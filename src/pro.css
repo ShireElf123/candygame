@@ -417,6 +417,8 @@
 .candy-board {
   position: relative;
   display: grid;
+  grid-template-rows: repeat(var(--board-rows, 8), minmax(0, 1fr));
+  aspect-ratio: calc(var(--board-columns, 8) / var(--board-rows, 8));
   gap: 4px;
   padding: 7px;
   overflow: hidden;
@@ -428,7 +430,7 @@
   user-select: none;
   -webkit-user-select: none;
 }
-.candy-row { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; min-width: 0; }
+.candy-row { display: grid; grid-template-columns: repeat(var(--board-columns, 8), minmax(0, 1fr)); gap: 4px; min-width: 0; min-height: 0; }
 .candy {
   position: relative;
   min-width: 0;

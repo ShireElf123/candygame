@@ -11,6 +11,7 @@ import {
   expandSpecials,
   findBestMove,
   findMatches,
+  matchRuns,
   freshBoard,
   goalsForLevel,
   hasGoal,
@@ -46,6 +47,20 @@ describe('board generation and resolution', () => {
     expect(board.every(row => row.length === SIZE && row.every(Boolean))).toBe(true);
     expect(findMatches(board).size).toBe(0);
     expect(hasMove(board)).toBe(true);
+  });
+
+  it('creates a playable rectangular board and respects weighted refill colors', () => {
+    const weights = [{ color: 0, weight: 1 }, { color: 1, weight: 2 }, { color: 2, weight: 3 }];
+    const board = freshBoard(seeded(55), weights, 5, 7);
+    expect(board).toHaveLength(5);
+    expect(board.every(row => row.length === 7)).toBe(true);
+    expect(findMatches(board).size).toBe(0);
+    expect(hasMove(board)).toBe(true);
+
+    const refill = dropMatches(board, new Set([keyOf(4, 0), keyOf(3, 0)]), [{ color: 4, weight: 1 }], seeded(3));
+    const refilled = refill.board.flat().filter(candy => refill.spawned.includes(candy.id));
+    expect(refill.spawned).toHaveLength(2);
+    expect(refilled.every(candy => candy.color === 4)).toBe(true);
   });
 
   it('finds horizontal and vertical runs without missing intersections', () => {
@@ -88,6 +103,22 @@ describe('board generation and resolution', () => {
     expect(result.flat().map(candy => candy.id).sort((a, b) => a - b)).toEqual(idsBefore);
     expect(result.flat().filter(candy => candy.special)).toHaveLength(2);
     expect(board.flat()).toEqual(boardBefore);
+  });
+
+  it('prioritizes a swap that creates a special candy', () => {
+    const board = emptyBoard();
+    [0, 0, 1, 0, 0, 5, 0, 1].forEach((color, col) => { board[0][col] = makeCandy(color); });
+    board[1][2] = makeCandy(0);
+
+    const move = findBestMove(board, 'score', 0, new Set());
+    expect(move).not.toBeNull();
+    if (!move) return;
+    const candidate = board.map(row => row.map(candy => ({ ...candy })));
+    [candidate[move[0][0]][move[0][1]], candidate[move[1][0]][move[1][1]]] = [
+      candidate[move[1][0]][move[1][1]],
+      candidate[move[0][0]][move[0][1]],
+    ];
+    expect(matchRuns(candidate).some(run => run.length >= 4)).toBe(true);
   });
 
   it('recommends a legal adjacent move', () => {

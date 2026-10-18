@@ -25,28 +25,23 @@ import WorldScene from './components/WorldScene';
 import {
   applySpecialSwap,
   buildSwapSpecial,
-  bossDamageForClear,
   clone,
   COLORS,
   createJelly,
+  createLevelBoard,
   createSugarShells,
-  damageSugarShells,
-  dropMatches,
-  expandSpecials,
   findBestMove,
   findMatches,
   freshBoard,
   GLYPHS,
   goalsForLevel,
   hasGoal,
-  hasMove,
   objectiveProgressPercent,
   objectivesComplete,
   keyOf,
   LEVEL_COUNT,
   LEVELS,
   posOf,
-  shuffleBoard,
   SIZE,
   sleep,
   type Booster,
@@ -55,8 +50,11 @@ import {
   type Pos,
   type Screen,
 } from './game/engine';
+import { buildResolutionPlan } from './game/resolution';
 import { starsForCampaign, starsForScore } from './game/progress';
 import { readSave, writeSave } from './game/save';
+
+const HINT_IDLE_DELAY_MS = 6500;
 
 const BOOSTERS: { id: Booster; icon: string; label: string; shortName: string; description: string }[] = [
   { id: 'hammer', icon: '🔨', label: 'Sugar hammer', shortName: 'Hammer', description: 'Clear one candy' },
@@ -225,6 +223,7 @@ function App() {
   const [selected, setSelected] = useState<Pos | null>(null);
   const [focusedCell, setFocusedCell] = useState<Pos>([0, 0]);
   const [hinted, setHinted] = useState<Pos[]>([]);
+  const [activityRevision, setActivityRevision] = useState(0);
   const [message, setMessage] = useState('Make a match of 3 or more');
   const [busy, setBusy] = useState(false);
   const [clearing, setClearing] = useState<string[]>([]);
@@ -289,7 +288,9 @@ function App() {
     }
   }, [sound]);
 
-  const triggerBurst = useCallback((keys: string[], kind: JuiceBurst['kind'], points = 0) => {
+  const registerBoardActivity = useCallback(() => setActivityRevision(revision => revision + 1), []);
+
+  const triggerBurst = useCallback((keys: string[], kind: JuiceBurst['kind'], points = 0, rows = SIZE, columns = SIZE) => {
     if (!keys.length) return;
     const cells = keys.map(key => posOf(key));
     const avgRow = cells.reduce((sum, cell) => sum + cell[0], 0) / cells.length;
@@ -299,15 +300,15 @@ function App() {
     const sampledCells = cells.filter((_, index) => index % stride === 0).slice(0, maxOrigins);
     const bursts: JuiceBurst[] = sampledCells.map(([row, col]) => ({
       id: ++burstSequence.current,
-      x: ((col + 0.5) / SIZE) * 100,
-      y: ((row + 0.5) / SIZE) * 100,
+      x: ((col + 0.5) / columns) * 100,
+      y: ((row + 0.5) / rows) * 100,
       kind,
       strength: Math.min(1.35, 0.72 + keys.length / 36),
     }));
     bursts.push({
       id: ++burstSequence.current,
-      x: ((avgCol + 0.5) / SIZE) * 100,
-      y: ((avgRow + 0.5) / SIZE) * 100,
+      x: ((avgCol + 0.5) / columns) * 100,
+      y: ((avgRow + 0.5) / rows) * 100,
       kind,
       strength: Math.min(1.8, 1.02 + keys.length / 22),
       points,
@@ -334,6 +335,19 @@ function App() {
   useEffect(() => () => {
     if (shellHitTimeout.current !== null) window.clearTimeout(shellHitTimeout.current);
   }, []);
+
+  useEffect(() => {
+    if (screen !== 'play' || busy || showHelp || showLeaveConfirm || showRestartConfirm || hinted.length > 0) return;
+    const timer = window.setTimeout(() => {
+      const move = findBestMove(board, levelData.goalType, levelData.goalColor, jelly, levelData.secondaryGoalType, sugarShells);
+      if (!move) return;
+      setHinted(move);
+      setSelected(null);
+      setArmed(null);
+      setMessage('A little nudge: swap the two glowing candies.');
+    }, HINT_IDLE_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [activityRevision, board, busy, hinted.length, jelly, levelData, screen, showHelp, showLeaveConfirm, showRestartConfirm, sugarShells]);
 
   useEffect(() => {
     if (showHelp) helpActionRef.current?.focus();
@@ -394,16 +408,18 @@ function App() {
     suppressTap.current = false;
     pointerStart.current = null;
     const safeLevel = Math.max(1, Math.min(unlocked, LEVEL_COUNT, Math.floor(requested)));
+    const levelConfig = LEVELS[safeLevel - 1];
+    const levelStart = createLevelBoard(levelConfig);
     setLevel(safeLevel);
     setMapSelectedLevel(safeLevel);
-    setBoard(freshBoard());
-    setMoves(LEVELS[safeLevel - 1].moves + Math.max(0, bonusMoves));
+    setBoard(levelStart.board);
+    setMoves(levelConfig.moves + Math.max(0, bonusMoves));
     setScore(0);
     setGoalProgress(0);
-    setBossHealth(LEVELS[safeLevel - 1].boss?.maxHealth ?? 0);
+    setBossHealth(levelConfig.boss?.maxHealth ?? 0);
     setSugarShells(createSugarShells(safeLevel));
     setShellsCleared(0);
-    setJelly(hasGoal(LEVELS[safeLevel - 1], 'jelly') ? createJelly(safeLevel) : new Set());
+    setJelly(levelStart.jelly);
     setSelected(null);
     setFocusedCell([0, 0]);
     setHinted([]);
@@ -472,111 +488,80 @@ function App() {
     startingShellImpactCells: Set<string> = new Set(),
     runToken = gameRun.current,
   ) => {
-    let current = clone(startingBoard);
-    let scoreNow = startingScore;
-    let goalNow = goalProgress;
-    let jellyNow = new Set(jelly);
-    let bossHealthNow = startingBossHealth;
-    let shellsNow = new Map(startingSugarShells);
-    let shellsClearedNow = startingShellsCleared;
-    let matches = new Set(initialMatches);
-    let cascade = 0;
-    let totalCleared = 0;
-    let totalShellsHit = 0;
+    const config = LEVELS[levelAtMove - 1];
+    const plan = buildResolutionPlan({
+      level: config,
+      board: startingBoard,
+      matches: initialMatches,
+      score: startingScore,
+      goalProgress,
+      jelly,
+      bossHealth: startingBossHealth,
+      sugarShells: startingSugarShells,
+      shellsCleared: startingShellsCleared,
+      startingShellImpactCells,
+    });
 
-    while (matches.size && cascade < 30) {
-      cascade++;
-      const expanded = expandSpecials(current, matches);
-      const config = LEVELS[levelAtMove - 1];
-      if (config.boss && bossHealthNow > 0) {
-        const damage = bossDamageForClear(expanded.size, cascade);
-        bossHealthNow = Math.max(0, bossHealthNow - damage);
-        setBossHealth(bossHealthNow);
+    for (const step of plan.steps) {
+      if (runToken !== gameRun.current) return;
+      if (config.boss) setBossHealth(step.bossHealth);
+      if (step.shellsHit > 0) {
+        setShellHitCells(step.shellHitCells);
+        if (shellHitTimeout.current !== null) window.clearTimeout(shellHitTimeout.current);
+        shellHitTimeout.current = window.setTimeout(() => {
+          setShellHitCells([]);
+          shellHitTimeout.current = null;
+        }, 360);
+        setSugarShells(new Map(step.sugarShells));
+        setShellsCleared(step.shellsCleared);
       }
-      let shellsHitThisCascade = 0;
-      if (hasGoal(config, 'shell')) {
-        const shellImpactCells = new Set(expanded);
-        if (cascade === 1) startingShellImpactCells.forEach(key => shellImpactCells.add(key));
-        const shellHitKeys = Array.from(shellImpactCells).filter(key => shellsNow.has(key));
-        const shellDamage = damageSugarShells(shellsNow, shellImpactCells);
-        shellsNow = shellDamage.shells;
-        shellsHitThisCascade = shellDamage.hit;
-        shellsClearedNow += shellDamage.cleared;
-        if (shellsHitThisCascade > 0) {
-          totalShellsHit += shellsHitThisCascade;
-          setShellHitCells(shellHitKeys);
-          if (shellHitTimeout.current !== null) window.clearTimeout(shellHitTimeout.current);
-          shellHitTimeout.current = window.setTimeout(() => {
-            setShellHitCells([]);
-            shellHitTimeout.current = null;
-          }, 360);
-          setSugarShells(new Map(shellsNow));
-          setShellsCleared(shellsClearedNow);
-        }
-      }
-      if (hasGoal(config, 'collect')) {
-        for (const key of expanded) {
-          const [r, c] = posOf(key);
-          if (current[r]?.[c]?.color === config.goalColor) goalNow++;
-        }
-      }
-      if (hasGoal(config, 'jelly')) expanded.forEach(key => jellyNow.delete(key));
-      setGoalProgress(goalNow);
-      setJelly(new Set(jellyNow));
-      setClearing(Array.from(expanded));
+      setGoalProgress(step.goalProgress);
+      setJelly(new Set(step.jelly));
+      setClearing(step.clearCells);
       setImpactPulse(value => value + 1);
-      const points = expanded.size * 60 * Math.min(cascade, 6);
-      scoreNow += points;
-      setScore(scoreNow);
+      setScore(step.score);
       setMessage(config.boss
-        ? bossHealthNow <= 0 ? `${config.boss.name} is down!` : `${config.boss.name} has ${bossHealthNow} power left.`
-        : shellsHitThisCascade > 0
-          ? `${shellsHitThisCascade} sugar shell${shellsHitThisCascade === 1 ? '' : 's'} cracked!`
-          : cascade > 1
-            ? ['Sweet cascade!', 'Tasty chain!', 'Sugar rush!', 'Unstoppable!'][Math.min(3, cascade - 2)]
-            : expanded.size >= 5 ? 'Sugar rush!' : 'Nice match!');
-      const burstKind: JuiceBurst['kind'] = cascade > 1 ? 'cascade' : expanded.size >= 5 ? 'special' : 'match';
-      triggerBurst(Array.from(expanded), burstKind, points);
-      playCue(cascade > 1 ? 'cascade' : expanded.size >= 5 ? 'special' : 'match', sound, cascade);
-      await sleep(expanded.size >= 5 ? 190 : 178);
+        ? step.bossHealth <= 0 ? `${config.boss.name} is down!` : `${config.boss.name} has ${step.bossHealth} power left.`
+        : step.shellsHit > 0
+          ? `${step.shellsHit} sugar shell${step.shellsHit === 1 ? '' : 's'} cracked!`
+          : step.cascade > 1
+            ? ['Sweet cascade!', 'Tasty chain!', 'Sugar rush!', 'Unstoppable!'][Math.min(3, step.cascade - 2)]
+            : step.clearCells.length >= 5 ? 'Sugar rush!' : 'Nice match!');
+      const burstKind: JuiceBurst['kind'] = step.cascade > 1 ? 'cascade' : step.clearCells.length >= 5 ? 'special' : 'match';
+      triggerBurst(step.clearCells, burstKind, step.points, config.rows, config.columns);
+      playCue(step.cascade > 1 ? 'cascade' : step.clearCells.length >= 5 ? 'special' : 'match', sound, step.cascade);
+      await sleep(step.clearCells.length >= 5 ? 190 : 178);
       if (runToken !== gameRun.current) return;
 
-      const dropped = dropMatches(current, expanded);
-      totalCleared += expanded.size;
-      current = dropped.board;
-      setBoard(current);
+      setBoard(step.boardAfterDrop);
       setClearing([]);
-      setFallDistances(dropped.fallDistances);
-      const fallDuration = Math.max(190, ...Object.values(dropped.fallDistances).map(distance => Math.min(420, 175 + distance * 32)));
+      setFallDistances(step.fallDistances);
+      const fallDuration = Math.max(190, ...Object.values(step.fallDistances).map(distance => Math.min(420, 175 + distance * 32)));
       await sleep(fallDuration + 24);
       if (runToken !== gameRun.current) return;
       setFallDistances({});
-      matches = findMatches(current);
     }
 
-    if (matches.size) {
-      current = shuffleBoard(current);
+    if (runToken !== gameRun.current) return;
+    if (plan.reshuffleReason === 'cascade-limit') {
       setMessage('Board reshuffled for a fair move');
-    } else if (!hasMove(current)) {
+    } else if (plan.reshuffleReason === 'no-valid-moves') {
       setMessage('Shuffling for a new move…');
       await sleep(180);
       if (runToken !== gameRun.current) return;
-      current = shuffleBoard(current);
     }
-    if (runToken !== gameRun.current) return;
 
-    setBoard(current);
+    setBoard(plan.board);
     setClearing([]);
     setFallDistances({});
     setSelected(null);
-    const objectiveConfig = LEVELS[levelAtMove - 1];
-    const objectiveMet = objectivesComplete(objectiveConfig, scoreNow, goalNow, jellyNow.size, bossHealthNow, shellsClearedNow);
-    finishMove(scoreNow, nextMoves, levelAtMove, goalNow, jellyNow, bossHealthNow, shellsClearedNow);
-    if (totalCleared > 0 && nextMoves > 0 && !objectiveMet && !objectiveConfig.boss) {
-      const pointSummary = `+${(scoreNow - startingScore).toLocaleString()} points`;
-      setMessage(totalShellsHit > 0
+    const objectiveMet = objectivesComplete(config, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared);
+    finishMove(plan.score, nextMoves, levelAtMove, plan.goalProgress, plan.jelly, plan.bossHealth, plan.shellsCleared);
+    if (plan.totalCleared > 0 && nextMoves > 0 && !objectiveMet && !config.boss) {
+      const pointSummary = `+${(plan.score - startingScore).toLocaleString()} points`;
+      setMessage(plan.totalShellsHit > 0
         ? `Sugar shells cracked · ${pointSummary}`
-        : cascade > 1 ? `Cascade ×${cascade} · ${pointSummary}` : pointSummary);
+        : plan.steps.length > 1 ? `Cascade ×${plan.steps.length} · ${pointSummary}` : pointSummary);
     }
     setBusy(false);
     inputLock.current = false;
@@ -669,10 +654,10 @@ function App() {
       const chosen = working[r][c];
       const cleared = new Set<string>();
       if (booster === 'hammer') cleared.add(keyOf(r, c));
-      if (booster === 'line') for (let x = 0; x < SIZE; x++) cleared.add(keyOf(r, x));
+      if (booster === 'line') for (let x = 0; x < working[r].length; x++) cleared.add(keyOf(r, x));
       if (booster === 'rainbow') {
-        for (let y = 0; y < SIZE; y++) {
-          for (let x = 0; x < SIZE; x++) if (working[y][x].color === chosen.color) cleared.add(keyOf(y, x));
+        for (let y = 0; y < working.length; y++) {
+          for (let x = 0; x < working[y].length; x++) if (working[y][x].color === chosen.color) cleared.add(keyOf(y, x));
         }
       }
       setArmed(null);
@@ -710,8 +695,8 @@ function App() {
     if (!delta) return;
     event.preventDefault();
     if (busy || inputLock.current || showHelp || showLeaveConfirm || showRestartConfirm) return;
-    const nextRow = Math.max(0, Math.min(SIZE - 1, row + delta[0]));
-    const nextCol = Math.max(0, Math.min(SIZE - 1, col + delta[1]));
+    const nextRow = Math.max(0, Math.min(board.length - 1, row + delta[0]));
+    const nextCol = Math.max(0, Math.min(board[nextRow].length - 1, col + delta[1]));
     setFocusedCell([nextRow, nextCol]);
     setHinted([]);
     candyRefs.current[keyOf(nextRow, nextCol)]?.focus();
@@ -820,7 +805,7 @@ function App() {
           const moveCol = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 1 : -1) : 0;
           const nextRow = start.r + moveRow;
           const nextCol = start.c + moveCol;
-          if (nextRow >= 0 && nextRow < SIZE && nextCol >= 0 && nextCol < SIZE) {
+          if (nextRow >= 0 && nextRow < board.length && nextCol >= 0 && nextCol < board[nextRow].length) {
             suppressTap.current = true;
             window.setTimeout(() => { suppressTap.current = false; }, 350);
             setSelected(null);
@@ -1094,7 +1079,7 @@ function App() {
               <div className="mobile-hud-moves"><small>MOVES</small><b key={moves} className="move-tick">{moves}</b></div>
             </div>
           </div>
-          <div className="play-layout">
+          <div className="play-layout" onPointerDown={registerBoardActivity} onKeyDown={registerBoardActivity}>
             <aside className="play-rail-left">
               <section className="mission-card">
                 <div className="mission-card-head"><span>LEVEL {String(level).padStart(2, '0')}</span><Sparkles size={16} /></div>
@@ -1152,11 +1137,11 @@ function App() {
               <div className="game-board-wrap">
                 <div className="board-top"><span>LEVEL {String(level).padStart(2, '0')}</span><span>{busy ? 'SWEET THINGS IN MOTION' : 'SWAP TO MATCH'}</span></div>
                 <JuiceBurstLayer effects={juiceBursts} />
-                <div className={`candy-board${busy ? ' resolving' : ''}${impactPulse % 2 ? ' juice-impact-a' : ' juice-impact-b'}`} role="group" aria-label="Candy puzzle board">
+                <div className={`candy-board${busy ? ' resolving' : ''}${impactPulse % 2 ? ' juice-impact-a' : ' juice-impact-b'}`} style={{ '--board-columns': levelData.columns, '--board-rows': levelData.rows } as CSSProperties} role="group" aria-label="Candy puzzle board">
                   <span id="board-instructions" className="visually-hidden">Choose a candy and an adjacent candy to swap, or swipe a candy. Use arrow keys to move around the board.</span>
                   {board.map((row, rowIndex) => <div className="candy-row" key={rowIndex} role="presentation">{row.map((item, colIndex) => renderCandy(item, rowIndex, colIndex))}</div>)}
                 </div>
-                <div className="board-bottom"><span><span className="board-spark">✦</span> Match 3 or more</span><span>8 × 8 puzzle</span></div>
+                <div className="board-bottom"><span><span className="board-spark">✦</span> Match 3 or more</span><span>{levelData.columns} × {levelData.rows} puzzle</span></div>
               </div>
               <div className="status-message" role="status" aria-live="polite"><span className="status-message-indicator" /><span key={message} className="status-copy">{message}</span></div>
               <div className="board-footnote"><span>TIP: LOOK FOR A MOVE THAT HELPS YOUR GOAL</span><span>{busy ? 'PLEASE WAIT' : 'NO TIMER · PLAY AT YOUR PACE'}</span></div>
@@ -1195,7 +1180,7 @@ function App() {
 
               <section className="tool-card">
                 <div className="card-heading"><span>NEED A NUDGE?</span><Lightbulb size={17} /></div>
-                <p className="card-subcopy">A hint points to a move that helps your current goal.</p>
+                <p className="card-subcopy">A goal-focused nudge appears here if you pause for a few seconds.</p>
                 <button className="utility-button" type="button" onClick={hintMove} disabled={busy}><Lightbulb size={17} /> Show me a move <ArrowRight size={15} /></button>
                 <button className="utility-button utility-secondary" type="button" onClick={openRestartDialog} disabled={busy}><RotateCcw size={16} /> Restart level</button>
               </section>
