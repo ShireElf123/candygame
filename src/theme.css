@@ -432,7 +432,7 @@
 }
 .map-level.is-selected .map-boss-marker { color: #fff4bf; }
 .result-art .character-art { width: 68px; height: 68px; }
-.mobile-game-hud { display: none; }
+.level-hud { display: none; }
 
 @media (max-width: 560px) {
   /* Portrait play uses a compact game HUD, full-width board, and reachable controls. */
@@ -478,7 +478,7 @@
   .app-shell.is-playing .back-link { min-height: 32px; font-size: 10px; }
   .app-shell.is-playing .play-world-label { display: none; }
 
-  .mobile-game-hud {
+  .level-hud {
     display: block;
     margin: 0 0 8px;
     padding: 8px 9px;
@@ -487,22 +487,22 @@
     background: linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(255, 247, 237, .98));
     box-shadow: 0 7px 18px rgba(105, 55, 88, .09), inset 0 1px 0 #fff;
   }
-  .mobile-game-hud.is-boss-level { border-color: rgba(201, 40, 114, .22); background: linear-gradient(135deg, #fff8eb, #fff0f5); }
-  .mobile-hud-main { display: grid; grid-template-columns: 41px minmax(0, 1fr) 47px; align-items: center; gap: 8px; }
-  .mobile-hud-character { width: 40px; height: 40px; filter: drop-shadow(0 3px 4px rgba(87, 48, 83, .16)); }
-  .mobile-hud-copy { min-width: 0; display: grid; gap: 3px; }
-  .mobile-hud-kicker { overflow: hidden; color: #9c587c; font-size: 7px; font-weight: 900; letter-spacing: .09em; text-overflow: ellipsis; white-space: nowrap; }
-  .mobile-hud-copy > b { overflow: hidden; color: #56344f; font-size: 12px; font-weight: 900; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
-  .mobile-boss-epithet { overflow: hidden; color: #786477; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
-  .mobile-objective-track { height: 6px; display: block; overflow: hidden; margin-top: 2px; border-radius: 999px; background: #eadbe6; }
-  .mobile-objective-track > span { height: 100%; display: block; border-radius: inherit; background: linear-gradient(90deg, #48a9cf, #d8478c, #f2ba3c); transition: width .3s ease; }
-  .mobile-hud-copy .boss-health-track { height: 7px; margin-top: 2px; }
-  .mobile-hud-subline { display: flex; justify-content: space-between; gap: 7px; color: #786477; font-size: 7px; line-height: 1.2; }
-  .mobile-hud-subline > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .mobile-hud-subline > span:last-child { flex: 0 0 auto; }
-  .mobile-hud-moves { min-height: 51px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 1px solid rgba(201, 40, 114, .16); border-radius: 12px; background: linear-gradient(145deg, #fff0f6, #fff8eb); }
-  .mobile-hud-moves small { color: #72586d; font-size: 7px; font-weight: 900; letter-spacing: .12em; }
-  .mobile-hud-moves b { color: #c92872; font-size: 22px; font-weight: 950; line-height: 1; }
+  .level-hud.is-boss-level { border-color: rgba(201, 40, 114, .22); background: linear-gradient(135deg, #fff8eb, #fff0f5); }
+  .level-hud-main { display: grid; grid-template-columns: 41px minmax(0, 1fr) 47px; align-items: center; gap: 8px; }
+  .level-hud-character { width: 40px; height: 40px; filter: drop-shadow(0 3px 4px rgba(87, 48, 83, .16)); }
+  .level-hud-copy { min-width: 0; display: grid; gap: 3px; }
+  .level-hud-kicker { overflow: hidden; color: #9c587c; font-size: 7px; font-weight: 900; letter-spacing: .09em; text-overflow: ellipsis; white-space: nowrap; }
+  .level-hud-copy > b { overflow: hidden; color: #56344f; font-size: 12px; font-weight: 900; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+  .level-boss-epithet { overflow: hidden; color: #786477; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+  .level-objective-track { height: 6px; display: block; overflow: hidden; margin-top: 2px; border-radius: 999px; background: #eadbe6; }
+  .level-objective-track > span { height: 100%; display: block; border-radius: inherit; background: linear-gradient(90deg, #48a9cf, #d8478c, #f2ba3c); transition: width .3s ease; }
+  .level-hud-copy .boss-health-track { height: 7px; margin-top: 2px; }
+  .level-hud-subline { display: flex; justify-content: space-between; gap: 7px; color: #786477; font-size: 7px; line-height: 1.2; }
+  .level-hud-subline > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .level-hud-subline > span:last-child { flex: 0 0 auto; }
+  .level-hud-moves { min-height: 51px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 1px solid rgba(201, 40, 114, .16); border-radius: 12px; background: linear-gradient(145deg, #fff0f6, #fff8eb); }
+  .level-hud-moves small { color: #72586d; font-size: 7px; font-weight: 900; letter-spacing: .12em; }
+  .level-hud-moves b { color: #c92872; font-size: 22px; font-weight: 950; line-height: 1; }
 
   .app-shell.is-playing .play-layout { display: flex; flex-direction: column; gap: 8px; }
   .app-shell.is-playing .play-rail-left { display: none; }
@@ -582,9 +582,9 @@
 .character-eyes { transform-box: fill-box; transform-origin: center; animation: character-blink 5.8s steps(1, end) infinite; }
 .character-horns, .character-leaves { transform-box: fill-box; transform-origin: center bottom; animation: character-sway 3.4s ease-in-out infinite alternate; }
 .desktop-boss-card.boss-hit-a .character-art,
-.mobile-hud-character.boss-hit-a .character-art { animation: boss-recoil-a 280ms cubic-bezier(.2, .7, .25, 1.15) both; }
+.level-hud-character.boss-hit-a .character-art { animation: boss-recoil-a 280ms cubic-bezier(.2, .7, .25, 1.15) both; }
 .desktop-boss-card.boss-hit-b .character-art,
-.mobile-hud-character.boss-hit-b .character-art { animation: boss-recoil-b 280ms cubic-bezier(.2, .7, .25, 1.15) both; }
+.level-hud-character.boss-hit-b .character-art { animation: boss-recoil-b 280ms cubic-bezier(.2, .7, .25, 1.15) both; }
 
 /* World art drifts in place without moving the level grid or stealing taps. */
 .world-cloud { transform-box: fill-box; transform-origin: center; }
@@ -674,4 +674,234 @@
 
 @media (max-width: 560px) {
   .app-shell.is-playing .juice-effects { inset: 9px 7px 25px; }
+}
+
+/* Gameplay is the product screen: keep its hierarchy closer to a native puzzle game. */
+.app-shell.is-playing {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+}
+.app-shell.is-playing .site-footer { display: none; }
+.app-shell.is-playing .play-view {
+  position: relative;
+  isolation: isolate;
+  flex: 1;
+  min-width: 0;
+}
+.app-shell.is-playing .play-view::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -35px -20px -18px;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 34%, rgba(255, 255, 255, .82), transparent 40rem),
+    radial-gradient(ellipse at 3% 12%, rgba(255, 210, 230, .47), transparent 30rem),
+    radial-gradient(ellipse at 98% 5%, rgba(179, 229, 249, .58), transparent 32rem);
+}
+.app-shell.is-playing .game-header {
+  min-height: 72px;
+  flex: 0 0 auto;
+}
+.app-shell.is-playing .play-topline { margin: 0 0 14px; }
+.app-shell.is-playing .back-link {
+  min-height: 40px;
+  padding: 0 13px;
+  color: #684b62;
+  border: 1px solid rgba(112, 67, 94, .16);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .78);
+  box-shadow: 0 4px 0 rgba(129, 71, 110, .1);
+  font-size: 11px;
+}
+.app-shell.is-playing .back-link:hover { color: var(--berry); border-color: rgba(201, 40, 114, .32); }
+.app-shell.is-playing .play-world-label {
+  min-height: 34px;
+  padding: 0 12px;
+  color: #674863;
+  border: 1px solid rgba(112, 67, 94, .14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .74);
+  font-size: 10px;
+  letter-spacing: .08em;
+}
+.app-shell.is-playing .play-world-label i { width: 7px; height: 7px; background: #59ae68; box-shadow: 0 0 0 3px rgba(89, 174, 104, .15); opacity: 1; }
+.app-shell.is-playing .mission-card { border-color: rgba(127, 75, 109, .16); box-shadow: 0 14px 32px rgba(105, 55, 88, .12), inset 0 1px 0 #fff; }
+.app-shell.is-playing .mission-card h1 { font-size: 23px; }
+.app-shell.is-playing .objective-copy b, .app-shell.is-playing .objective-secondary b { font-size: 12px; }
+.app-shell.is-playing .objective-copy small, .app-shell.is-playing .objective-secondary small { font-size: 10px; }
+.app-shell.is-playing .moves-display { min-height: 66px; }
+.app-shell.is-playing .board-title-row { margin-bottom: 11px; }
+.app-shell.is-playing .board-title-row .eyebrow { display: inline-flex; align-items: center; gap: 7px; color: #a62865; font-size: 9px; }
+.app-shell.is-playing .board-live-dot { width: 7px; height: 7px; display: inline-block; border-radius: 50%; background: #57b66c; box-shadow: 0 0 0 3px rgba(87, 182, 108, .16); }
+.app-shell.is-playing .board-title-row h2 { color: #51334d; font-size: 22px; }
+.app-shell.is-playing .game-board-wrap {
+  width: min(100%, 680px, var(--board-fit-width, 72svh));
+  max-width: 680px;
+  padding: 12px;
+  border: 3px solid #8acfe8;
+  border-radius: 25px;
+  background: linear-gradient(145deg, #e1f8ff 0%, #b2e3f2 46%, #a5c6ec 100%);
+  box-shadow: 0 8px 0 #578ebd, 0 24px 48px rgba(55, 105, 153, .22), inset 0 1px 0 #fff;
+}
+.app-shell.is-playing .candy-board {
+  aspect-ratio: var(--board-ratio, 1);
+  border-color: rgba(255, 255, 255, .72);
+  border-radius: 16px;
+  background: linear-gradient(145deg, #466a9e, #345685 72%, #2b4a77);
+  box-shadow: inset 0 4px 14px rgba(23, 38, 68, .28), 0 1px 0 rgba(255, 255, 255, .24);
+}
+.app-shell.is-playing .board-top, .app-shell.is-playing .board-bottom { color: #315778; font-size: 10px; }
+.app-shell.is-playing .board-spark { color: #c08317; }
+.app-shell.is-playing .status-message {
+  color: #61445d;
+  border-color: rgba(176, 90, 139, .18);
+  background: linear-gradient(105deg, rgba(255, 255, 255, .94), rgba(255, 248, 232, .96));
+  box-shadow: 0 6px 18px rgba(103, 50, 79, .08);
+  font-size: 12px;
+}
+.app-shell.is-playing .status-message-indicator { background: #d12e78; box-shadow: 0 0 0 4px rgba(209, 46, 120, .12); }
+.app-shell.is-playing .board-footnote { color: #6d5b70; font-size: 8px; }
+.app-shell.is-playing .powerups-card, .app-shell.is-playing .tool-card { box-shadow: 0 14px 30px rgba(105, 55, 88, .12), inset 0 1px 0 #fff; }
+.app-shell.is-playing .powerups-card { border-color: rgba(201, 40, 114, .17); }
+.app-shell.is-playing .power-button { min-height: 58px; }
+.app-shell.is-playing .powerup-emoji { width: 38px; height: 38px; font-size: 20px; }
+.app-shell.is-playing .powerup-label b { font-size: 12px; }
+.app-shell.is-playing .powerup-label small { font-size: 9px; }
+.app-shell.is-playing .tool-card .card-subcopy { font-size: 11px; }
+
+.app-shell.is-playing .level-hud {
+  display: block;
+  max-width: 1120px;
+  margin: 0 auto 14px;
+  padding: 12px 16px;
+  border: 1px solid rgba(172, 79, 130, .19);
+  border-radius: 20px;
+  background: linear-gradient(110deg, rgba(255, 255, 255, .98), rgba(255, 243, 224, .98) 58%, rgba(255, 235, 245, .98));
+  box-shadow: 0 9px 24px rgba(105, 55, 88, .1), inset 0 1px 0 #fff;
+}
+.app-shell.is-playing .level-hud-main { display: grid; grid-template-columns: 56px minmax(0, 1fr) 82px; align-items: center; gap: 14px; }
+.app-shell.is-playing .level-hud-character { width: 54px; height: 54px; filter: drop-shadow(0 3px 5px rgba(87, 48, 83, .16)); }
+.app-shell.is-playing .level-hud-copy { min-width: 0; display: grid; gap: 5px; }
+.app-shell.is-playing .level-hud-kicker { overflow: hidden; color: #923a6e; font-size: 9px; font-weight: 900; letter-spacing: .11em; text-overflow: ellipsis; white-space: nowrap; }
+.app-shell.is-playing .level-hud-copy > b { overflow: hidden; color: #482c45; font-size: 16px; font-weight: 900; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+.app-shell.is-playing .level-boss-epithet { overflow: hidden; color: #786477; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.app-shell.is-playing .level-objective-track { height: 8px; display: block; overflow: hidden; margin-top: 2px; border-radius: 999px; background: #eadbe6; }
+.app-shell.is-playing .level-objective-track > span { height: 100%; display: block; border-radius: inherit; background: linear-gradient(90deg, #48a9cf, #d8478c, #f2ba3c); transition: width .3s ease; }
+.app-shell.is-playing .level-hud-copy .boss-health-track { height: 8px; margin-top: 2px; }
+.app-shell.is-playing .level-hud-subline { display: flex; justify-content: space-between; gap: 8px; color: #715c71; font-size: 10px; line-height: 1.2; }
+.app-shell.is-playing .level-hud-subline > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-shell.is-playing .level-hud-subline > span:last-child { flex: 0 0 auto; }
+.app-shell.is-playing .level-hud-moves { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+.app-shell.is-playing .level-hud-moves {
+  width: 82px;
+  min-height: 76px;
+  border: 1px solid rgba(186, 93, 137, .26);
+  border-radius: 20px;
+  background: linear-gradient(145deg, #fff0f6, #ffe5a9);
+  box-shadow: inset 0 1px 0 #fff, 0 4px 0 rgba(183, 88, 131, .12);
+}
+.app-shell.is-playing .level-hud-moves small { color: #72586d; font-size: 9px; }
+.app-shell.is-playing .level-hud-moves b { color: #b92669; font-size: 31px; }
+.app-shell.is-playing .play-rail-left { display: none; }
+.app-shell.is-playing .play-layout { max-width: 1220px; margin: 0 auto; }
+
+@media (min-width: 821px) and (max-width: 1120px) {
+  .app-shell.is-playing .play-layout { grid-template-columns: minmax(0, 1fr) minmax(220px, 260px); gap: 18px; }
+  .app-shell.is-playing .play-board-column { grid-column: 1; grid-row: 1; }
+  .app-shell.is-playing .play-rail-right { grid-column: 2; grid-row: 1; grid-template-columns: 1fr; align-self: start; }
+}
+
+@media (min-width: 1121px) {
+  .app-shell.is-playing .play-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(230px, 280px);
+    gap: clamp(18px, 2vw, 28px);
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell.is-playing { padding: 0 8px calc(8px + env(safe-area-inset-bottom)); }
+  .app-shell.is-playing .game-header { min-height: 48px; }
+  .app-shell.is-playing .brand-mark { width: 30px; height: 30px; }
+  .app-shell.is-playing .play-view { padding-top: 1px; }
+  .app-shell.is-playing .play-topline { display: none; }
+  .app-shell.is-playing .level-hud {
+    margin: 0 0 6px;
+    padding: 9px 10px;
+    border-color: rgba(172, 79, 130, .2);
+    border-radius: 17px;
+    background: linear-gradient(120deg, rgba(255, 255, 255, .98), rgba(255, 242, 221, .98) 58%, rgba(255, 235, 245, .98));
+    box-shadow: 0 8px 20px rgba(105, 55, 88, .1), inset 0 1px 0 #fff;
+  }
+  .app-shell.is-playing .level-hud-main { grid-template-columns: 44px minmax(0, 1fr) 58px; gap: 9px; }
+  .app-shell.is-playing .level-hud-character { width: 43px; height: 43px; }
+  .app-shell.is-playing .level-hud-copy { gap: 4px; }
+  .app-shell.is-playing .level-hud-kicker { color: #923a6e; font-size: 8px; letter-spacing: .1em; }
+  .app-shell.is-playing .level-hud-copy > b { color: #482c45; font-size: 13px; }
+  .app-shell.is-playing .level-boss-epithet { font-size: 9px; }
+  .app-shell.is-playing .level-hud-subline { color: #715c71; font-size: 9px; }
+  .app-shell.is-playing .level-objective-track { height: 7px; margin-top: 3px; }
+  .app-shell.is-playing .level-hud-moves {
+    width: 58px;
+    min-height: 58px;
+    border-color: rgba(186, 93, 137, .28);
+    border-radius: 18px;
+    background: linear-gradient(145deg, #fff0f6, #ffe5a9);
+    box-shadow: inset 0 1px 0 #fff, 0 4px 0 rgba(183, 88, 131, .12);
+  }
+  .app-shell.is-playing .level-hud-moves small { color: #72586d; font-size: 8px; }
+  .app-shell.is-playing .level-hud-moves b { color: #b92669; font-size: 25px; }
+  .app-shell.is-playing .play-layout { gap: 6px; }
+  .app-shell.is-playing .personal-best { display: none; }
+  .app-shell.is-playing .game-board-wrap {
+    width: min(100%, var(--board-fit-width, 72svh));
+    max-width: none;
+    padding: 8px;
+    border-width: 2px;
+    border-radius: 20px;
+  }
+  .app-shell.is-playing .candy-board { gap: 3px; padding: 5px; border-radius: 13px; }
+  .app-shell.is-playing .candy-row { gap: 2px; }
+  .app-shell.is-playing .board-title-row { margin: 0 2px 5px; }
+  .app-shell.is-playing .board-title-row .eyebrow { color: #983965; font-size: 8px; }
+  .app-shell.is-playing .board-title-row h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .app-shell.is-playing .icon-action { width: 34px; height: 34px; border-radius: 11px; }
+  .app-shell.is-playing .board-bottom { padding: 6px 2px 0; font-size: 9px; }
+  .app-shell.is-playing .status-message { min-height: 31px; gap: 8px; margin-top: 6px; padding: 6px 9px; border-radius: 11px; font-size: 10px; }
+  .app-shell.is-playing .status-message-indicator { width: 7px; height: 7px; flex-basis: 7px; }
+  .app-shell.is-playing .powerups-card {
+    bottom: max(4px, env(safe-area-inset-bottom));
+    padding: 8px 9px;
+    border: 1px solid rgba(175, 85, 135, .21);
+    border-radius: 16px;
+    background: rgba(255, 252, 248, .97);
+    box-shadow: 0 -5px 20px rgba(89, 52, 80, .09), 0 7px 17px rgba(105, 55, 88, .1);
+  }
+  .app-shell.is-playing .powerups-card > .card-heading { color: #754e6c; font-size: 9px; }
+  .app-shell.is-playing .powerups-card > .card-heading svg { width: 15px; height: 15px; }
+  .app-shell.is-playing .powerup-list { gap: 7px; margin-top: 7px; }
+  .app-shell.is-playing .power-button { min-height: 46px; grid-template-columns: 26px minmax(0, 1fr) 18px; gap: 5px; padding: 5px 6px; border-radius: 12px; }
+  .app-shell.is-playing .powerup-emoji { width: 26px; height: 26px; border-radius: 9px; font-size: 15px; }
+  .app-shell.is-playing .powerup-label b { color: #573650; font-size: 9px; }
+  .app-shell.is-playing .powerup-count { min-width: 18px; height: 20px; font-size: 9px; }
+  .app-shell.is-playing .play-rail-right .tool-card { padding: 9px; }
+  .app-shell.is-playing .utility-button { min-height: 40px; font-size: 10px; }
+}
+
+@media (max-height: 700px) and (max-width: 560px) {
+  .app-shell.is-playing .game-header { min-height: 44px; }
+  .app-shell.is-playing .level-hud { padding: 6px 8px; }
+  .app-shell.is-playing .level-hud-main { grid-template-columns: 37px minmax(0, 1fr) 52px; gap: 7px; }
+  .app-shell.is-playing .level-hud-character { width: 36px; height: 36px; }
+  .app-shell.is-playing .level-hud-moves { width: 52px; min-height: 52px; }
+  .app-shell.is-playing .level-hud-moves b { font-size: 22px; }
+  .app-shell.is-playing .board-title-row { margin-bottom: 2px; }
+  .app-shell.is-playing .icon-action { width: 29px; height: 29px; }
+  .app-shell.is-playing .game-board-wrap { padding: 5px; border-radius: 16px; }
+  .app-shell.is-playing .board-bottom { padding-top: 4px; }
+  .app-shell.is-playing .status-message { min-height: 28px; margin-top: 4px; padding: 4px 7px; font-size: 9px; }
+  .app-shell.is-playing .powerups-card { padding: 6px 8px; }
+  .app-shell.is-playing .powerup-list { margin-top: 4px; }
+  .app-shell.is-playing .power-button { min-height: 39px; }
 }

@@ -1050,23 +1050,23 @@ function App() {
             <button className="back-link" type="button" onClick={openLeaveDialog}><ArrowLeft size={16} /> Campaign map</button>
             <span className="play-world-label">WORLD {String(levelData.chapter).padStart(2, '0')} <i /> {levelData.chapterName}</span>
           </div>
-          <div className={`mobile-game-hud${levelData.boss ? ' is-boss-level' : ''}`}>
-            <div className="mobile-hud-main">
-              <div className={`mobile-hud-character${levelData.boss && impactPulse > 0 ? ` boss-hit-${impactPulse % 2 ? 'b' : 'a'}` : ''}`}>
+          <div className={`level-hud${levelData.boss ? ' is-boss-level' : ''}`}>
+            <div className="level-hud-main">
+              <div className={`level-hud-character${levelData.boss && impactPulse > 0 ? ` boss-hit-${impactPulse % 2 ? 'b' : 'a'}` : ''}`}>
                 {levelData.boss
                   ? <CharacterArt kind="boss" mood="determined" color={currentBossPalette.color} accent={currentBossPalette.accent} />
                   : <CharacterArt color="#78d68b" accent="#308d5a" />}
               </div>
-              <div className="mobile-hud-copy">
-                <span className="mobile-hud-kicker">{levelData.boss ? `CHAPTER BOSS · LEVEL ${String(level).padStart(2, '0')}` : `LEVEL ${String(level).padStart(2, '0')} · ${levelData.chapterName}`}</span>
+              <div className="level-hud-copy">
+                <span className="level-hud-kicker">{levelData.boss ? `CHAPTER BOSS · LEVEL ${String(level).padStart(2, '0')}` : `LEVEL ${String(level).padStart(2, '0')} · ${levelData.chapterName}`}</span>
                 <b>{levelData.boss?.name ?? goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared)}</b>
-                {levelData.boss && <small className="mobile-boss-epithet">{levelData.boss.epithet} · “{levelData.boss.taunt}”</small>}
+                {levelData.boss && <small className="level-boss-epithet">{levelData.boss.epithet} · “{levelData.boss.taunt}”</small>}
                 {levelData.boss
                   ? <div className="boss-health-track" role="progressbar" aria-label={`${levelData.boss.name} remaining power`} aria-valuemin={0} aria-valuemax={levelData.boss.maxHealth} aria-valuenow={bossHealth}>
                     <span style={{ width: `${Math.max(0, bossHealth / levelData.boss.maxHealth * 100)}%` }} />
                   </div>
-                  : <div className="mobile-objective-track" role="progressbar" aria-label="Level objective progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(objectivePercent)}><span style={{ width: `${objectivePercent}%` }} /></div>}
-                <div className="mobile-hud-subline">
+                  : <div className="level-objective-track" role="progressbar" aria-label="Level objective progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(objectivePercent)}><span style={{ width: `${objectivePercent}%` }} /></div>}
+                <div className="level-hud-subline">
                   <span>{levelData.boss
                     ? `${bossHealth} / ${levelData.boss.maxHealth} power`
                     : [
@@ -1076,7 +1076,7 @@ function App() {
                   <span key={score} className="score-live">{score.toLocaleString()} pts</span>
                 </div>
               </div>
-              <div className="mobile-hud-moves"><small>MOVES</small><b key={moves} className="move-tick">{moves}</b></div>
+              <div className="level-hud-moves"><small>MOVES</small><b key={moves} className="move-tick">{moves}</b></div>
             </div>
           </div>
           <div className="play-layout" onPointerDown={registerBoardActivity} onKeyDown={registerBoardActivity}>
@@ -1126,18 +1126,17 @@ function App() {
                 <div className="objective-track-label"><span>{levelData.boss ? 'BOSS POWER DRAINED' : levelData.secondaryGoalType ? 'BOTH GOALS · LEAST COMPLETE' : 'OBJECTIVE PROGRESS'}</span><b>{Math.round(objectivePercent)}%</b></div>
                 <div className="moves-display"><span className="moves-icon">↗</span><div><small>MOVES LEFT</small><b key={moves} className="move-tick">{moves}</b></div><span className="moves-hint">Plan a<br />good one.</span></div>
               </section>
-              <div className="personal-best"><span>PERSONAL BEST</span><b>{best.toLocaleString()}</b><small>Saved on this device</small></div>
             </aside>
 
             <section className="play-board-column" aria-labelledby="board-title">
               <div className="board-title-row">
-                <div><span className="eyebrow">THE CANDY BOARD</span><h2 id="board-title">Find your next match.</h2></div>
+                <div><span className="eyebrow"><i className="board-live-dot" /> LEVEL IN PLAY</span><h2 id="board-title">Make your next move count.</h2></div>
                 <button className="icon-action" type="button" onClick={() => openGuide(false)} aria-label="How to play"><CircleHelp size={19} /></button>
               </div>
-              <div className="game-board-wrap">
+              <div className="game-board-wrap" style={{ '--board-fit-width': `${72 * levelData.columns / levelData.rows}svh` } as CSSProperties}>
                 <div className="board-top"><span>LEVEL {String(level).padStart(2, '0')}</span><span>{busy ? 'SWEET THINGS IN MOTION' : 'SWAP TO MATCH'}</span></div>
                 <JuiceBurstLayer effects={juiceBursts} />
-                <div className={`candy-board${busy ? ' resolving' : ''}${impactPulse % 2 ? ' juice-impact-a' : ' juice-impact-b'}`} style={{ '--board-columns': levelData.columns, '--board-rows': levelData.rows } as CSSProperties} role="group" aria-label="Candy puzzle board">
+                <div className={`candy-board${busy ? ' resolving' : ''}${impactPulse % 2 ? ' juice-impact-a' : ' juice-impact-b'}`} style={{ '--board-columns': levelData.columns, '--board-rows': levelData.rows, '--board-ratio': levelData.columns / levelData.rows } as CSSProperties} role="group" aria-label="Candy puzzle board">
                   <span id="board-instructions" className="visually-hidden">Choose a candy and an adjacent candy to swap, or swipe a candy. Use arrow keys to move around the board.</span>
                   {board.map((row, rowIndex) => <div className="candy-row" key={rowIndex} role="presentation">{row.map((item, colIndex) => renderCandy(item, rowIndex, colIndex))}</div>)}
                 </div>
@@ -1177,6 +1176,8 @@ function App() {
                 </div>
                 <div className="powerup-cost"><span>MOVE COST</span><b>1 move</b><i /> <span>CHARGE COST</span><b>1 charge</b></div>
               </section>
+
+              <div className="personal-best"><span>PERSONAL BEST</span><b>{best.toLocaleString()}</b><small>Saved on this device</small></div>
 
               <section className="tool-card">
                 <div className="card-heading"><span>NEED A NUDGE?</span><Lightbulb size={17} /></div>
