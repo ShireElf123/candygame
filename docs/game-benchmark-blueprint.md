@@ -74,7 +74,7 @@ These are **screen-language observations**, not a literal pixel overlay: availab
 
 This is a visual-appeal and readability pass, **not** a claim that any hue is inherently addictive. The sources support a bright, cohesive, readable, satisfying presentation; they do **not** prove a particular palette causes addiction. Candy Crush's store copy is product marketing, not behavioural research. The new palette still needs same-viewport playtesting; ask players to identify the objective, move budget, and next action before calling the design finished.
 
-**UI-only heuristic (not a user-test score):** Candy Crush is about **9/10** for cohesive visual identity and board-art polish; Jam Shift after this pass is about **8/10** for match-3 warmth and hierarchy, with the next gap being authored world-map/candy illustration depth; the original styling was about **8/10** for genre fit but **6/10** for restraint/cohesion. This is separate from the product-breadth/prototype scores above.
+**UI-only heuristic (not a user-test score):** Candy Crush is about **9/10** for cohesive visual identity and board-art polish; Jam Shift after this pass is about **8/10** for match-3 warmth and hierarchy, with the next visual gap being authored world-map/candy illustration depth; the original styling was about **8/10** for genre fit but **6/10** for restraint/cohesion. This is separate from the product-breadth/prototype scores above.
 
 **Visual references:** [Candy Crush Saga](https://play.google.com/store/apps/details?id=com.king.candycrushsaga&hl=en_US), [Soda Saga](https://play.google.com/store/apps/details?id=com.king.candycrushsodasaga&hl=en_US), [Jelly Saga](https://play.google.com/store/apps/details?id=com.king.candycrushjellysaga&hl=en_US), and [Friends Saga](https://play.google.com/store/apps/details?id=com.king.candycrush4&hl=en_US) official Play listings; [James Kirkwood, former Associate UI Director on Candy Crush](https://www.jameskirkwood.com/new-page-1); [PocketGamer's 2026 interview with Candy Crush artists](https://www.pocketgamer.biz/the-secret-ingredients-behind-the-art-of-candy-crush-saga/); [King Community art-team Q&A](https://community.king.com/en/candy-crush-saga/discussion/308930/%EF%B8%8F-we-have-their-answers-exclusive-q-a-with-our-ccs-art-team); historical [Saga](https://www.gameuidatabase.com/gameData.php?id=147), [Soda](https://www.gameuidatabase.com/gameData.php?id=434), and [Friends](https://www.gameuidatabase.com/gameData.php?id=433) screen archives; and [Jelly Saga public screenshots](https://gamerant.com/db/video-game/candy-crush-jelly-saga/). Archive images vary in date/provenance and are not treated as current device-perfect captures.
 
@@ -129,7 +129,7 @@ function resolveMove(
 
 ### How this maps to this repository
 
-- `src/game/engine.ts` contains the board helpers, specials, level definitions, move hints, and now shared mixed-objective rules.
+- `src/game/engine.ts` contains the board helpers, specials, level definitions, move hints, shared mixed-objective rules, and the layered sugar-shell state/damage helpers.
 - `src/App.tsx` renders the board and also orchestrates the asynchronous animation/cascade loop. That is appropriate for this prototype, but the next architecture step is for a pure resolver to return a replayable event trace that React only animates.
 - `src/game/save.ts` and `src/game/progress.ts` own local-save validation and campaign-star accounting.
 - `tests/game-engine.test.ts`, `tests/save.test.ts`, and `tests/app-render.test.ts` cover rules, save validation, and server rendering. Add seeded cascade traces and property/simulation tests as the rules grow.
@@ -141,12 +141,12 @@ function resolveMove(
 - [PlaytestersKitchen/match-three-js](https://github.com/PlaytestersKitchen/match-three-js) is an MIT-licensed independent engine example. Its README describes a reusable board core for moving, matching, removing, refilling, and shuffling, without game-specific turn/stat business logic.
 - [aykutkardas/ymir-js Match 3 implementation](https://github.com/aykutkardas/ymir-js/pull/30) is another MIT-repository reference. Its public implementation notes are useful for a modern blueprint: seedable randomness, cascade-step output for animation, and tests across many seeds/random swaps.
 
-**Important boundary:** King has not published Candy Crush Saga’s proprietary source code as a reusable blueprint. The references above are public gameplay documentation and independent match-three implementations. No Candy Crush source, art, branding, or copied code was used in Jam Shift. The external repositories are architecture/learning references; their existence does not imply they are King code.
+**Important boundary:** This audit did not identify an official, current King production-source repository. The GitHub links above are explicitly community/student recreations or independent match-three engineering examples; they are not King source and are not a license to reuse King material. Public gameplay guides/listings informed the comparison, and no third-party code or assets were copied into Jam Shift.
 
 ## Next best steps
 
 1. **Playtest the new milestone levels** on a real mobile viewport and tune move budgets/objective counts from observed completion rates.
 2. **Extract the cascade resolver and inject seeded randomness** so bug reports and level simulations are reproducible.
-3. **Add one original board mechanic**—for example a removable blocker or a falling ingredient—with explicit rules and its own tests before expanding the 100-level curve.
+3. **Add a second, distinct board mechanic or board shape**—for example a falling ingredient/drop objective or an irregular playable silhouette—with explicit rules and its own tests before expanding the 100-level curve.
 4. Add a readable level-data format plus a small bot/simulator to check solvability and relative difficulty.
 5. Consider daily/live events or social/cloud features only if the product actually wants a backend; keep Jam Shift’s no-paywall, local-first design intentional.
