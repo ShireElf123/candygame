@@ -1,15 +1,26 @@
-const CACHE_NAME = 'jam-shift-shell-v1';
-const APP_SHELL = ['/', '/manifest.webmanifest', '/jam-shift-icon.svg'];
+const CACHE_NAME = 'jam-shift-shell-v2';
+const APP_BASE = new URL('./', self.registration.scope).href;
+const APP_SHELL = [
+  APP_BASE,
+  new URL('./manifest.webmanifest', APP_BASE).href,
+  new URL('./jam-shift-icon.svg', APP_BASE).href,
+];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key.startsWith('jam-shift-shell-') && key !== CACHE_NAME).map(key => caches.delete(key))))
-      .then(() => self.clients.claim())
+      .then(keys => Promise.all(keys
+        .filter(key => key.startsWith('jam-shift-shell-') && key !== CACHE_NAME)
+        .map(key => caches.delete(key))))
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -21,10 +32,13 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(request)
         .then(response => {
-          if (response.ok) void caches.open(CACHE_NAME).then(cache => cache.put('/', response.clone()));
+          if (response.ok) void caches.open(CACHE_NAME).then(cache => cache.put(APP_BASE, response.clone()));
           return response;
         })
-        .catch(async () => (await caches.match(request)) || (await caches.match('/')))
+        .catch(async () => {
+          const cached = await caches.match(request);
+          return cached || await caches.match(APP_BASE);
+        }),
     );
     return;
   }
@@ -36,6 +50,6 @@ self.addEventListener('fetch', event => {
         return response;
       });
       return cached || update;
-    })
+    }),
   );
 });

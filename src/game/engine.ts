@@ -9,6 +9,19 @@ export const GLYPHS = ['✿', '●', '♥', '✦', '◆', '◉'];
 export const SIZE = 8;
 export const LEVEL_COUNT = 100;
 export type GoalType = 'score' | 'collect' | 'jelly';
+export type LevelDefinition = {
+  chapter: number;
+  chapterName: string;
+  moves: number;
+  target: number;
+  goalType: GoalType;
+  secondaryGoalType?: GoalType;
+  goalColor: number;
+  goalCount: number;
+};
+
+type ObjectiveSet = Pick<LevelDefinition, 'goalType' | 'secondaryGoalType'>;
+
 export const CHAPTERS = [
   'Sugar Garden',
   'Berry Bay',
@@ -50,13 +63,19 @@ const CHAPTER_MOVES = [
 
 const CHAPTER_TARGET_BASES = [850, 1350, 1510, 1680, 1850, 2020, 2190, 2360, 2530, 2700];
 const LEVEL_TARGET_STEPS = [0, 20, 45, 70, 95, 125, 155, 185, 215, 245];
+// Late-chapter milestones introduce a second, explicit win condition.
+const MIXED_OBJECTIVE_LEVELS = new Set([29, 39, 49, 59, 69, 79, 89, 99]);
 
-export const LEVELS = Array.from({ length: LEVEL_COUNT }, (_, i) => {
+export const LEVELS: LevelDefinition[] = Array.from({ length: LEVEL_COUNT }, (_, i) => {
   const chapterIndex = Math.floor(i / 10);
   const step = i % 10;
   const target = chapterIndex === 0
     ? [850, 900, 950, 1000, 1050, 1100, 1200, 1250, 1300, 1350][step]
     : CHAPTER_TARGET_BASES[chapterIndex] + LEVEL_TARGET_STEPS[step];
+  const goalType = CHAPTER_GOALS[chapterIndex][step];
+  const secondaryGoalType = MIXED_OBJECTIVE_LEVELS.has(i + 1)
+    ? goalType === 'score' ? 'jelly' : 'score'
+    : undefined;
   return {
     chapter: chapterIndex + 1,
     chapterName: CHAPTERS[chapterIndex],
@@ -64,13 +83,51 @@ export const LEVELS = Array.from({ length: LEVEL_COUNT }, (_, i) => {
     // in steps rather than using one steep formula for every level after level 10.
     moves: CHAPTER_MOVES[chapterIndex][step],
     target,
-    goalType: CHAPTER_GOALS[chapterIndex][step],
+    goalType,
+    ...(secondaryGoalType ? { secondaryGoalType } : {}),
     goalColor: (i + 2) % COLORS.length,
     goalCount: chapterIndex === 0
       ? 5 + Math.floor(step / 4)
       : Math.min(15, 6 + chapterIndex + Math.floor(step / 4)),
   };
 });
+
+export function goalsForLevel(level: ObjectiveSet): GoalType[] {
+  return level.secondaryGoalType ? [level.goalType, level.secondaryGoalType] : [level.goalType];
+}
+
+export function hasGoal(level: ObjectiveSet, goalType: GoalType): boolean {
+  return goalsForLevel(level).includes(goalType);
+}
+
+export function objectivesComplete(
+  level: LevelDefinition,
+  score: number,
+  collected: number,
+  jellyRemaining: number,
+): boolean {
+  return goalsForLevel(level).every(goalType => {
+    if (goalType === 'score') return score >= level.target;
+    if (goalType === 'collect') return collected >= level.goalCount;
+    return jellyRemaining === 0;
+  });
+}
+
+/** A mixed level's overall bar reflects the least-complete objective. */
+export function objectiveProgressPercent(
+  level: LevelDefinition,
+  score: number,
+  collected: number,
+  jellyRemaining: number,
+  jellyTotal: number,
+): number {
+  const percentages = goalsForLevel(level).map(goalType => {
+    if (goalType === 'score') return level.target > 0 ? Math.min(100, score / level.target * 100) : 100;
+    if (goalType === 'collect') return level.goalCount > 0 ? Math.min(100, collected / level.goalCount * 100) : 100;
+    return jellyTotal > 0 ? Math.min(100, (jellyTotal - jellyRemaining) / jellyTotal * 100) : 100;
+  });
+  return Math.min(...percentages);
+}
 
 export function createJelly(level: number): Set<string> {
   const levelIndex = Math.max(0, Math.min(LEVEL_COUNT - 1, level - 1));
@@ -297,6 +354,7 @@ export function findBestMove(
   goalType: GoalType,
   goalColor: number,
   jelly: Set<string>,
+  secondaryGoalType?: GoalType,
 ): [Pos, Pos] | null {
   let best: [Pos, Pos] | null = null;
   let bestValue = -Infinity;
@@ -322,16 +380,17 @@ export function findBestMove(
         const cleared = expandSpecials(candidate, effectMatches);
         let value = cleared.size;
 
-        if (goalType === 'collect') {
+        const goals = [goalType, ...(secondaryGoalType ? [secondaryGoalType] : [])];
+        if (goals.includes('collect')) {
           for (const key of cleared) {
             const [mr, mc] = posOf(key);
             if (candidate[mr]?.[mc]?.color === goalColor) value += 9;
           }
-        } else if (goalType === 'jelly') {
-          for (const key of cleared) if (jelly.has(key)) value += 12;
-        } else {
-          value += Math.min(20, cleared.size) * 0.35;
         }
+        if (goals.includes('jelly')) {
+          for (const key of cleared) if (jelly.has(key)) value += 12;
+        }
+        if (goals.includes('score')) value += Math.min(20, cleared.size) * 0.35;
 
         if (activatesSpecial) value += 4;
         if (value > bestValue) {
@@ -393,17 +452,10 @@ export function applySpecialSwap(board: Candy[][], a: Pos, b: Pos, existingMatch
   }
 
   if ((one === 'striped-h' || one === 'striped-v') && (two === 'striped-h' || two === 'striped-v')) {
-    // Parallel stripes clear both parallel lines; perpendicular stripes form a cross.
-    if (one === 'striped-h' && two === 'striped-h') {
-      addRow(a[0]);
-      addRow(b[0]);
-    } else if (one === 'striped-v' && two === 'striped-v') {
-      addColumn(a[1]);
-      addColumn(b[1]);
-    } else {
-      addRow(a[0]);
-      addColumn(b[1]);
-    }
+    // Any stripe + stripe swap fires one row and one column at the destination;
+    // the candies' own orientations do not turn a parallel pair into a single line.
+    addRow(b[0]);
+    addColumn(b[1]);
     return { matches, message: 'CROSS BLAST!' };
   }
 

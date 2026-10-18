@@ -1,41 +1,48 @@
-# Candy Game (Jam Shift)
+# Jam Shift — Puzzle Club
 
-A mobile-first match-3 puzzle game built with React, TypeScript, and Vite. The game includes an 8×8 candy board, cascades, special candies, campaign progression across 100 levels, score/collect/jelly objectives, boosters, and visual feedback effects.
+Jam Shift is an original, mobile-first match-three game with a polished campaign hub, ten themed worlds, a 100-level progression map, collectible stars, boosters, cascades, and offline-friendly play. It uses its own name, visual identity, candy styling, and game implementation; it does not include Candy Crush artwork or proprietary assets.
 
-## Requirements
+## What is in the build
 
-- Node.js 20 or newer (recommended)
-- npm
+- **Playable campaign:** 8×8 boards, tap/swipe/keyboard controls, match validation, cascades, striped/wrapped/color specials, three base objective families (score, color collect, jelly), and late-world mixed-goal levels that require two objectives together.
+- **Player portal:** campaign overview, world map, level previews, personal bests, star totals, and a configurable pre-level booster loadout.
+- **Player feedback:** goal-focused hints, short onboarding guide, win/loss recaps, sound effects, reduced-motion support, and clear confirmation before leaving or restarting a level.
+- **Local progress:** schema-checked browser storage with a migration path for existing Jam Shift saves. Progress and power-up counts stay on the player's device; there is no account or game backend.
+- **Installable shell:** a web app manifest and versioned service worker cache the app shell and visited assets for offline use after the first successful load.
 
 ## Run locally
+
+Requirements: Node.js 20+ and npm.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Vite prints a local development URL in the terminal.
+Vite prints the development URL. The server binds to `0.0.0.0` for local devices and preview environments.
 
-## Production build
+## Quality checks
 
 ```bash
-npm run build
+npm test       # Match rules, specials, save validation, and star accounting
+npm run typecheck
+npm run build  # Type-checks and creates the production bundle
 npm run preview
 ```
 
-The production bundle is generated in `dist/`.
+The `tests/tests.json` file contains manual gameplay QA scenarios for mobile and desktop. Automated engine, portal-render, and save-data tests live in `tests/`. GitHub Actions runs the test suite, production build, and dependency audit on pushes and pull requests to `main`.
 
 ## Project layout
 
-- `src/game/engine.ts` — board rules, match resolution helpers, specials, levels, and objectives.
-- `src/App.tsx` — game UI and interaction flow.
-- `src/components/JuiceBurstLayer.tsx` — visual effect layer.
-- `src/*.css` — layout, game styling, and animation effects.
+- `src/App.tsx` — campaign hub, world map, gameplay flow, accessibility, and recap states.
+- `src/game/engine.ts` — pure board rules, match resolution, specials, level definitions, and objectives.
+- `src/game/save.ts` — local-save validation, migration, and persistence.
+- `src/game/progress.ts` — shared campaign star-rating rules.
+- `src/components/JuiceBurstLayer.tsx` — lightweight match feedback effects.
+- `src/*.css` — global design system, responsive screens, and motion.
 - `public/` — app icon, web manifest, and service worker.
-- `tests/tests.json` — gameplay QA scenarios (scenario definitions; not proof of automated test execution).
+- `docs/game-benchmark-blueprint.md` — Candy Crush feature comparison, public references, and Jam Shift’s engine roadmap.
 
-## Notes
+## Release notes
 
-This repository contains the latest source snapshot deployed to AppDeploy. The live preview is [Jam Shift](https://jam-shift-6k5dl7.v2.appdeploy.ai/). It is an independent match-3 game and does not include Candy Crush proprietary artwork or assets.
-
-Before a store release, run the production build, add/execute engine-level automated tests, and verify gameplay, persistence, accessibility, and performance on real mobile devices.
+This repository is a polished client-side game prototype and a solid agency/demo handoff. Before a public store launch, add a backend only if accounts, cross-device sync, live events, or leaderboards are required; then run browser/device QA, tune the authored level curve, and complete store-specific privacy, legal, and accessibility reviews. No analytics, ads, purchases, or network accounts are included in this build.
