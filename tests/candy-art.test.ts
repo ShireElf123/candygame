@@ -18,6 +18,17 @@ describe('Jam Shift candy artwork', () => {
     });
   });
 
+  it('adds a per-candy glossy gradient so repeated SVGs do not share fragment ids', () => {
+    const gallery = renderToStaticMarkup(createElement('div', null,
+      createElement(CandyArt, { color: 2 }),
+      createElement(CandyArt, { color: 2 }),
+    ));
+    const gradientIds = [...gallery.matchAll(/<linearGradient id="([^"]+)"/g)].map(match => match[1]);
+    expect(gallery).toContain('stop-color="#ffb5d1"');
+    expect(gradientIds).toHaveLength(2);
+    expect(new Set(gradientIds).size).toBe(2);
+  });
+
   it('renders orientation-specific stripes and a separate wrapped/cosmic treatment', () => {
     expect(markup(0, 'striped-h')).toContain('candy-art-stripes-horizontal');
     expect(markup(1, 'striped-v')).toContain('candy-art-stripes-vertical');

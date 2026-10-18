@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import CandyArt from './components/CandyArt';
 import JuiceBurstLayer, { type JuiceBurst } from './components/JuiceBurstLayer';
+import WorldScene from './components/WorldScene';
 import {
   applySpecialSwap,
   buildSwapSpecial,
@@ -867,6 +868,7 @@ function App() {
                   </div>
                 </div>
               </div>
+              <WorldScene chapter={mapChapter} />
               <div className="level-map-grid" aria-label={`${LEVELS[mapChapter * 10].chapterName} levels`}>
                 {Array.from({ length: 10 }, (_, index) => mapChapter * 10 + index + 1).map(number => {
                   const isLocked = number > unlocked;

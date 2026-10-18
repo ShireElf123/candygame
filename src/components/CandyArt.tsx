@@ -1,3 +1,4 @@
+import { useId, type CSSProperties } from 'react';
 import type { Special } from '../game/engine';
 
 type Props = {
@@ -5,6 +6,15 @@ type Props = {
   special?: Special;
   className?: string;
 };
+
+const BODY_SHADES = [
+  ['#e3b1ff', '#a64cda', '#64288f'],
+  ['#fff1a6', '#f6c632', '#a96815'],
+  ['#ffb5d1', '#ed4d88', '#9e244f'],
+  ['#c7ffd7', '#58c879', '#237a4e'],
+  ['#b8eaff', '#4a9ae9', '#2759a8'],
+  ['#ffd5a0', '#f58c38', '#a94321'],
+];
 
 const SHAPES = [
   <g key="grape" className="candy-shape candy-shape-grapes" stroke="var(--candy-edge)" strokeWidth="1.8" strokeLinejoin="round">
@@ -74,9 +84,20 @@ function ColorBombArt() {
 }
 
 export default function CandyArt({ color, special, className }: Props) {
+  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const fillId = `candy-gloss-${instanceId}`;
+  const [highlight, midtone, shadow] = BODY_SHADES[color] ?? BODY_SHADES[0];
   const candyClass = ['candy-art', className].filter(Boolean).join(' ');
+  const artStyle = { '--candy-fill': `url(#${fillId})` } as CSSProperties;
   return (
-    <svg className={candyClass} viewBox="0 0 48 48" role="presentation" focusable="false">
+    <svg className={candyClass} style={artStyle} viewBox="0 0 48 48" role="presentation" focusable="false">
+      <defs>
+        <linearGradient id={fillId} x1="12%" y1="2%" x2="82%" y2="100%">
+          <stop offset="0%" stopColor={highlight} />
+          <stop offset="42%" stopColor={midtone} />
+          <stop offset="100%" stopColor={shadow} />
+        </linearGradient>
+      </defs>
       {special === 'color' ? ColorBombArt() : SHAPES[color] ?? SHAPES[0]}
       {special === 'striped-h' && (
         <g className="candy-art-stripes candy-art-stripes-horizontal" fill="none" stroke="#fff9e9" strokeWidth="2.4" strokeLinecap="round">
