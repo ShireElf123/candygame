@@ -8,7 +8,7 @@ export const COLORS = ['grape', 'lemon', 'berry', 'mint', 'blueberry', 'orange']
 export const GLYPHS = ['✿', '●', '♥', '✦', '◆', '◉'];
 export const SIZE = 8;
 export const LEVEL_COUNT = 100;
-export type GoalType = 'score' | 'collect' | 'jelly' | 'boss';
+export type GoalType = 'score' | 'collect' | 'jelly' | 'boss' | 'shell';
 export type BossDefinition = {
   name: string;
   epithet: string;
@@ -25,6 +25,7 @@ export type LevelDefinition = {
   secondaryGoalType?: GoalType;
   goalColor: number;
   goalCount: number;
+  shellCount?: number;
   boss?: BossDefinition;
 };
 
@@ -86,6 +87,7 @@ const CHAPTER_TARGET_BASES = [850, 1350, 1510, 1680, 1850, 2020, 2190, 2360, 253
 const LEVEL_TARGET_STEPS = [0, 20, 45, 70, 95, 125, 155, 185, 215, 245];
 // Late-chapter milestones introduce a second, explicit win condition.
 const MIXED_OBJECTIVE_LEVELS = new Set([29, 39, 49, 59, 69, 79, 89, 99]);
+const SHELL_OBJECTIVE_LEVELS = new Set([8, 18, 28, 38, 58, 78, 88, 98]);
 
 export const LEVELS: LevelDefinition[] = Array.from({ length: LEVEL_COUNT }, (_, i) => {
   const chapterIndex = Math.floor(i / 10);
@@ -97,9 +99,11 @@ export const LEVELS: LevelDefinition[] = Array.from({ length: LEVEL_COUNT }, (_,
     ? { ...CHAPTER_BOSSES[chapterIndex], maxHealth: 6 + chapterIndex }
     : undefined;
   const goalType: GoalType = boss ? 'boss' : CHAPTER_GOALS[chapterIndex][step];
-  const secondaryGoalType = !boss && MIXED_OBJECTIVE_LEVELS.has(i + 1)
-    ? goalType === 'score' ? 'jelly' : 'score'
-    : undefined;
+  const secondaryGoalType = !boss && SHELL_OBJECTIVE_LEVELS.has(i + 1)
+    ? 'shell'
+    : !boss && MIXED_OBJECTIVE_LEVELS.has(i + 1)
+      ? goalType === 'score' ? 'jelly' : 'score'
+      : undefined;
   return {
     chapter: chapterIndex + 1,
     chapterName: CHAPTERS[chapterIndex],
@@ -113,6 +117,7 @@ export const LEVELS: LevelDefinition[] = Array.from({ length: LEVEL_COUNT }, (_,
     goalCount: chapterIndex === 0
       ? 5 + Math.floor(step / 4)
       : Math.min(15, 6 + chapterIndex + Math.floor(step / 4)),
+    ...(SHELL_OBJECTIVE_LEVELS.has(i + 1) ? { shellCount: Math.min(9, 4 + chapterIndex) } : {}),
     ...(boss ? { boss } : {}),
   };
 });
@@ -131,12 +136,14 @@ export function objectivesComplete(
   collected: number,
   jellyRemaining: number,
   bossHealthRemaining = level.boss?.maxHealth ?? 0,
+  shellsCleared = 0,
 ): boolean {
   return goalsForLevel(level).every(goalType => {
     if (goalType === 'score') return score >= level.target;
     if (goalType === 'collect') return collected >= level.goalCount;
     if (goalType === 'jelly') return jellyRemaining === 0;
-    return bossHealthRemaining <= 0;
+    if (goalType === 'boss') return bossHealthRemaining <= 0;
+    return shellsCleared >= (level.shellCount ?? 0);
   });
 }
 
@@ -148,14 +155,18 @@ export function objectiveProgressPercent(
   jellyRemaining: number,
   jellyTotal: number,
   bossHealthRemaining = level.boss?.maxHealth ?? 0,
+  shellsCleared = 0,
 ): number {
   const percentages = goalsForLevel(level).map(goalType => {
     if (goalType === 'score') return level.target > 0 ? Math.min(100, score / level.target * 100) : 100;
     if (goalType === 'collect') return level.goalCount > 0 ? Math.min(100, collected / level.goalCount * 100) : 100;
     if (goalType === 'jelly') return jellyTotal > 0 ? Math.min(100, (jellyTotal - jellyRemaining) / jellyTotal * 100) : 100;
-    return level.boss && level.boss.maxHealth > 0
-      ? Math.min(100, Math.max(0, level.boss.maxHealth - bossHealthRemaining) / level.boss.maxHealth * 100)
-      : 100;
+    if (goalType === 'boss') {
+      return level.boss && level.boss.maxHealth > 0
+        ? Math.min(100, Math.max(0, level.boss.maxHealth - bossHealthRemaining) / level.boss.maxHealth * 100)
+        : 100;
+    }
+    return level.shellCount && level.shellCount > 0 ? Math.min(100, shellsCleared / level.shellCount * 100) : 100;
   });
   return Math.min(...percentages);
 }
@@ -163,6 +174,44 @@ export function objectiveProgressPercent(
 /** Bosses take one point per four cleared candies, plus momentum from cascades. */
 export function bossDamageForClear(clearedCells: number, cascade: number): number {
   return Math.max(1, Math.floor(Math.max(0, clearedCells) / 4)) + Math.max(0, cascade - 1);
+}
+
+const SUGAR_SHELL_LAYOUT: Pos[] = [
+  [1, 1], [1, 6], [2, 3], [2, 5], [3, 1], [3, 6],
+  [4, 2], [4, 5], [5, 1], [5, 6], [6, 3], [6, 5],
+];
+
+/** Deterministic layered shells for authored chapter levels; candies remain playable underneath. */
+export function createSugarShells(levelNumber: number): Map<string, number> {
+  const safeLevel = Math.max(1, Math.min(LEVEL_COUNT, Math.floor(levelNumber)));
+  const level = LEVELS[safeLevel - 1];
+  const shellCount = level.shellCount ?? 0;
+  if (!hasGoal(level, 'shell') || shellCount <= 0) return new Map();
+
+  const start = (level.chapter * 3) % SUGAR_SHELL_LAYOUT.length;
+  return new Map(Array.from({ length: shellCount }, (_, index) => {
+    const [row, column] = SUGAR_SHELL_LAYOUT[(start + index) % SUGAR_SHELL_LAYOUT.length];
+    const layers = safeLevel >= 18 && index % 4 === 0 ? 2 : 1;
+    return [keyOf(row, column), layers];
+  }));
+}
+
+export function damageSugarShells(shells: ReadonlyMap<string, number>, matchedCells: ReadonlySet<string>) {
+  const remainingShells = new Map(shells);
+  let hit = 0;
+  let cleared = 0;
+  for (const key of matchedCells) {
+    const layers = remainingShells.get(key);
+    if (!layers) continue;
+    hit++;
+    if (layers <= 1) {
+      remainingShells.delete(key);
+      cleared++;
+    } else {
+      remainingShells.set(key, layers - 1);
+    }
+  }
+  return { shells: remainingShells, hit, cleared };
 }
 
 export function createJelly(level: number): Set<string> {
@@ -391,6 +440,7 @@ export function findBestMove(
   goalColor: number,
   jelly: Set<string>,
   secondaryGoalType?: GoalType,
+  sugarShells?: Map<string, number>,
 ): [Pos, Pos] | null {
   let best: [Pos, Pos] | null = null;
   let bestValue = -Infinity;
@@ -428,6 +478,9 @@ export function findBestMove(
         }
         if (goals.includes('score')) value += Math.min(20, cleared.size) * 0.35;
         if (goals.includes('boss')) value += Math.min(20, cleared.size) * 1.5;
+        if (goals.includes('shell') && sugarShells) {
+          for (const key of cleared) if (sugarShells.has(key)) value += 15;
+        }
 
         if (activatesSpecial) value += 4;
         if (value > bestValue) {

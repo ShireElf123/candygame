@@ -10,7 +10,7 @@ import {
   Compass,
   Heart,
   Lightbulb,
-  Map,
+  Map as MapIcon,
   RotateCcw,
   Sparkles,
   Star,
@@ -29,6 +29,8 @@ import {
   clone,
   COLORS,
   createJelly,
+  createSugarShells,
+  damageSugarShells,
   dropMatches,
   expandSpecials,
   findBestMove,
@@ -74,7 +76,7 @@ const CHARACTER_PALETTES = [
 const HELP_STEPS = [
   { title: 'Swap neighbours.', detail: 'Tap one candy, then an adjacent candy — or swipe to move it. Use the arrow keys to explore the board.' },
   { title: 'Match three or more.', detail: 'Four in a row makes a stripe; five makes a color candy. T and L shapes can make a wrapped candy.' },
-  { title: 'Play every objective.', detail: 'Score points, collect the target color, clear jelly, or outmatch a chapter boss. Some later puzzles pair two goals, so finish both before moves run out.' },
+  { title: 'Play every objective.', detail: 'Score points, collect the target color, clear jelly, crack sugar shells, or outmatch a chapter boss. Some later puzzles pair two goals, so finish both before moves run out.' },
   { title: 'Save a power-up for the right moment.', detail: 'Choose a power-up, then tap a candy. Each use costs one move and one charge.' },
 ];
 
@@ -84,6 +86,7 @@ function goalDescription(levelNumber: number) {
     if (goalType === 'score') return `${config.target.toLocaleString()} points`;
     if (goalType === 'collect') return `Collect ${config.goalCount} ${COLORS[config.goalColor]} candies`;
     if (goalType === 'jelly') return `Clear ${createJelly(levelNumber).size} jelly tiles`;
+    if (goalType === 'shell') return `Crack ${config.shellCount ?? 0} sugar shells`;
     return `Defeat ${config.boss?.name ?? 'the chapter boss'}`;
   }).join(' + ');
 }
@@ -92,10 +95,11 @@ function goalGlyph(goalType: GoalType, levelNumber: number) {
   const config = LEVELS[levelNumber - 1];
   if (goalType === 'jelly') return '▧';
   if (goalType === 'collect') return GLYPHS[config.goalColor];
-  return goalType === 'boss' ? '✦' : '★';
+  if (goalType === 'shell') return '✧';
+  return '✦';
 }
 
-function goalHeadline(goalType: GoalType, levelNumber: number, score: number, collected: number, jellyLeft: number, bossHealthLeft = 0) {
+function goalHeadline(goalType: GoalType, levelNumber: number, score: number, collected: number, jellyLeft: number, bossHealthLeft = 0, shellsCleared = 0) {
   const config = LEVELS[levelNumber - 1];
   if (goalType === 'score') return score >= config.target ? 'Score target reached' : `Reach ${config.target.toLocaleString()} points`;
   if (goalType === 'collect') {
@@ -104,11 +108,15 @@ function goalHeadline(goalType: GoalType, levelNumber: number, score: number, co
       : `Collect ${config.goalCount - collected} ${COLORS[config.goalColor]} candies`;
   }
   if (goalType === 'jelly') return jellyLeft === 0 ? 'All jelly cleared' : `Clear ${jellyLeft} jelly tiles`;
+  if (goalType === 'shell') {
+    const left = Math.max(0, (config.shellCount ?? 0) - shellsCleared);
+    return left === 0 ? 'All sugar shells cracked' : `Crack ${left} sugar shells`;
+  }
   const boss = config.boss;
   return bossHealthLeft <= 0 ? `${boss?.name ?? 'The boss'} defeated!` : `Outmatch ${boss?.name ?? 'the boss'}`;
 }
 
-function goalCounter(goalType: GoalType, levelNumber: number, score: number, collected: number, jellyLeft: number, bossHealthLeft = 0) {
+function goalCounter(goalType: GoalType, levelNumber: number, score: number, collected: number, jellyLeft: number, bossHealthLeft = 0, shellsCleared = 0) {
   const config = LEVELS[levelNumber - 1];
   if (goalType === 'score') return `${Math.min(score, config.target).toLocaleString()} / ${config.target.toLocaleString()} points`;
   if (goalType === 'collect') return `${Math.min(collected, config.goalCount)} / ${config.goalCount} collected`;
@@ -116,14 +124,15 @@ function goalCounter(goalType: GoalType, levelNumber: number, score: number, col
     const total = createJelly(levelNumber).size;
     return `${total - jellyLeft} / ${total} cleared`;
   }
+  if (goalType === 'shell') return `${Math.min(shellsCleared, config.shellCount ?? 0)} / ${config.shellCount ?? 0} cracked`;
   const total = config.boss?.maxHealth ?? 0;
   return `${Math.max(0, total - bossHealthLeft)} / ${total} power drained`;
 }
 
-function objectiveProgress(levelNumber: number, score: number, collected: number, jellyLeft: number, bossHealthLeft: number) {
+function objectiveProgress(levelNumber: number, score: number, collected: number, jellyLeft: number, bossHealthLeft: number, shellsCleared: number) {
   const config = LEVELS[levelNumber - 1];
   const totalJelly = hasGoal(config, 'jelly') ? createJelly(levelNumber).size : 0;
-  return objectiveProgressPercent(config, score, collected, jellyLeft, totalJelly, bossHealthLeft);
+  return objectiveProgressPercent(config, score, collected, jellyLeft, totalJelly, bossHealthLeft, shellsCleared);
 }
 
 function trapDialogFocus(event: ReactKeyboardEvent<HTMLElement>, onEscape?: () => void) {
@@ -210,6 +219,8 @@ function App() {
   const [score, setScore] = useState(0);
   const [goalProgress, setGoalProgress] = useState(0);
   const [bossHealth, setBossHealth] = useState(LEVELS[save.level - 1].boss?.maxHealth ?? 0);
+  const [sugarShells, setSugarShells] = useState<Map<string, number>>(() => new Map());
+  const [shellsCleared, setShellsCleared] = useState(0);
   const [jelly, setJelly] = useState<Set<string>>(() => new Set());
   const [selected, setSelected] = useState<Pos | null>(null);
   const [focusedCell, setFocusedCell] = useState<Pos>([0, 0]);
@@ -297,7 +308,7 @@ function App() {
   const currentBossPalette = CHARACTER_PALETTES[levelData.boss?.color ?? 3];
   const progress = Math.min(100, score / target * 100);
   const stars = starsForScore(score, target);
-  const objectivePercent = objectiveProgress(level, score, goalProgress, jelly.size, bossHealth);
+  const objectivePercent = objectiveProgress(level, score, goalProgress, jelly.size, bossHealth, shellsCleared);
   const best = bestScores[String(level)] || 0;
   const completedCount = Object.values(completedLevels).filter(Boolean).length;
   const totalStars = useMemo(() => starsForCampaign(bestWinScores), [bestWinScores]);
@@ -372,6 +383,8 @@ function App() {
     setScore(0);
     setGoalProgress(0);
     setBossHealth(LEVELS[safeLevel - 1].boss?.maxHealth ?? 0);
+    setSugarShells(createSugarShells(safeLevel));
+    setShellsCleared(0);
     setJelly(hasGoal(LEVELS[safeLevel - 1], 'jelly') ? createJelly(safeLevel) : new Set());
     setSelected(null);
     setFocusedCell([0, 0]);
@@ -395,9 +408,9 @@ function App() {
     setEquippedBoosters([...introBoosters]);
   }, [level, unlocked, introBoosters, tutorialSeen]);
 
-  const finishMove = (nextScore: number, nextMoves: number, levelAtMove: number, nextGoalProgress: number, nextJelly: Set<string>, nextBossHealth: number) => {
+  const finishMove = (nextScore: number, nextMoves: number, levelAtMove: number, nextGoalProgress: number, nextJelly: Set<string>, nextBossHealth: number, nextShellsCleared: number) => {
     const config = LEVELS[levelAtMove - 1];
-    const goalComplete = objectivesComplete(config, nextScore, nextGoalProgress, nextJelly.size, nextBossHealth);
+    const goalComplete = objectivesComplete(config, nextScore, nextGoalProgress, nextJelly.size, nextBossHealth, nextShellsCleared);
     const finalScore = goalComplete ? nextScore + Math.max(0, nextMoves) * 100 : nextScore;
     const levelKey = String(levelAtMove);
 
@@ -405,6 +418,7 @@ function App() {
     setMoves(nextMoves);
     setGoalProgress(nextGoalProgress);
     setBossHealth(nextBossHealth);
+    setShellsCleared(nextShellsCleared);
     setJelly(new Set(nextJelly));
     setBestScores(old => ({ ...old, [levelKey]: Math.max(old[levelKey] || 0, finalScore) }));
 
@@ -433,6 +447,9 @@ function App() {
     nextMoves: number,
     levelAtMove: number,
     startingBossHealth: number,
+    startingSugarShells: Map<string, number>,
+    startingShellsCleared: number,
+    startingShellImpactCells: Set<string> = new Set(),
     runToken = gameRun.current,
   ) => {
     let current = clone(startingBoard);
@@ -440,9 +457,12 @@ function App() {
     let goalNow = goalProgress;
     let jellyNow = new Set(jelly);
     let bossHealthNow = startingBossHealth;
+    let shellsNow = new Map(startingSugarShells);
+    let shellsClearedNow = startingShellsCleared;
     let matches = new Set(initialMatches);
     let cascade = 0;
     let totalCleared = 0;
+    let totalShellsHit = 0;
 
     while (matches.size && cascade < 30) {
       cascade++;
@@ -452,6 +472,20 @@ function App() {
         const damage = bossDamageForClear(expanded.size, cascade);
         bossHealthNow = Math.max(0, bossHealthNow - damage);
         setBossHealth(bossHealthNow);
+      }
+      let shellsHitThisCascade = 0;
+      if (hasGoal(config, 'shell')) {
+        const shellImpactCells = new Set(expanded);
+        if (cascade === 1) startingShellImpactCells.forEach(key => shellImpactCells.add(key));
+        const shellDamage = damageSugarShells(shellsNow, shellImpactCells);
+        shellsNow = shellDamage.shells;
+        shellsHitThisCascade = shellDamage.hit;
+        shellsClearedNow += shellDamage.cleared;
+        if (shellsHitThisCascade > 0) {
+          totalShellsHit += shellsHitThisCascade;
+          setSugarShells(new Map(shellsNow));
+          setShellsCleared(shellsClearedNow);
+        }
       }
       if (hasGoal(config, 'collect')) {
         for (const key of expanded) {
@@ -466,9 +500,11 @@ function App() {
       setImpactPulse(value => value + 1);
       setMessage(config.boss
         ? bossHealthNow <= 0 ? `${config.boss.name} is down!` : `${config.boss.name} has ${bossHealthNow} power left.`
-        : cascade > 1
-          ? ['Sweet cascade!', 'Tasty chain!', 'Sugar rush!', 'Unstoppable!'][Math.min(3, cascade - 2)]
-          : expanded.size >= 5 ? 'Sugar rush!' : 'Nice match!');
+        : shellsHitThisCascade > 0
+          ? `${shellsHitThisCascade} sugar shell${shellsHitThisCascade === 1 ? '' : 's'} cracked!`
+          : cascade > 1
+            ? ['Sweet cascade!', 'Tasty chain!', 'Sugar rush!', 'Unstoppable!'][Math.min(3, cascade - 2)]
+            : expanded.size >= 5 ? 'Sugar rush!' : 'Nice match!');
       const burstKind: JuiceBurst['kind'] = cascade > 1 ? 'cascade' : expanded.size >= 5 ? 'special' : 'match';
       triggerBurst(Array.from(expanded), burstKind);
       playCue(cascade > 1 ? 'cascade' : expanded.size >= 5 ? 'special' : 'match', sound, cascade);
@@ -504,12 +540,13 @@ function App() {
     setFreshIds([]);
     setSelected(null);
     const objectiveConfig = LEVELS[levelAtMove - 1];
-    const objectiveMet = objectivesComplete(objectiveConfig, scoreNow, goalNow, jellyNow.size, bossHealthNow);
-    finishMove(scoreNow, nextMoves, levelAtMove, goalNow, jellyNow, bossHealthNow);
+    const objectiveMet = objectivesComplete(objectiveConfig, scoreNow, goalNow, jellyNow.size, bossHealthNow, shellsClearedNow);
+    finishMove(scoreNow, nextMoves, levelAtMove, goalNow, jellyNow, bossHealthNow, shellsClearedNow);
     if (totalCleared > 0 && nextMoves > 0 && !objectiveMet && !objectiveConfig.boss) {
-      setMessage(cascade > 1
-        ? `Cascade ×${cascade} · +${(scoreNow - startingScore).toLocaleString()}`
-        : `+${(scoreNow - startingScore).toLocaleString()} points`);
+      const pointSummary = `+${(scoreNow - startingScore).toLocaleString()} points`;
+      setMessage(totalShellsHit > 0
+        ? `Sugar shells cracked · ${pointSummary}`
+        : cascade > 1 ? `Cascade ×${cascade} · ${pointSummary}` : pointSummary);
     }
     setBusy(false);
     inputLock.current = false;
@@ -524,12 +561,15 @@ function App() {
     const startScore = score;
     const startMoves = moves;
     const startBossHealth = bossHealth;
+    const startSugarShells = new Map(sugarShells);
+    const startShellsCleared = shellsCleared;
     const original = clone(board);
     const copy = clone(board);
     [copy[a[0]][a[1]], copy[b[0]][b[1]]] = [copy[b[0]][b[1]], copy[a[0]][a[1]]];
     const itemA = copy[a[0]][a[1]];
     const itemB = copy[b[0]][b[1]];
     let matches = findMatches(copy);
+    const matchedCellsBeforeSpecial = new Set(matches);
     const specialSwap = Boolean(itemA.special || itemB.special);
 
     if (!matches.size && !specialSwap) {
@@ -569,7 +609,7 @@ function App() {
       buildSwapSpecial(copy, matches, a, b);
     }
     setBoard(copy);
-    await resolveAnimated(copy, matches, startScore, startMoves - 1, levelAtMove, startBossHealth, runToken).catch(() => {
+    await resolveAnimated(copy, matches, startScore, startMoves - 1, levelAtMove, startBossHealth, startSugarShells, startShellsCleared, matchedCellsBeforeSpecial, runToken).catch(() => {
       if (runToken === gameRun.current) {
         setBusy(false);
         inputLock.current = false;
@@ -607,7 +647,7 @@ function App() {
       }
       setArmed(null);
       setBoosterCounts(old => ({ ...old, [booster]: Math.max(0, old[booster] - 1) }));
-      void resolveAnimated(working, cleared, score, Math.max(0, moves - 1), level, bossHealth, runToken).catch(() => {
+      void resolveAnimated(working, cleared, score, Math.max(0, moves - 1), level, bossHealth, new Map(sugarShells), shellsCleared, new Set(), runToken).catch(() => {
         if (runToken === gameRun.current) {
           setBusy(false);
           inputLock.current = false;
@@ -689,7 +729,7 @@ function App() {
 
   const hintMove = () => {
     if (busy || inputLock.current || screen !== 'play') return;
-    const move = findBestMove(board, levelData.goalType, levelData.goalColor, jelly, levelData.secondaryGoalType);
+    const move = findBestMove(board, levelData.goalType, levelData.goalColor, jelly, levelData.secondaryGoalType, sugarShells);
     if (!move) {
       setHinted([]);
       setMessage('No move found — the board will reshuffle after your next turn.');
@@ -703,6 +743,7 @@ function App() {
 
   const renderCandy = (item: Candy, row: number, col: number) => {
     const cellKey = keyOf(row, col);
+    const shellLayers = sugarShells.get(cellKey) ?? 0;
     const className = [
       'candy',
       COLORS[item.color],
@@ -712,9 +753,10 @@ function App() {
       clearing.includes(cellKey) ? 'clearing' : '',
       freshIds.includes(item.id) ? 'falling' : '',
       jelly.has(cellKey) ? 'jelly' : '',
+      shellLayers ? 'sugar-shelled' : '',
       item.special || '',
     ].filter(Boolean).join(' ');
-    const candyName = `${COLORS[item.color]}${item.special ? ` ${item.special.replace('-', ' ')}` : ''} candy, row ${row + 1}, column ${col + 1}${jelly.has(cellKey) ? ', on jelly' : ''}`;
+    const candyName = `${COLORS[item.color]}${item.special ? ` ${item.special.replace('-', ' ')}` : ''} candy, row ${row + 1}, column ${col + 1}${jelly.has(cellKey) ? ', on jelly' : ''}${shellLayers ? `, in a sugar shell with ${shellLayers} layer${shellLayers === 1 ? '' : 's'} left` : ''}`;
 
     return (
       <button
@@ -753,6 +795,7 @@ function App() {
         disabled={busy}
       >
         {jelly.has(cellKey) && <span className="jelly-glaze" aria-hidden="true" />}
+        {shellLayers > 0 && <span className={`sugar-shell${shellLayers > 1 ? ' has-layers' : ''}`} aria-hidden="true"><i>✧</i>{shellLayers > 1 && <b>{shellLayers}</b>}</span>}
         <span className="candy-face" aria-hidden="true">
           <CandyArt color={item.color} special={item.special} />
         </span>
@@ -786,7 +829,7 @@ function App() {
             else if (screen === 'map') setScreen('intro');
             else openMap();
           }} aria-label={screen === 'map' ? 'Return home' : 'Open campaign map'}>
-            {screen === 'map' ? <ArrowLeft size={16} /> : <Map size={16} />}
+            {screen === 'map' ? <ArrowLeft size={16} /> : <MapIcon size={16} />}
             <span>{screen === 'map' ? 'Home' : 'World map'}</span>
           </button>
           <button className="sound-toggle" type="button" onClick={() => setSound(value => !value)} aria-label={sound ? 'Turn sound off' : 'Turn sound on'} aria-pressed={sound}>
@@ -872,7 +915,7 @@ function App() {
               </section>
 
               <button className="map-card-link" type="button" onClick={openMap}>
-                <span className="map-link-icon"><Map size={19} /></span>
+                <span className="map-link-icon"><MapIcon size={19} /></span>
                 <span><b>Explore the world map</b><small>10 worlds · 100 levels</small></span>
                 <ArrowRight size={17} />
               </button>
@@ -988,7 +1031,7 @@ function App() {
               </div>
               <div className="mobile-hud-copy">
                 <span className="mobile-hud-kicker">{levelData.boss ? `CHAPTER BOSS · LEVEL ${String(level).padStart(2, '0')}` : `LEVEL ${String(level).padStart(2, '0')} · ${levelData.chapterName}`}</span>
-                <b>{levelData.boss?.name ?? goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth)}</b>
+                <b>{levelData.boss?.name ?? goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared)}</b>
                 {levelData.boss && <small className="mobile-boss-epithet">{levelData.boss.epithet} · “{levelData.boss.taunt}”</small>}
                 {levelData.boss
                   ? <div className="boss-health-track" role="progressbar" aria-label={`${levelData.boss.name} remaining power`} aria-valuemin={0} aria-valuemax={levelData.boss.maxHealth} aria-valuenow={bossHealth}>
@@ -996,7 +1039,12 @@ function App() {
                   </div>
                   : <div className="mobile-objective-track" role="progressbar" aria-label="Level objective progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(objectivePercent)}><span style={{ width: `${objectivePercent}%` }} /></div>}
                 <div className="mobile-hud-subline">
-                  <span>{levelData.boss ? `${bossHealth} / ${levelData.boss.maxHealth} power` : goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth)}</span>
+                  <span>{levelData.boss
+                    ? `${bossHealth} / ${levelData.boss.maxHealth} power`
+                    : [
+                      goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared),
+                      ...(levelData.secondaryGoalType ? [goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared)] : []),
+                    ].join(' · ')}</span>
                   <span>{score.toLocaleString()} pts</span>
                 </div>
               </div>
@@ -1035,15 +1083,15 @@ function App() {
                 <div className="objective-copy">
                   <span className="objective-glyph">{goalGlyph(levelData.goalType, level)}</span>
                   <div>
-                    <b>{goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth)}</b>
-                    <small>{goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth)}</small>
+                    <b>{goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared)}</b>
+                    <small>{goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared)}</small>
                   </div>
                 </div>
                 {levelData.secondaryGoalType && <div className="objective-secondary">
                   <span className="objective-secondary-icon" aria-hidden="true">{goalGlyph(levelData.secondaryGoalType, level)}</span>
                   <div>
-                    <b>{goalHeadline(levelData.secondaryGoalType, level, score, goalProgress, jelly.size)}</b>
-                    <small>{goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size)}</small>
+                    <b>{goalHeadline(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared)}</b>
+                    <small>{goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared)}</small>
                   </div>
                 </div>}
                 <div className="objective-track" role="progressbar" aria-label={levelData.boss ? `${levelData.boss.name} power drained` : levelData.secondaryGoalType ? 'Both level objectives progress' : 'Level objective progress'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(objectivePercent)}><span style={{ width: `${objectivePercent}%` }} /></div>
@@ -1134,7 +1182,7 @@ function App() {
               <button className="primary-button result-action" type="button" ref={resultActionRef} onClick={() => level < LEVEL_COUNT ? startLevel(level + 1) : setScreen('map')}>
                 {level < LEVEL_COUNT ? 'Next level' : 'Explore the map'} <ArrowRight size={18} />
               </button>
-              <button className="text-button result-secondary" type="button" onClick={() => { setMapChapter(Math.floor((level - 1) / 10)); setMapSelectedLevel(level); setScreen('map'); }}><Map size={16} /> Campaign map</button>
+              <button className="text-button result-secondary" type="button" onClick={() => { setMapChapter(Math.floor((level - 1) / 10)); setMapSelectedLevel(level); setScreen('map'); }}><MapIcon size={16} /> Campaign map</button>
             </> : <>
               <div className="result-art result-art-lose" aria-hidden="true">{levelData.boss
                 ? <CharacterArt kind="boss" color={currentBossPalette.color} accent={currentBossPalette.accent} />
@@ -1148,7 +1196,7 @@ function App() {
               <button className="primary-button result-action" type="button" ref={resultActionRef} onClick={() => startLevel(level, 3)}>
                 Retry with +3 moves <RotateCcw size={17} />
               </button>
-              <button className="text-button result-secondary" type="button" onClick={() => { setMapChapter(Math.floor((level - 1) / 10)); setMapSelectedLevel(level); setScreen('map'); }}><Map size={16} /> Campaign map</button>
+              <button className="text-button result-secondary" type="button" onClick={() => { setMapChapter(Math.floor((level - 1) / 10)); setMapSelectedLevel(level); setScreen('map'); }}><MapIcon size={16} /> Campaign map</button>
             </>}
           </section>
         </div>
@@ -1158,7 +1206,7 @@ function App() {
         <div className="modal-backdrop">
           <section className="modal-card confirm-card" role="dialog" aria-modal="true" aria-labelledby="leave-title" onKeyDown={event => trapDialogFocus(event, () => setShowLeaveConfirm(false))}>
             <button className="modal-close" type="button" onClick={() => setShowLeaveConfirm(false)} aria-label="Stay in the level"><X size={19} /></button>
-            <div className="modal-icon"><Map size={24} /></div>
+            <div className="modal-icon"><MapIcon size={24} /></div>
             <span className="eyebrow">PAUSE FOR A MOMENT</span>
             <h2 id="leave-title">Leave this puzzle?</h2>
             <p>Your current round will end, but your campaign progress and boosters are safe.</p>

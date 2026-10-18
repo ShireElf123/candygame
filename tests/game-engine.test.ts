@@ -5,6 +5,8 @@ import {
   buildSwapSpecial,
   COLORS,
   createJelly,
+  createSugarShells,
+  damageSugarShells,
   dropMatches,
   expandSpecials,
   findBestMove,
@@ -218,6 +220,31 @@ describe('special candy rules', () => {
     expect(bossDamageForClear(8, 1)).toBe(2);
     expect(bossDamageForClear(3, 2)).toBe(2);
     expect(bossDamageForClear(-1, 0)).toBe(1);
+  });
+
+  it('adds deterministic layered sugar shells as a second objective', () => {
+    const firstShellLevel = LEVELS[7];
+    const firstShells = createSugarShells(8);
+    expect(firstShellLevel.secondaryGoalType).toBe('shell');
+    expect(firstShells).toEqual(createSugarShells(8));
+    expect(firstShells.size).toBe(firstShellLevel.shellCount);
+    expect([...firstShells.values()].every(layers => layers === 1)).toBe(true);
+    expect(createSugarShells(7).size).toBe(0);
+
+    expect(objectivesComplete(firstShellLevel, 0, firstShellLevel.goalCount, 0, 0, 0)).toBe(false);
+    expect(objectivesComplete(firstShellLevel, 0, firstShellLevel.goalCount, 0, 0, firstShellLevel.shellCount)).toBe(true);
+    expect(objectiveProgressPercent(firstShellLevel, 0, firstShellLevel.goalCount, 0, 0, 0, 0)).toBe(0);
+    expect(objectiveProgressPercent(firstShellLevel, 0, firstShellLevel.goalCount, 0, 0, 0, firstShellLevel.shellCount)).toBe(100);
+
+    const laterShells = createSugarShells(18);
+    expect([...laterShells.values()].some(layers => layers === 2)).toBe(true);
+
+    const start = new Map([['one-layer', 1], ['two-layer', 2]]);
+    const hit = damageSugarShells(start, new Set(['one-layer', 'two-layer', 'empty']));
+    expect(hit.hit).toBe(2);
+    expect(hit.cleared).toBe(1);
+    expect(hit.shells).toEqual(new Map([['two-layer', 1]]));
+    expect(start).toEqual(new Map([['one-layer', 1], ['two-layer', 2]]));
   });
 
   it('marks jelly cells deterministically and keeps campaign star tiers consistent', () => {
