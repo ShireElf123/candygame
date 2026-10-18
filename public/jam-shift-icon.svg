@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#39304f"/><stop offset="1" stop-color="#141521"/></linearGradient>
-    <linearGradient id="sweet" x1=".15" y1="0" x2=".85" y2="1"><stop stop-color="#f1ffb7"/><stop offset=".5" stop-color="#c7eb69"/><stop offset="1" stop-color="#82b74f"/></linearGradient>
-    <filter id="shadow" x="-.25" y="-.25" width="1.5" height="1.6"><feDropShadow dx="0" dy="18" stdDeviation="15" flood-color="#05040c" flood-opacity=".45"/></filter>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff7e9"/><stop offset=".56" stop-color="#ffe3ef"/><stop offset="1" stop-color="#cceef6"/></linearGradient>
+    <linearGradient id="jam" x1=".12" y1="0" x2=".84" y2="1"><stop stop-color="#f77eb5"/><stop offset=".48" stop-color="#d12e78"/><stop offset="1" stop-color="#a51e5e"/></linearGradient>
+    <filter id="shadow" x="-.3" y="-.3" width="1.6" height="1.7"><feDropShadow dx="0" dy="18" stdDeviation="15" flood-color="#74445f" flood-opacity=".28"/></filter>
   </defs>
   <rect width="512" height="512" rx="116" fill="url(#bg)"/>
-  <circle cx="255" cy="250" r="190" fill="#d7f477" opacity=".06"/>
-  <circle cx="414" cy="104" r="9" fill="#ff947c"/>
-  <path d="M257 79c22 0 41 14 48 35 19-11 43-7 58 8s19 38 9 58c21 7 35 26 35 49s-14 42-35 49c10 20 6 43-9 58s-39 19-58 8c-7 21-26 35-48 35s-41-14-48-35c-19 11-43 7-58-8s-19-38-9-58c-21-7-35-26-35-49s14-42 35-49c-10-20-6-43 9-58s39-19 58-8c7-21 26-35 48-35z" fill="url(#sweet)" stroke="#f6ffd8" stroke-width="9" filter="url(#shadow)"/>
-  <path d="M162 166c26-29 59-42 91-39" fill="none" stroke="#fff" stroke-width="17" stroke-linecap="round" opacity=".77"/>
-  <path d="M358 100l8 19 21 2-16 13 5 21-18-12-18 12 5-21-16-13 21-2z" fill="#ffae94"/>
-  <text x="255" y="301" text-anchor="middle" font-family="ui-sans-serif,system-ui,sans-serif" font-weight="900" font-size="186" fill="#20231b" letter-spacing="-16">J</text>
+  <circle cx="105" cy="109" r="16" fill="#fff" opacity=".72"/>
+  <circle cx="417" cy="375" r="24" fill="#fff" opacity=".52"/>
+  <path d="M256 78c22 0 41 14 48 35 19-11 43-7 58 8s19 38 9 58c21 7 35 26 35 49s-14 42-35 49c10 20 6 43-9 58s-39 19-58 8c-7 21-26 35-48 35s-41-14-48-35c-19 11-43 7-58-8s-19-38-9-58c-21-7-35-26-35-49s14-42 35-49c-10-20-6-43 9-58s39-19 58-8c7-21 26-35 48-35z" fill="url(#jam)" stroke="#fffaf5" stroke-width="12" filter="url(#shadow)"/>
+  <path d="M158 166c27-30 60-43 94-39" fill="none" stroke="#fff" stroke-width="18" stroke-linecap="round" opacity=".76"/>
+  <path d="M363 91l10 24 27 2-21 17 6 26-22-14-22 14 6-26-21-17 27-2z" fill="#ffd24a" stroke="#fff8db" stroke-width="5" stroke-linejoin="round"/>
+  <text x="256" y="313" text-anchor="middle" font-family="ui-sans-serif,system-ui,sans-serif" font-weight="900" font-size="197" fill="#fff8f0" letter-spacing="-14" paint-order="stroke" stroke="#9c205b" stroke-width="7">J</text>
 </svg>

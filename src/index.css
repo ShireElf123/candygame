@@ -1,33 +1,40 @@
 /* Jam Shift — an original, offline-friendly match-three experience. */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --ink-950: #100f19;
-  --ink-900: #151421;
-  --ink-850: #1b1929;
-  --ink-800: #222033;
-  --ink-750: #2a273c;
-  --ink-700: #353149;
-  --line: rgba(255, 255, 255, .09);
-  --line-strong: rgba(255, 255, 255, .16);
-  --text: #f8f5ff;
-  --text-soft: #d6d2e2;
-  --muted: #9995ab;
-  --muted-strong: #b7b2c8;
-  --lime: #d5f477;
-  --lime-deep: #b2db4b;
-  --coral: #ff947c;
-  --lilac: #b49aff;
-  --sky: #8de0ed;
-  --gold: #ffd673;
-  --surface-shadow: 0 24px 70px rgba(2, 2, 11, .28);
+  --ink-950: #fff8ed;
+  --ink-900: #fff3e4;
+  --ink-850: #fffdf9;
+  --ink-800: #fbeaf1;
+  --ink-750: #f5dce8;
+  --ink-700: #e9cbdc;
+  --line: rgba(103, 50, 79, .13);
+  --line-strong: rgba(103, 50, 79, .23);
+  --text: #44263f;
+  --text-soft: #674e65;
+  --muted: #72586d;
+  --muted-strong: #644a60;
+  --berry: #c92872;
+  --berry-light: #f17bb5;
+  --berry-deep: #8f1e56;
+  --blue: #2d77c7;
+  --lime: #8caf39;
+  --lime-deep: #6e9026;
+  --coral: #dc7159;
+  --lilac: #9165c6;
+  --sky: #4eafcf;
+  --gold: #99620b;
+  --mint: #5aae66;
+  --paper: #fff5e6;
+  --board: #405a85;
+  --surface-shadow: 0 20px 52px rgba(103, 50, 79, .15);
 }
 
 * { box-sizing: border-box; }
-html { min-width: 320px; min-height: 100%; background: var(--ink-950); scroll-behavior: smooth; }
+html { min-width: 320px; min-height: 100%; background: var(--paper); scroll-behavior: smooth; }
 body {
   margin: 0;
   min-width: 320px;
@@ -35,9 +42,10 @@ body {
   min-height: 100svh;
   color: var(--text);
   background:
-    radial-gradient(ellipse at 11% 0%, rgba(100, 77, 166, .18), transparent 34rem),
-    radial-gradient(ellipse at 95% 24%, rgba(52, 124, 135, .12), transparent 34rem),
-    linear-gradient(155deg, #171523 0%, #11111b 54%, #121a20 100%);
+    radial-gradient(ellipse at 6% 0%, rgba(255, 195, 222, .58), transparent 31rem),
+    radial-gradient(ellipse at 96% 13%, rgba(189, 234, 246, .72), transparent 34rem),
+    radial-gradient(ellipse at 52% 100%, rgba(204, 235, 174, .48), transparent 36rem),
+    linear-gradient(155deg, #fff7e9 0%, #fffafd 52%, #edf8fc 100%);
   background-attachment: fixed;
   font-size: 14px;
 }
@@ -47,18 +55,18 @@ body::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: .24;
-  background-image: radial-gradient(rgba(255, 255, 255, .13) .7px, transparent .7px);
-  background-size: 22px 22px;
+  opacity: .14;
+  background-image: radial-gradient(rgba(103, 50, 79, .3) .7px, transparent .7px);
+  background-size: 24px 24px;
   mask-image: linear-gradient(to bottom, black, transparent 82%);
 }
 button { color: inherit; font: inherit; cursor: pointer; }
 button:disabled { cursor: not-allowed; }
 button:focus-visible, a:focus-visible {
-  outline: 3px solid var(--lime);
+  outline: 3px solid var(--berry);
   outline-offset: 3px;
 }
-::selection { color: #181526; background: var(--lime); }
+::selection { color: #fff; background: var(--berry); }
 .visually-hidden {
   position: absolute !important;
   width: 1px !important;
@@ -103,11 +111,11 @@ button:focus-visible, a:focus-visible {
   height: 39px;
   display: grid;
   place-items: center;
-  color: #171326;
-  background: linear-gradient(145deg, #f0ffad, #c4e968 64%, #a6cf51);
-  border: 1px solid rgba(255, 255, 255, .45);
+  color: #fff;
+  background: linear-gradient(145deg, #d12e78, #c02870 64%, #a51e5e);
+  border: 1px solid rgba(255, 255, 255, .82);
   border-radius: 13px;
-  box-shadow: 0 5px 20px rgba(197, 232, 93, .15), inset 0 1px 0 rgba(255, 255, 255, .75);
+  box-shadow: 0 5px 18px rgba(201, 40, 114, .2), inset 0 1px 0 rgba(255, 255, 255, .82);
   transform: rotate(-4deg);
 }
 .brand-copy {

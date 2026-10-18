@@ -23,6 +23,40 @@ The score is a practical product assessment, not a measured fun or visual-qualit
 2. **Striped-pair correction.** Two striped candies now clear one full row and one full column at the swap destination regardless of whether their stripes are parallel or perpendicular. Previously, parallel pairs could clear only their shared line. Regression tests cover all four orientation cases.
 3. **Shared rule helpers.** `src/game/engine.ts` now owns the common goal-list, completion, and aggregate-progress rules, so the UI, hint system, and win check agree about mixed goals.
 
+## Visual and UI comparison: Candy Crush and Jam Shift
+
+**Scope and limits:** I inspected Jam Shift's current CSS/UI structure, the original `f83d8bf` styling, the current Google Play listing/screenshots, and public Candy Crush reference screenshots. The Game UI Database archive is historical (the game entry is 2012 and its gameplay captures include 2020 screens), so it is used for visual principles—not as proof that every screen is the exact 2026 build. This is a source-and-reference review, not a same-device pixel comparison or audience playtest. Jam Shift's swatches are original design choices, not sampled Candy Crush brand values.
+
+### What Candy Crush is doing visually
+
+- **Separates the world from the playfield.** Public screenshots show warm pink/cream UI and illustrated scenery around a blue/slate board; the candies are the highest-saturation, highest-detail objects. A darker playfield can make the pieces pop without making the entire game feel dark.
+- **Uses deliberately different art treatments.** Candy Crush's former Associate UI Director describes highly rendered 3D game pieces alongside 2D paper-craft environments, joined by the UI. In a 2026 interview, King artists describe flat, paper-textured 2D art contrasted with glossy, edible-looking 3D pieces, bright modern colour, vector art, and snappy animation. That contrast is part of a consistent art system—not a reason to apply gradients to every element.
+- **Makes pieces legible at a glance.** Distinct candy silhouettes, surface shine/shading, and special-candy markings help the board read quickly. James Kirkwood also notes that simplifying the pre-level popup made it more harmonious and that the target stayed highlighted through the end-of-game flow. Those are useful hierarchy principles; they don't require reproducing Candy Crush's screens.
+
+### Side-by-side with Jam Shift
+
+| Dimension | Candy Crush reference | Jam Shift after the UI pass | Original styling at `f83d8bf` |
+| --- | --- | --- | --- |
+| Overall palette | Bright candy objects; warm pink/cream UI; sky/blue accents; gold rewards; pastel illustrated map | Sugar-paper cream/sky world, deep-plum text, berry CTA, blue information accents, gold rewards, mint success states | Sky-to-green backdrop, blush/pink bevelled panels and buttons, bright blue score/goal ribbon, gold stars, plus purple/cyan arcade accents |
+| Board and pieces | Blue/slate playfield contrasts with glossy, distinct candy shapes | Sky-blue raised frame and slate-blue grid, now with six original SVG candy silhouettes, surface glints, and explicit special-candy markings | Blue playfield and glossy saturated gradients; closer to classic match-3 language, but pieces were primarily gradient tiles with glyphs |
+| Shell and hierarchy | Chunky, playful UI; goal/moves stay prominent; scenery and board have distinct roles | Warm card system; mission and move count remain ahead of the board on mobile; stronger contrast and larger labels; desktop side rails remain | Stronger candy-game mood, but busy pre-level card and a mix of pastel bevels and neon accents |
+| Map/progression | Illustrated, themed world-map language | Pastel paper surfaces and clearer current/complete/locked level states; still a chapter grid rather than a scenic illustrated map | Bright coloured level nodes and a candy-like raised-button treatment |
+
+**Your recollection was right:** the original styling was closer to Candy Crush's *genre cues*—pink, blue, gold, glossy buttons, stars, and a bright map—than the dark-and-lime refresh. That isn't evidence the original copied Candy Crush artwork; these are broad match-3 conventions. The new pass restores warmth while keeping Jam Shift's own layouts, plum/berry identity, and original candy art.
+
+### Implemented visual changes
+
+- Added a warm light palette and role-based colours: paper/sky surfaces, plum text, berry actions, blue navigation/information, gold stars, and mint success states. White text on the berry CTA stop `#D12E78` is about **4.8:1**; the blue `#2D77C7` is about **4.6:1** against white.
+- Restyled the hub, chapter map, mission/HUD, power-up cards, focus states, help/result dialogs, board frame, browser theme colour, PWA manifest, and app icon; bumped the service-worker shell cache so updated offline assets refresh. The actual board stays slate blue so the brighter candy pieces have contrast; lime is now a small accent rather than the dominant action colour.
+- Added `src/components/CandyArt.tsx`: six original colour-plus-shape SVG candies (grape cluster, lemon, berry, mint square, blueberry, and orange lozenge), plus separate stripe/wrap/rainbow special marks. The candy buttons keep their accessible colour/special/row/column labels.
+- Raised important small labels and updated selection/juice effects to the berry/gold/sky palette. The current chapter-grid layout remains intentionally simple; a fully illustrated route/world map is a separate art-production task.
+
+This is a visual-appeal and readability pass, **not** a claim that any hue is inherently addictive. The sources support a bright, cohesive, readable, satisfying presentation; they do **not** prove a particular palette causes addiction. Candy Crush's store copy is product marketing, not behavioural research. The new palette still needs same-viewport playtesting; ask players to identify the objective, move budget, and next action before calling the design finished.
+
+**UI-only heuristic (not a user-test score):** Candy Crush is about **9/10** for cohesive visual identity and board-art polish; Jam Shift after this pass is about **8/10** for match-3 warmth and hierarchy, with the next gap being authored world-map/candy illustration depth; the original styling was about **8/10** for genre fit but **6/10** for restraint/cohesion. This is separate from the product-breadth/prototype scores above.
+
+**Visual references:** [King's current Google Play listing](https://play.google.com/store/apps/details?id=com.king.candycrushsaga&hl=en_US); [James Kirkwood, former Associate UI Director on Candy Crush](https://www.jameskirkwood.com/new-page-1); [PocketGamer's 2026 interview with Candy Crush artists](https://www.pocketgamer.biz/the-secret-ingredients-behind-the-art-of-candy-crush-saga/); [King Community art-team Q&A](https://community.king.com/en/candy-crush-saga/discussion/308930/%EF%B8%8F-we-have-their-answers-exclusive-q-a-with-our-ccs-art-team); [Game UI Database's historical Candy Crush screen archive](https://www.gameuidatabase.com/gameData.php?id=147).
+
 ## Blueprint: a maintainable match-three stack
 
 ```text

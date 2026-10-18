@@ -4,6 +4,7 @@ import App from './App';
 import './index.css';
 import './pro.css';
 import './juice.css';
+import './theme.css';
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

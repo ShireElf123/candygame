@@ -18,6 +18,7 @@ import {
   VolumeX,
   X,
 } from 'lucide-react';
+import CandyArt from './components/CandyArt';
 import JuiceBurstLayer, { type JuiceBurst } from './components/JuiceBurstLayer';
 import {
   applySpecialSwap,
@@ -714,10 +715,9 @@ function App() {
         tabIndex={focusedCell[0] === row && focusedCell[1] === col ? 0 : -1}
         disabled={busy}
       >
-        <span className="candy-shine" aria-hidden="true" />
         {jelly.has(cellKey) && <span className="jelly-glaze" aria-hidden="true" />}
         <span className="candy-face" aria-hidden="true">
-          {item.special === 'striped-h' ? '↔' : item.special === 'striped-v' ? '↕' : item.special === 'wrapped' ? '✹' : item.special === 'color' ? '✧' : GLYPHS[item.color]}
+          <CandyArt color={item.color} special={item.special} />
         </span>
       </button>
     );
@@ -768,9 +768,9 @@ function App() {
               <div className="hero-art" aria-hidden="true">
                 <span className="orbit orbit-one" />
                 <span className="orbit orbit-two" />
-                <span className="hero-candy hero-candy-one">✿</span>
-                <span className="hero-candy hero-candy-two">◆</span>
-                <span className="hero-candy hero-candy-three">♥</span>
+                <span className="hero-candy hero-candy-one"><CandyArt color={2} /></span>
+                <span className="hero-candy hero-candy-two"><CandyArt color={4} /></span>
+                <span className="hero-candy hero-candy-three"><CandyArt color={1} /></span>
                 <span className="hero-spark hero-spark-one">✦</span>
                 <span className="hero-spark hero-spark-two">✧</span>
               </div>
