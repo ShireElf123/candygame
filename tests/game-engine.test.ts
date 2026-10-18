@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applySpecialSwap,
+  bossDamageForClear,
   buildSwapSpecial,
   COLORS,
   createJelly,
@@ -197,6 +198,26 @@ describe('special candy rules', () => {
     const scoreAndCollect = LEVELS.find(level => level.secondaryGoalType && hasGoal(level, 'score') && hasGoal(level, 'collect'))!;
     expect(objectivesComplete(scoreAndCollect, scoreAndCollect.target - 1, scoreAndCollect.goalCount, 0)).toBe(false);
     expect(objectivesComplete(scoreAndCollect, scoreAndCollect.target, scoreAndCollect.goalCount, 0)).toBe(true);
+  });
+
+  it('adds a named boss finale to every chapter and tracks remaining boss power', () => {
+    const bossLevels = LEVELS.filter(level => level.boss);
+    expect(bossLevels).toHaveLength(10);
+    expect(bossLevels.map(level => LEVELS.indexOf(level) + 1)).toEqual([10, 20, 30, 40, 50, 60, 70, 80, 90, 100]);
+    expect(new Set(bossLevels.map(level => level.boss?.name)).size).toBe(10);
+
+    const finale = bossLevels[0];
+    const boss = finale.boss!;
+    expect(goalsForLevel(finale)).toEqual(['boss']);
+    expect(objectivesComplete(finale, 0, 0, 0, boss.maxHealth)).toBe(false);
+    expect(objectivesComplete(finale, 0, 0, 0, 0)).toBe(true);
+    expect(objectiveProgressPercent(finale, 0, 0, 0, 0, boss.maxHealth)).toBe(0);
+    expect(objectiveProgressPercent(finale, 0, 0, 0, 0, Math.floor(boss.maxHealth / 2))).toBe(50);
+    expect(objectiveProgressPercent(finale, 0, 0, 0, 0, 0)).toBe(100);
+    expect(bossDamageForClear(3, 1)).toBe(1);
+    expect(bossDamageForClear(8, 1)).toBe(2);
+    expect(bossDamageForClear(3, 2)).toBe(2);
+    expect(bossDamageForClear(-1, 0)).toBe(1);
   });
 
   it('marks jelly cells deterministically and keeps campaign star tiers consistent', () => {

@@ -8,7 +8,14 @@ export const COLORS = ['grape', 'lemon', 'berry', 'mint', 'blueberry', 'orange']
 export const GLYPHS = ['✿', '●', '♥', '✦', '◆', '◉'];
 export const SIZE = 8;
 export const LEVEL_COUNT = 100;
-export type GoalType = 'score' | 'collect' | 'jelly';
+export type GoalType = 'score' | 'collect' | 'jelly' | 'boss';
+export type BossDefinition = {
+  name: string;
+  epithet: string;
+  color: number;
+  maxHealth: number;
+  taunt: string;
+};
 export type LevelDefinition = {
   chapter: number;
   chapterName: string;
@@ -18,6 +25,7 @@ export type LevelDefinition = {
   secondaryGoalType?: GoalType;
   goalColor: number;
   goalCount: number;
+  boss?: BossDefinition;
 };
 
 type ObjectiveSet = Pick<LevelDefinition, 'goalType' | 'secondaryGoalType'>;
@@ -34,6 +42,19 @@ export const CHAPTERS = [
   'Starfall Summit',
   'Royal Candy Castle',
 ] as const;
+
+const CHAPTER_BOSSES: Omit<BossDefinition, 'maxHealth'>[] = [
+  { name: 'Captain Crumble', epithet: 'Cookie corsair', color: 5, taunt: 'Catch me if you can!' },
+  { name: 'Berry Bandit', epithet: 'Jam jar juggler', color: 2, taunt: 'This berry haul is mine!' },
+  { name: 'Zest Zapper', epithet: 'Lagoon lightning', color: 1, taunt: 'Ready for a sour surprise?' },
+  { name: 'Mallow Muncher', epithet: 'Meadow mischief-maker', color: 3, taunt: 'The meadow is my snack!' },
+  { name: 'Midnight Moth', epithet: 'Market moonlighter', color: 0, taunt: 'You will never catch my sparkle.' },
+  { name: 'Crystal Crumbler', epithet: 'Cavern keeper', color: 4, taunt: 'One crack and the crystals are mine.' },
+  { name: 'Neon Nibbler', epithet: 'Orchard night owl', color: 0, taunt: 'Let us light up this board!' },
+  { name: 'Frost Flurry', epithet: 'Peak snow-sprite', color: 4, taunt: 'A chilly challenge awaits!' },
+  { name: 'Comet Cookie', epithet: 'Starfall showstopper', color: 5, taunt: 'Make a wish, then make a match!' },
+  { name: 'Crowned Caramel', epithet: 'Castle confectioner', color: 1, taunt: 'The crown stays with me!' },
+];
 
 const CHAPTER_GOALS: GoalType[][] = [
   ['score', 'score', 'score', 'score', 'collect', 'jelly', 'score', 'collect', 'jelly', 'score'],
@@ -72,8 +93,11 @@ export const LEVELS: LevelDefinition[] = Array.from({ length: LEVEL_COUNT }, (_,
   const target = chapterIndex === 0
     ? [850, 900, 950, 1000, 1050, 1100, 1200, 1250, 1300, 1350][step]
     : CHAPTER_TARGET_BASES[chapterIndex] + LEVEL_TARGET_STEPS[step];
-  const goalType = CHAPTER_GOALS[chapterIndex][step];
-  const secondaryGoalType = MIXED_OBJECTIVE_LEVELS.has(i + 1)
+  const boss = step === 9
+    ? { ...CHAPTER_BOSSES[chapterIndex], maxHealth: 6 + chapterIndex }
+    : undefined;
+  const goalType: GoalType = boss ? 'boss' : CHAPTER_GOALS[chapterIndex][step];
+  const secondaryGoalType = !boss && MIXED_OBJECTIVE_LEVELS.has(i + 1)
     ? goalType === 'score' ? 'jelly' : 'score'
     : undefined;
   return {
@@ -85,10 +109,11 @@ export const LEVELS: LevelDefinition[] = Array.from({ length: LEVEL_COUNT }, (_,
     target,
     goalType,
     ...(secondaryGoalType ? { secondaryGoalType } : {}),
-    goalColor: (i + 2) % COLORS.length,
+    goalColor: boss?.color ?? (i + 2) % COLORS.length,
     goalCount: chapterIndex === 0
       ? 5 + Math.floor(step / 4)
       : Math.min(15, 6 + chapterIndex + Math.floor(step / 4)),
+    ...(boss ? { boss } : {}),
   };
 });
 
@@ -105,11 +130,13 @@ export function objectivesComplete(
   score: number,
   collected: number,
   jellyRemaining: number,
+  bossHealthRemaining = level.boss?.maxHealth ?? 0,
 ): boolean {
   return goalsForLevel(level).every(goalType => {
     if (goalType === 'score') return score >= level.target;
     if (goalType === 'collect') return collected >= level.goalCount;
-    return jellyRemaining === 0;
+    if (goalType === 'jelly') return jellyRemaining === 0;
+    return bossHealthRemaining <= 0;
   });
 }
 
@@ -120,13 +147,22 @@ export function objectiveProgressPercent(
   collected: number,
   jellyRemaining: number,
   jellyTotal: number,
+  bossHealthRemaining = level.boss?.maxHealth ?? 0,
 ): number {
   const percentages = goalsForLevel(level).map(goalType => {
     if (goalType === 'score') return level.target > 0 ? Math.min(100, score / level.target * 100) : 100;
     if (goalType === 'collect') return level.goalCount > 0 ? Math.min(100, collected / level.goalCount * 100) : 100;
-    return jellyTotal > 0 ? Math.min(100, (jellyTotal - jellyRemaining) / jellyTotal * 100) : 100;
+    if (goalType === 'jelly') return jellyTotal > 0 ? Math.min(100, (jellyTotal - jellyRemaining) / jellyTotal * 100) : 100;
+    return level.boss && level.boss.maxHealth > 0
+      ? Math.min(100, Math.max(0, level.boss.maxHealth - bossHealthRemaining) / level.boss.maxHealth * 100)
+      : 100;
   });
   return Math.min(...percentages);
+}
+
+/** Bosses take one point per four cleared candies, plus momentum from cascades. */
+export function bossDamageForClear(clearedCells: number, cascade: number): number {
+  return Math.max(1, Math.floor(Math.max(0, clearedCells) / 4)) + Math.max(0, cascade - 1);
 }
 
 export function createJelly(level: number): Set<string> {
@@ -391,6 +427,7 @@ export function findBestMove(
           for (const key of cleared) if (jelly.has(key)) value += 12;
         }
         if (goals.includes('score')) value += Math.min(20, cleared.size) * 0.35;
+        if (goals.includes('boss')) value += Math.min(20, cleared.size) * 1.5;
 
         if (activatesSpecial) value += 4;
         if (value > bestValue) {

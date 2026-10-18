@@ -8,6 +8,7 @@ describe('Jam Shift portal shell', () => {
     const html = renderToString(createElement(App)).replaceAll('<!-- -->', '');
     expect(html).toContain('Make a little');
     expect(html).toContain('candy-art');
+    expect(html).toContain('character-art');
     expect(html).toContain('Play level 01');
     expect(html).toContain('YOUR JOURNEY');
     expect(html).toContain('Explore the world map');

@@ -19,11 +19,13 @@ import {
   X,
 } from 'lucide-react';
 import CandyArt from './components/CandyArt';
+import CharacterArt from './components/CharacterArt';
 import JuiceBurstLayer, { type JuiceBurst } from './components/JuiceBurstLayer';
 import WorldScene from './components/WorldScene';
 import {
   applySpecialSwap,
   buildSwapSpecial,
+  bossDamageForClear,
   clone,
   COLORS,
   createJelly,
@@ -60,10 +62,19 @@ const BOOSTERS: { id: Booster; icon: string; label: string; shortName: string; d
   { id: 'rainbow', icon: '🌈', label: 'Color pop', shortName: 'Color pop', description: 'Clear one color' },
 ];
 
+const CHARACTER_PALETTES = [
+  { color: '#a866d5', accent: '#603489' },
+  { color: '#f4d158', accent: '#b47c26' },
+  { color: '#ef639a', accent: '#982c60' },
+  { color: '#72d17e', accent: '#33864f' },
+  { color: '#64b9e9', accent: '#315ca3' },
+  { color: '#f3914e', accent: '#ac4939' },
+];
+
 const HELP_STEPS = [
   { title: 'Swap neighbours.', detail: 'Tap one candy, then an adjacent candy — or swipe to move it. Use the arrow keys to explore the board.' },
   { title: 'Match three or more.', detail: 'Four in a row makes a stripe; five makes a color candy. T and L shapes can make a wrapped candy.' },
-  { title: 'Play every objective.', detail: 'Score points, collect the target color, or clear jelly. Some later puzzles pair two goals, so finish both before moves run out.' },
+  { title: 'Play every objective.', detail: 'Score points, collect the target color, clear jelly, or outmatch a chapter boss. Some later puzzles pair two goals, so finish both before moves run out.' },
   { title: 'Save a power-up for the right moment.', detail: 'Choose a power-up, then tap a candy. Each use costs one move and one charge.' },
 ];
 
@@ -72,16 +83,19 @@ function goalDescription(levelNumber: number) {
   return goalsForLevel(config).map(goalType => {
     if (goalType === 'score') return `${config.target.toLocaleString()} points`;
     if (goalType === 'collect') return `Collect ${config.goalCount} ${COLORS[config.goalColor]} candies`;
-    return `Clear ${createJelly(levelNumber).size} jelly tiles`;
+    if (goalType === 'jelly') return `Clear ${createJelly(levelNumber).size} jelly tiles`;
+    return `Defeat ${config.boss?.name ?? 'the chapter boss'}`;
   }).join(' + ');
 }
 
 function goalGlyph(goalType: GoalType, levelNumber: number) {
   const config = LEVELS[levelNumber - 1];
-  return goalType === 'jelly' ? '▧' : goalType === 'collect' ? GLYPHS[config.goalColor] : '★';
+  if (goalType === 'jelly') return '▧';
+  if (goalType === 'collect') return GLYPHS[config.goalColor];
+  return goalType === 'boss' ? '✦' : '★';
 }
 
-function goalHeadline(goalType: GoalType, levelNumber: number, score: number, collected: number, jellyLeft: number) {
+function goalHeadline(goalType: GoalType, levelNumber: number, score: number, collected: number, jellyLeft: number, bossHealthLeft = 0) {
   const config = LEVELS[levelNumber - 1];
   if (goalType === 'score') return score >= config.target ? 'Score target reached' : `Reach ${config.target.toLocaleString()} points`;
   if (goalType === 'collect') {
@@ -89,21 +103,27 @@ function goalHeadline(goalType: GoalType, levelNumber: number, score: number, co
       ? `All ${config.goalCount} ${COLORS[config.goalColor]} candies collected`
       : `Collect ${config.goalCount - collected} ${COLORS[config.goalColor]} candies`;
   }
-  return jellyLeft === 0 ? 'All jelly cleared' : `Clear ${jellyLeft} jelly tiles`;
+  if (goalType === 'jelly') return jellyLeft === 0 ? 'All jelly cleared' : `Clear ${jellyLeft} jelly tiles`;
+  const boss = config.boss;
+  return bossHealthLeft <= 0 ? `${boss?.name ?? 'The boss'} defeated!` : `Outmatch ${boss?.name ?? 'the boss'}`;
 }
 
-function goalCounter(goalType: GoalType, levelNumber: number, score: number, collected: number, jellyLeft: number) {
+function goalCounter(goalType: GoalType, levelNumber: number, score: number, collected: number, jellyLeft: number, bossHealthLeft = 0) {
   const config = LEVELS[levelNumber - 1];
   if (goalType === 'score') return `${Math.min(score, config.target).toLocaleString()} / ${config.target.toLocaleString()} points`;
   if (goalType === 'collect') return `${Math.min(collected, config.goalCount)} / ${config.goalCount} collected`;
-  const total = createJelly(levelNumber).size;
-  return `${total - jellyLeft} / ${total} cleared`;
+  if (goalType === 'jelly') {
+    const total = createJelly(levelNumber).size;
+    return `${total - jellyLeft} / ${total} cleared`;
+  }
+  const total = config.boss?.maxHealth ?? 0;
+  return `${Math.max(0, total - bossHealthLeft)} / ${total} power drained`;
 }
 
-function objectiveProgress(levelNumber: number, score: number, collected: number, jellyLeft: number) {
+function objectiveProgress(levelNumber: number, score: number, collected: number, jellyLeft: number, bossHealthLeft: number) {
   const config = LEVELS[levelNumber - 1];
   const totalJelly = hasGoal(config, 'jelly') ? createJelly(levelNumber).size : 0;
-  return objectiveProgressPercent(config, score, collected, jellyLeft, totalJelly);
+  return objectiveProgressPercent(config, score, collected, jellyLeft, totalJelly, bossHealthLeft);
 }
 
 function trapDialogFocus(event: ReactKeyboardEvent<HTMLElement>, onEscape?: () => void) {
@@ -189,6 +209,7 @@ function App() {
   const [moves, setMoves] = useState(LEVELS[save.level - 1].moves);
   const [score, setScore] = useState(0);
   const [goalProgress, setGoalProgress] = useState(0);
+  const [bossHealth, setBossHealth] = useState(LEVELS[save.level - 1].boss?.maxHealth ?? 0);
   const [jelly, setJelly] = useState<Set<string>>(() => new Set());
   const [selected, setSelected] = useState<Pos | null>(null);
   const [focusedCell, setFocusedCell] = useState<Pos>([0, 0]);
@@ -273,9 +294,10 @@ function App() {
 
   const levelData = LEVELS[level - 1];
   const target = levelData.target;
+  const currentBossPalette = CHARACTER_PALETTES[levelData.boss?.color ?? 3];
   const progress = Math.min(100, score / target * 100);
   const stars = starsForScore(score, target);
-  const objectivePercent = objectiveProgress(level, score, goalProgress, jelly.size);
+  const objectivePercent = objectiveProgress(level, score, goalProgress, jelly.size, bossHealth);
   const best = bestScores[String(level)] || 0;
   const completedCount = Object.values(completedLevels).filter(Boolean).length;
   const totalStars = useMemo(() => starsForCampaign(bestWinScores), [bestWinScores]);
@@ -349,6 +371,7 @@ function App() {
     setMoves(LEVELS[safeLevel - 1].moves + Math.max(0, bonusMoves));
     setScore(0);
     setGoalProgress(0);
+    setBossHealth(LEVELS[safeLevel - 1].boss?.maxHealth ?? 0);
     setJelly(hasGoal(LEVELS[safeLevel - 1], 'jelly') ? createJelly(safeLevel) : new Set());
     setSelected(null);
     setFocusedCell([0, 0]);
@@ -372,15 +395,16 @@ function App() {
     setEquippedBoosters([...introBoosters]);
   }, [level, unlocked, introBoosters, tutorialSeen]);
 
-  const finishMove = (nextScore: number, nextMoves: number, levelAtMove: number, nextGoalProgress: number, nextJelly: Set<string>) => {
+  const finishMove = (nextScore: number, nextMoves: number, levelAtMove: number, nextGoalProgress: number, nextJelly: Set<string>, nextBossHealth: number) => {
     const config = LEVELS[levelAtMove - 1];
-    const goalComplete = objectivesComplete(config, nextScore, nextGoalProgress, nextJelly.size);
+    const goalComplete = objectivesComplete(config, nextScore, nextGoalProgress, nextJelly.size, nextBossHealth);
     const finalScore = goalComplete ? nextScore + Math.max(0, nextMoves) * 100 : nextScore;
     const levelKey = String(levelAtMove);
 
     setScore(finalScore);
     setMoves(nextMoves);
     setGoalProgress(nextGoalProgress);
+    setBossHealth(nextBossHealth);
     setJelly(new Set(nextJelly));
     setBestScores(old => ({ ...old, [levelKey]: Math.max(old[levelKey] || 0, finalScore) }));
 
@@ -390,9 +414,11 @@ function App() {
       setScreen('win');
       setUnlocked(old => Math.max(old, Math.min(LEVEL_COUNT, levelAtMove + 1)));
       setCompletedLevels(old => ({ ...old, [levelKey]: true }));
-      setMessage(nextMoves > 0
-        ? `Level clear! +${(nextMoves * 100).toLocaleString()} move bonus!`
-        : 'Level complete! Beautifully played.');
+      setMessage(config.boss
+        ? `${config.boss.name} defeated! Chapter ${config.chapter} cleared.`
+        : nextMoves > 0
+          ? `Level clear! +${(nextMoves * 100).toLocaleString()} move bonus!`
+          : 'Level complete! Beautifully played.');
     } else if (nextMoves <= 0) {
       playCue('lose');
       setScreen('lose');
@@ -406,12 +432,14 @@ function App() {
     startingScore: number,
     nextMoves: number,
     levelAtMove: number,
+    startingBossHealth: number,
     runToken = gameRun.current,
   ) => {
     let current = clone(startingBoard);
     let scoreNow = startingScore;
     let goalNow = goalProgress;
     let jellyNow = new Set(jelly);
+    let bossHealthNow = startingBossHealth;
     let matches = new Set(initialMatches);
     let cascade = 0;
     let totalCleared = 0;
@@ -420,6 +448,11 @@ function App() {
       cascade++;
       const expanded = expandSpecials(current, matches);
       const config = LEVELS[levelAtMove - 1];
+      if (config.boss && bossHealthNow > 0) {
+        const damage = bossDamageForClear(expanded.size, cascade);
+        bossHealthNow = Math.max(0, bossHealthNow - damage);
+        setBossHealth(bossHealthNow);
+      }
       if (hasGoal(config, 'collect')) {
         for (const key of expanded) {
           const [r, c] = posOf(key);
@@ -431,9 +464,11 @@ function App() {
       setJelly(new Set(jellyNow));
       setClearing(Array.from(expanded));
       setImpactPulse(value => value + 1);
-      setMessage(cascade > 1
-        ? ['Sweet cascade!', 'Tasty chain!', 'Sugar rush!', 'Unstoppable!'][Math.min(3, cascade - 2)]
-        : expanded.size >= 5 ? 'Sugar rush!' : 'Nice match!');
+      setMessage(config.boss
+        ? bossHealthNow <= 0 ? `${config.boss.name} is down!` : `${config.boss.name} has ${bossHealthNow} power left.`
+        : cascade > 1
+          ? ['Sweet cascade!', 'Tasty chain!', 'Sugar rush!', 'Unstoppable!'][Math.min(3, cascade - 2)]
+          : expanded.size >= 5 ? 'Sugar rush!' : 'Nice match!');
       const burstKind: JuiceBurst['kind'] = cascade > 1 ? 'cascade' : expanded.size >= 5 ? 'special' : 'match';
       triggerBurst(Array.from(expanded), burstKind);
       playCue(cascade > 1 ? 'cascade' : expanded.size >= 5 ? 'special' : 'match', sound, cascade);
@@ -469,9 +504,9 @@ function App() {
     setFreshIds([]);
     setSelected(null);
     const objectiveConfig = LEVELS[levelAtMove - 1];
-    const objectiveMet = objectivesComplete(objectiveConfig, scoreNow, goalNow, jellyNow.size);
-    finishMove(scoreNow, nextMoves, levelAtMove, goalNow, jellyNow);
-    if (totalCleared > 0 && nextMoves > 0 && !objectiveMet) {
+    const objectiveMet = objectivesComplete(objectiveConfig, scoreNow, goalNow, jellyNow.size, bossHealthNow);
+    finishMove(scoreNow, nextMoves, levelAtMove, goalNow, jellyNow, bossHealthNow);
+    if (totalCleared > 0 && nextMoves > 0 && !objectiveMet && !objectiveConfig.boss) {
       setMessage(cascade > 1
         ? `Cascade ×${cascade} · +${(scoreNow - startingScore).toLocaleString()}`
         : `+${(scoreNow - startingScore).toLocaleString()} points`);
@@ -488,6 +523,7 @@ function App() {
     const levelAtMove = level;
     const startScore = score;
     const startMoves = moves;
+    const startBossHealth = bossHealth;
     const original = clone(board);
     const copy = clone(board);
     [copy[a[0]][a[1]], copy[b[0]][b[1]]] = [copy[b[0]][b[1]], copy[a[0]][a[1]]];
@@ -533,7 +569,7 @@ function App() {
       buildSwapSpecial(copy, matches, a, b);
     }
     setBoard(copy);
-    await resolveAnimated(copy, matches, startScore, startMoves - 1, levelAtMove, runToken).catch(() => {
+    await resolveAnimated(copy, matches, startScore, startMoves - 1, levelAtMove, startBossHealth, runToken).catch(() => {
       if (runToken === gameRun.current) {
         setBusy(false);
         inputLock.current = false;
@@ -571,7 +607,7 @@ function App() {
       }
       setArmed(null);
       setBoosterCounts(old => ({ ...old, [booster]: Math.max(0, old[booster] - 1) }));
-      void resolveAnimated(working, cleared, score, Math.max(0, moves - 1), level, runToken).catch(() => {
+      void resolveAnimated(working, cleared, score, Math.max(0, moves - 1), level, bossHealth, runToken).catch(() => {
         if (runToken === gameRun.current) {
           setBusy(false);
           inputLock.current = false;
@@ -726,13 +762,14 @@ function App() {
 
   const mapLevelNumber = mapSelectedLevel ?? mapChapter * 10 + 1;
   const mapLevelData = LEVELS[mapLevelNumber - 1];
+  const mapBossPalette = CHARACTER_PALETTES[mapLevelData.boss?.color ?? 3];
   const mapLevelUnlocked = mapSelectedLevel !== null && mapSelectedLevel <= unlocked;
   const selectedLevelBest = bestScores[String(mapLevelNumber)] || 0;
   const selectedLevelStars = starsForScore(bestWinScores[String(mapLevelNumber)] || 0, mapLevelData.target);
   const currentLevelProgress = Math.min(100, completedCount / LEVEL_COUNT * 100);
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell${screen === 'play' ? ' is-playing' : ''}`}>
       <header className="game-header">
         <button className="brand-button" type="button" onClick={() => {
           if (screen === 'play') openLeaveDialog();
@@ -772,6 +809,7 @@ function App() {
                 <span className="hero-candy hero-candy-one"><CandyArt color={2} /></span>
                 <span className="hero-candy hero-candy-two"><CandyArt color={4} /></span>
                 <span className="hero-candy hero-candy-three"><CandyArt color={1} /></span>
+                <span className="hero-buddy"><CharacterArt color="#78d68b" accent="#308d5a" /></span>
                 <span className="hero-spark hero-spark-one">✦</span>
                 <span className="hero-spark hero-spark-two">✧</span>
               </div>
@@ -874,12 +912,12 @@ function App() {
                   const isLocked = number > unlocked;
                   const isComplete = Boolean(completedLevels[String(number)]);
                   const levelStars = starsForScore(bestWinScores[String(number)] || 0, LEVELS[number - 1].target);
-                  const label = isLocked ? `Level ${number}, locked` : `Level ${number}${isComplete ? `, completed with ${levelStars} stars` : ''}`;
+                  const label = isLocked ? `Level ${number}, locked` : `Level ${number}${LEVELS[number - 1].boss ? ', chapter boss finale' : ''}${isComplete ? `, completed with ${levelStars} stars` : ''}`;
                   return (
                     <button
                       key={number}
                       type="button"
-                      className={`map-level ${number === mapSelectedLevel ? 'is-selected' : ''} ${isComplete ? 'is-complete' : ''} ${isLocked ? 'is-locked' : ''}`}
+                      className={`map-level ${number === mapSelectedLevel ? 'is-selected' : ''} ${isComplete ? 'is-complete' : ''} ${isLocked ? 'is-locked' : ''} ${LEVELS[number - 1].boss ? 'is-boss-level' : ''}`}
                       disabled={isLocked}
                       aria-label={label}
                       aria-pressed={number === mapSelectedLevel}
@@ -888,6 +926,7 @@ function App() {
                       <span className="map-level-number">{isLocked ? <span className="lock-symbol">⌑</span> : String(number).padStart(2, '0')}</span>
                       {isComplete && <span className="map-level-star" aria-hidden="true">★</span>}
                       {number === level && !isComplete && <span className="map-level-current" aria-hidden="true">YOU</span>}
+                      {LEVELS[number - 1].boss && <span className="map-boss-marker" aria-hidden="true">✦ BOSS</span>}
                       {isComplete && <span className="map-node-stars" aria-label={`${levelStars} stars`}>{[1, 2, 3].map(star => <i key={star} className={levelStars >= star ? 'on' : ''} />)}</span>}
                     </button>
                   );
@@ -907,8 +946,13 @@ function App() {
                 </div>
                 <div className="detail-objective">
                   <span className="detail-objective-icon">{goalGlyph(mapLevelData.goalType, mapLevelNumber)}</span>
-                  <div><small>{mapLevelData.secondaryGoalType ? 'LEVEL OBJECTIVES' : 'LEVEL OBJECTIVE'}</small><b>{goalDescription(mapLevelNumber)}</b></div>
+                  <div><small>{mapLevelData.boss ? 'CHAPTER BOSS' : mapLevelData.secondaryGoalType ? 'LEVEL OBJECTIVES' : 'LEVEL OBJECTIVE'}</small><b>{goalDescription(mapLevelNumber)}</b></div>
                 </div>
+                {mapLevelData.boss && <div className="map-boss-preview">
+                  <CharacterArt kind="boss" color={mapBossPalette.color} accent={mapBossPalette.accent} />
+                  <div><small>CHAPTER FINALE</small><b>{mapLevelData.boss.name}</b><span>{mapLevelData.boss.epithet}</span></div>
+                  <span className="boss-health-chip">{mapLevelData.boss.maxHealth} HP</span>
+                </div>}
                 <div className="detail-meta"><span>Moves available</span><b>{mapLevelData.moves}</b></div>
                 <div className="detail-meta"><span>Personal best</span><b>{selectedLevelBest.toLocaleString()}</b></div>
                 <button className="primary-button detail-play" type="button" onClick={() => startLevel(mapLevelNumber)}>
@@ -935,28 +979,64 @@ function App() {
             <button className="back-link" type="button" onClick={openLeaveDialog}><ArrowLeft size={16} /> Campaign map</button>
             <span className="play-world-label">WORLD {String(levelData.chapter).padStart(2, '0')} <i /> {levelData.chapterName}</span>
           </div>
+          <div className={`mobile-game-hud${levelData.boss ? ' is-boss-level' : ''}`}>
+            <div className="mobile-hud-main">
+              <div className="mobile-hud-character">
+                {levelData.boss
+                  ? <CharacterArt kind="boss" mood="determined" color={currentBossPalette.color} accent={currentBossPalette.accent} />
+                  : <CharacterArt color="#78d68b" accent="#308d5a" />}
+              </div>
+              <div className="mobile-hud-copy">
+                <span className="mobile-hud-kicker">{levelData.boss ? `CHAPTER BOSS · LEVEL ${String(level).padStart(2, '0')}` : `LEVEL ${String(level).padStart(2, '0')} · ${levelData.chapterName}`}</span>
+                <b>{levelData.boss?.name ?? goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth)}</b>
+                {levelData.boss && <small className="mobile-boss-epithet">{levelData.boss.epithet} · “{levelData.boss.taunt}”</small>}
+                {levelData.boss
+                  ? <div className="boss-health-track" role="progressbar" aria-label={`${levelData.boss.name} remaining power`} aria-valuemin={0} aria-valuemax={levelData.boss.maxHealth} aria-valuenow={bossHealth}>
+                    <span style={{ width: `${Math.max(0, bossHealth / levelData.boss.maxHealth * 100)}%` }} />
+                  </div>
+                  : <div className="mobile-objective-track" role="progressbar" aria-label="Level objective progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(objectivePercent)}><span style={{ width: `${objectivePercent}%` }} /></div>}
+                <div className="mobile-hud-subline">
+                  <span>{levelData.boss ? `${bossHealth} / ${levelData.boss.maxHealth} power` : goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth)}</span>
+                  <span>{score.toLocaleString()} pts</span>
+                </div>
+              </div>
+              <div className="mobile-hud-moves"><small>MOVES</small><b>{moves}</b></div>
+            </div>
+          </div>
           <div className="play-layout">
             <aside className="play-rail-left">
               <section className="mission-card">
                 <div className="mission-card-head"><span>LEVEL {String(level).padStart(2, '0')}</span><Sparkles size={16} /></div>
                 <h1>{levelData.chapterName}</h1>
                 <p className="mission-subtitle">A new little challenge</p>
+                {levelData.boss && <div className="desktop-boss-card">
+                  <CharacterArt kind="boss" mood="determined" color={currentBossPalette.color} accent={currentBossPalette.accent} />
+                  <div className="boss-card-copy">
+                    <span>CHAPTER BOSS</span>
+                    <b>{levelData.boss.name}</b>
+                    <small className="boss-card-epithet">{levelData.boss.epithet} · “{levelData.boss.taunt}”</small>
+                    <div className="boss-health-track" role="progressbar" aria-label={`${levelData.boss.name} remaining power`} aria-valuemin={0} aria-valuemax={levelData.boss.maxHealth} aria-valuenow={bossHealth}>
+                      <span style={{ width: `${Math.max(0, bossHealth / levelData.boss.maxHealth * 100)}%` }} />
+                    </div>
+                    <small>{bossHealth} / {levelData.boss.maxHealth} power</small>
+                  </div>
+                </div>}
                 <div className="score-display">
                   <div><span>YOUR SCORE</span><strong>{score.toLocaleString()}</strong></div>
-                  <span className="score-target">TARGET<br /><b>{target.toLocaleString()}</b></span>
+                  <span className="score-target">{levelData.boss ? 'STAR GOAL' : 'TARGET'}<br /><b>{target.toLocaleString()}</b></span>
                 </div>
-                <div className="score-progress" role="progressbar" aria-label="Score toward level target" aria-valuemin={0} aria-valuemax={target} aria-valuenow={Math.min(score, target)}><span style={{ width: `${progress}%` }} /></div>
+                <div className="score-progress" role="progressbar" aria-label={levelData.boss ? 'Bonus score toward the star goal' : 'Score toward level target'} aria-valuemin={0} aria-valuemax={target} aria-valuenow={Math.min(score, target)}><span style={{ width: `${progress}%` }} /></div>
                 <div className="score-stars" aria-label={`${stars} stars earned this round`}>
                   {[1, 2, 3].map(star => <Star key={star} size={19} fill="currentColor" className={stars >= star ? 'is-earned' : ''} />)}
                   <span>{stars} / 3</span>
                 </div>
                 <div className="mission-divider" />
-                <div className="objective-heading"><span>{levelData.secondaryGoalType ? 'BOTH GOALS REQUIRED' : "THIS LEVEL'S GOAL"}</span><TargetMark /></div>
+                <div className="objective-heading"><span>{levelData.boss ? 'CHAPTER BOSS' : levelData.secondaryGoalType ? 'BOTH GOALS REQUIRED' : "THIS LEVEL'S GOAL"}</span><TargetMark /></div>
                 <div className="objective-copy">
                   <span className="objective-glyph">{goalGlyph(levelData.goalType, level)}</span>
                   <div>
-                    <b>{goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size)}</b>
-                    <small>{goalCounter(levelData.goalType, level, score, goalProgress, jelly.size)}</small>
+                    <b>{goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth)}</b>
+                    <small>{goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth)}</small>
                   </div>
                 </div>
                 {levelData.secondaryGoalType && <div className="objective-secondary">
@@ -966,8 +1046,8 @@ function App() {
                     <small>{goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size)}</small>
                   </div>
                 </div>}
-                <div className="objective-track" role="progressbar" aria-label={levelData.secondaryGoalType ? 'Both level objectives progress' : 'Level objective progress'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(objectivePercent)}><span style={{ width: `${objectivePercent}%` }} /></div>
-                <div className="objective-track-label"><span>{levelData.secondaryGoalType ? 'BOTH GOALS · LEAST COMPLETE' : 'OBJECTIVE PROGRESS'}</span><b>{Math.round(objectivePercent)}%</b></div>
+                <div className="objective-track" role="progressbar" aria-label={levelData.boss ? `${levelData.boss.name} power drained` : levelData.secondaryGoalType ? 'Both level objectives progress' : 'Level objective progress'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(objectivePercent)}><span style={{ width: `${objectivePercent}%` }} /></div>
+                <div className="objective-track-label"><span>{levelData.boss ? 'BOSS POWER DRAINED' : levelData.secondaryGoalType ? 'BOTH GOALS · LEAST COMPLETE' : 'OBJECTIVE PROGRESS'}</span><b>{Math.round(objectivePercent)}%</b></div>
                 <div className="moves-display"><span className="moves-icon">↗</span><div><small>MOVES LEFT</small><b>{moves}</b></div><span className="moves-hint">Plan a<br />good one.</span></div>
               </section>
               <div className="personal-best"><span>PERSONAL BEST</span><b>{best.toLocaleString()}</b><small>Saved on this device</small></div>
@@ -1039,10 +1119,14 @@ function App() {
         <div className="result-overlay">
           <section className={`result-card ${screen === 'lose' ? 'result-card-lose' : ''}`} role="dialog" aria-modal="true" aria-labelledby="result-title" onKeyDown={event => trapDialogFocus(event)}>
             {screen === 'win' ? <>
-              <div className="result-art result-art-win" aria-hidden="true"><span>✿</span><i>✦</i></div>
-              <span className="eyebrow">LEVEL COMPLETE</span>
-              <h2 id="result-title">Sweet victory.</h2>
-              <p>You scored <b>{score.toLocaleString()}</b> points. That was a lovely bit of strategy.</p>
+              <div className="result-art result-art-win" aria-hidden="true">{levelData.boss
+                ? <CharacterArt kind="boss" mood="dazed" color={currentBossPalette.color} accent={currentBossPalette.accent} />
+                : <><span>✿</span><i>✦</i></>}</div>
+              <span className="eyebrow">{levelData.boss ? 'CHAPTER BOSS DEFEATED' : 'LEVEL COMPLETE'}</span>
+              <h2 id="result-title">{levelData.boss ? 'Boss beaten!' : 'Sweet victory.'}</h2>
+              <p>{levelData.boss
+                ? `You outmatched ${levelData.boss.name} and cleared ${levelData.chapterName}. `
+                : 'You scored ' }{levelData.boss && <>You scored </>}<b>{score.toLocaleString()}</b> points. {levelData.boss ? 'What a finish!' : 'That was a lovely bit of strategy.'}</p>
               <div className="result-stars" aria-label={`${stars} stars earned`}>
                 {[1, 2, 3].map(star => <Star key={star} size={34} fill="currentColor" className={stars >= star ? 'is-earned' : ''} />)}
               </div>
@@ -1052,10 +1136,14 @@ function App() {
               </button>
               <button className="text-button result-secondary" type="button" onClick={() => { setMapChapter(Math.floor((level - 1) / 10)); setMapSelectedLevel(level); setScreen('map'); }}><Map size={16} /> Campaign map</button>
             </> : <>
-              <div className="result-art result-art-lose" aria-hidden="true"><span>◌</span><i>·</i></div>
-              <span className="eyebrow">ONE MORE TRY?</span>
-              <h2 id="result-title">The next move is yours.</h2>
-              <p>You scored <b>{score.toLocaleString()}</b>. Take a breath, then give this puzzle another go.</p>
+              <div className="result-art result-art-lose" aria-hidden="true">{levelData.boss
+                ? <CharacterArt kind="boss" color={currentBossPalette.color} accent={currentBossPalette.accent} />
+                : <><span>◌</span><i>·</i></>}</div>
+              <span className="eyebrow">{levelData.boss ? 'BOSS ROUND · ONE MORE TRY?' : 'ONE MORE TRY?'}</span>
+              <h2 id="result-title">{levelData.boss ? `${levelData.boss.name} held on.` : 'The next move is yours.'}</h2>
+              <p>{levelData.boss
+                ? `${levelData.boss.name} has ${bossHealth} power left. You scored `
+                : 'You scored '}<b>{score.toLocaleString()}</b> points. Take a breath, then give this puzzle another go.</p>
               <div className="result-reward"><span>YOUR OBJECTIVE</span><b>{goalDescription(level)}</b></div>
               <button className="primary-button result-action" type="button" ref={resultActionRef} onClick={() => startLevel(level, 3)}>
                 Retry with +3 moves <RotateCcw size={17} />
