@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "Jam Shift — Sweet Little Puzzles",
+  "short_name": "Jam Shift",
+  "description": "A colourful match-3 puzzle with cascades, special candies, power-ups and a 100-level campaign.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#100f2c",
+  "theme_color": "#100f2c",
+  "icons": [
+    {
+      "src": "/jam-shift-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&display=swap');
+.level-map-card{min-height:620px}
+.level-map-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin:18px auto 22px;max-width:340px;max-height:330px;overflow:auto;padding:5px}
+.map-level{aspect-ratio:1;border-radius:15px;border:3px solid #fff;background:linear-gradient(145deg,#9ce8ff,#4aa5ef);box-shadow:0 4px 0 #3276b3,inset 0 2px 4px #fff9;color:#fff;font:700 18px 'Fredoka',sans-serif;text-shadow:0 2px #3979ad;transition:transform .12s,filter .12s}
+.map-level.current{background:linear-gradient(145deg,#ffdb69,#ff9a42);box-shadow:0 4px 0 #c86c30,inset 0 2px 4px #fff9;outline:3px solid #fff1a1}
+.map-level.completed{background:linear-gradient(145deg,#b8f68d,#52c875);box-shadow:0 4px 0 #2d9d58,inset 0 2px 4px #fff9}
+.map-level.locked{background:linear-gradient(#d9d3e2,#aaa2bb);box-shadow:0 4px 0 #7b718f;filter:saturate(.55);cursor:not-allowed;font-size:15px}
+.map-level:active:not(:disabled){transform:translateY(2px) scale(.97)}
+.map-open{display:block;margin:12px auto 0;padding:9px 18px}
+.candy.jelly{outline:2px solid #b7f5ff;outline-offset:-3px}.jelly-glaze{position:absolute;inset:3px;border-radius:7px;background:linear-gradient(135deg,#e9ffff9c,#7ce7ff42 55%,#eaffff99);border:2px solid #efffff;box-shadow:inset 0 0 0 1px #51cfe8aa;pointer-events:none;z-index:1}.candy.jelly .candy-face{z-index:2}.candy.striped-h:after{content:'';position:absolute;inset:35% -10%;background:repeating-linear-gradient(0deg,#fff 0 3px,transparent 3px 7px);transform:rotate(0)}
+.candy.striped-v:after{content:'';position:absolute;inset:-10% 35%;background:repeating-linear-gradient(90deg,#fff 0 3px,transparent 3px 7px);transform:rotate(0)}
+.candy.striped-h .candy-face,.candy.striped-v .candy-face{font-size:clamp(12px,3vw,24px);z-index:1}
+.candy.color{background:radial-gradient(circle at 30% 24%,#fff 0 7%,#ffe7ff 8%,#d66dff 28%,#8244ee 58%,#4b2bb8 100%);box-shadow:inset 0 -4px 0 #35206d55,0 2px 0 #264d793d}.candy.wrapped{background:radial-gradient(circle at 30% 24%,#fff3b1 0 6%,#ffb84c 10%,#ff7848 44%,#d83b65 82%);box-shadow:inset 0 -4px 0 #9d234c55,0 2px 0 #264d793d}.candy.wrapped .candy-face{font-size:clamp(15px,3.8vw,30px);color:#fff7cb;text-shadow:0 2px 0 #9c3454,0 0 7px #fff}
+.level-map-card .booster-title{margin-top:8px}
+.map-level:focus-visible,.candy:focus-visible,.play-button:focus-visible,.secondary-button:focus-visible,.power-button:focus-visible{outline:3px solid #fff06b;outline-offset:2px}
+@media(max-width:380px){.level-map-grid{gap:6px}.map-level{border-radius:11px;font-size:15px}.level-map-card{padding-left:15px;padding-right:15px}}
+
+/* Hints identify both ends of the recommended move, not just the first candy. */
+.candy.hint-target{position:relative;z-index:5;outline:3px solid #fff36b;outline-offset:-3px;box-shadow:0 0 0 3px #ff62d4,0 0 18px #ffe66d;animation:hint-pulse .72s ease-in-out infinite alternate}
+@keyframes hint-pulse{from{filter:brightness(1.02);transform:scale(1)}to{filter:brightness(1.3);transform:scale(1.06)}}
+@media(prefers-reduced-motion:reduce){.candy.hint-target{animation:none!important;filter:brightness(1.2)}}
+
+/* Chapter navigation, persistent progression and first-run guidance. */
+.map-chapter-nav {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 46px;
+  align-items: center;
+  gap: 10px;
+  max-width: 350px;
+  margin: 18px auto 10px;
+}
+.chapter-arrow {
+  width: 44px;
+  height: 44px;
+  border: 2px solid #e6faff;
+  border-radius: 15px;
+  background: linear-gradient(145deg, #ff73d7, #8152ff);
+  box-shadow: 0 4px 0 #4b2c91, 0 0 14px #bd58ff38;
+  color: white;
+  font: 700 30px 'Fredoka', sans-serif;
+}
+.chapter-arrow:disabled { opacity: .35; filter: grayscale(.6); }
+.chapter-heading { display: grid; gap: 3px; text-align: center; min-width: 0; }
+.chapter-heading strong { color: #a7f7ff; font: 700 12px 'Nunito', sans-serif; letter-spacing: 1.5px; }
+.chapter-heading span { color: white; font: 700 21px 'Fredoka', sans-serif; overflow-wrap: anywhere; }
+.map-progress { display: flex; justify-content: space-between; gap: 8px; margin: 12px 0 6px; color: #e5dcff; font-size: 10px; font-weight: 900; }
+.level-map-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); max-height: none; overflow: visible; }
+.map-level { min-height: 48px; }
+.help-overlay {
+  position: fixed; inset: 0; z-index: 30; display: grid; place-items: center;
+  padding: 18px; background: #08061ee8; backdrop-filter: blur(10px);
+}
+.help-card {
+  width: min(100%, 430px); max-height: min(90dvh, 760px); overflow: auto;
+  padding: 26px 24px 24px; border-radius: 30px; border: 3px solid #ff8ae2;
+  background: linear-gradient(145deg, #29214f, #33214f 58%, #1d3d69);
+  box-shadow: inset 0 0 0 2px #ffffff18, 0 8px 0 #61247d, 0 22px 55px #020313b8;
+  color: #fff; text-align: center;
+}
+.help-mascot { font-size: 48px; filter: drop-shadow(0 0 12px #ff78d8); }
+.help-card h2 { margin: 4px 0 14px; color: white; font: 700 32px 'Fredoka', sans-serif; }
+.help-steps { display: grid; gap: 12px; padding: 0; margin: 0; list-style: none; text-align: left; counter-reset: guide; }
+.help-steps li { display: grid; grid-template-columns: 28px minmax(0,1fr); column-gap: 9px; align-items: start; counter-increment: guide; }
+.help-steps li::before {
+  content: counter(guide); display: grid; place-items: center; width: 27px; height: 27px;
+  border-radius: 50%; background: linear-gradient(#b3fbff,#55a5ff); color: #17244f;
+  font: 700 15px 'Fredoka', sans-serif; box-shadow: 0 3px 0 #274b9b;
+}
+.help-steps b { display: block; color: #fff0a6; font-size: 13px; }
+.help-steps span { grid-column: 2; display: block; margin-top: 2px; color: #ded6ff; font-size: 12px; line-height: 1.45; }
+.help-card .play-button { width: 100%; font-size: 24px; margin-top: 22px; }
+.chapter-arrow:focus-visible, .help-card button:focus-visible { outline: 3px solid #fff06b; outline-offset: 3px; }
+@media (max-width: 380px) {
+  .map-chapter-nav { grid-template-columns: 38px minmax(0,1fr) 38px; gap: 6px; }
+  .chapter-arrow { width: 38px; height: 38px; border-radius: 12px; }
+  .chapter-heading span { font-size: 18px; }
+  .map-progress { font-size: 9px; }
+  .help-card { padding: 20px 17px; }
+}

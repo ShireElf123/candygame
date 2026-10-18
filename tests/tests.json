@@ -1,0 +1,122 @@
+[
+  {
+    "name": "Start and restart remain playable",
+    "sanity": true,
+    "viewport": "mobile",
+    "covers": [
+      "first-run tutorial",
+      "start button responds",
+      "board initializes without matches",
+      "restart cancels stale operations",
+      "game input recovers",
+      "chapter-based level curve",
+      "retry rescue moves"
+    ],
+    "description": "Verifies first-time play opens a short tutorial, the level starts cleanly, and restart restores responsive input.",
+    "steps": [
+      "Open Jam Shift on a fresh save",
+      "Tap Play level 1",
+      "Read the quick guide and choose Got it — let's play!",
+      "Make an invalid swap then restart",
+      "Tap two adjacent candies"
+    ],
+    "expected": "First-time players receive a dismissible guide; level 1 starts with a fair board, restart clears stale activity, and controls respond again."
+  },
+  {
+    "name": "Tap and swipe controls both swap adjacent candies",
+    "viewport": "mobile",
+    "covers": [
+      "tap-to-select controls",
+      "pointer swipe controls",
+      "adjacent-only swap validation",
+      "invalid swap rollback",
+      "goal-aware clear-value hints",
+      "both hinted candies visibly highlighted"
+    ],
+    "description": "Verifies both hint targets are highlighted and a goal-relevant legal move can be played using tap or swipe.",
+    "steps": [
+      "Start a level and dismiss the guide if shown",
+      "Tap Hint and observe the two highlighted candies",
+      "Swap the hinted pair using taps",
+      "Restart and swipe a candy toward an adjacent cell"
+    ],
+    "expected": "The hint highlights both adjacent candies for a legal move; tap and swipe resolve valid swaps, while invalid swaps return cleanly."
+  },
+  {
+    "name": "Matches cascade, score and objectives update",
+    "viewport": "mobile",
+    "covers": [
+      "horizontal and vertical matching",
+      "gravity and refill",
+      "cascade scoring",
+      "cascade-escalated sound feedback",
+      "swap position animation",
+      "match particle effects",
+      "special-impact feedback",
+      "score collect and jelly objectives",
+      "special-trigger cascades",
+      "deadlock reshuffle",
+      "board remains playable after shuffle"
+    ],
+    "description": "Checks objective progress and cascade scoring settle correctly and board recovery leaves legal moves.",
+    "steps": [
+      "Start a level",
+      "Make a valid match",
+      "Wait for falls and cascades to settle",
+      "Check score, moves and objective counter",
+      "Continue until the board reshuffles if no legal moves remain"
+    ],
+    "expected": "Successful moves consume one move, cascades update score and objectives, and any deadlock recovery preserves a full, match-free board with at least one legal move."
+  },
+  {
+    "name": "Special candy effects and combinations",
+    "viewport": "mobile",
+    "covers": [
+      "four-match striped candy",
+      "five-match color candy",
+      "L/T wrapped candy",
+      "striped and wrapped combinations",
+      "parallel striped combo clears both matching rows or columns",
+      "perpendicular striped combo clears a cross",
+      "color bomb conversion combos",
+      "special swap consumes both candies",
+      "input lock recovery"
+    ],
+    "description": "Exercises special creation and combo effects through the visible gameplay flow.",
+    "steps": [
+      "Play until a four-match creates a striped candy",
+      "Create a five-match color candy and an L/T wrapped candy",
+      "Activate specials and swap special pairs",
+      "Wait for chained clears to settle"
+    ],
+    "expected": "Match shapes create specials; special swaps clear their intended areas and consume both swapped candies, including when a stripe is swapped perpendicular to its blast direction, without leaving the board locked."
+  },
+  {
+    "name": "Level progression and booster economy",
+    "viewport": "desktop",
+    "covers": [
+      "level map chapter pagination",
+      "locked level nodes",
+      "objective completion persistence",
+      "level completion stars only after a win",
+      "campaign star total excludes failed attempts",
+      "chapter and level metadata",
+      "win and loss states",
+      "generated sound effects",
+      "leftover-move score bonus",
+      "saved progress after reload",
+      "booster charges decrease on use",
+      "booster costs one move"
+    ],
+    "description": "Verifies chapter paging, genuine level completion, stars, sound feedback, booster accounting and saved progress.",
+    "steps": [
+      "Open the level map",
+      "Switch to the next chapter and back",
+      "Open the current unlocked level",
+      "Equip and use one available booster on a candy",
+      "Verify the charge and move count change",
+      "Complete or lose a level, then reload"
+    ],
+    "expected": "The map shows ten levels per chapter, locked levels cannot be opened, stars and cleared levels are tracked separately, each booster use consumes one charge and one move, and progress remains available after reload."
+  }
+]
