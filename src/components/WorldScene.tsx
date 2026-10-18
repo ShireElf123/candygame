@@ -51,46 +51,52 @@ export default function WorldScene({ chapter }: Props) {
         </linearGradient>
       </defs>
       <rect width="720" height="170" rx="22" fill={`url(#${skyId})`} />
-      <circle cx="602" cy="39" r="22" fill={scene.sun} opacity=".92" />
-      <circle cx="602" cy="39" r="31" fill={scene.sun} opacity=".18" />
+      <circle className="world-sun" cx="602" cy="39" r="22" fill={scene.sun} opacity=".92" />
+      <circle className="world-sun-glow" cx="602" cy="39" r="31" fill={scene.sun} opacity=".18" />
       <path d="M-15 91c67-39 112-32 170-8 43 18 89 8 141-15 71-31 119-18 170 7 59 30 108 14 150-4 45-19 80-8 125 15v87H-15Z" fill={scene.farHill} opacity=".68" />
       <path d="M-18 121c72-39 141-38 209-8 59 27 98 20 160-8 73-33 128-22 186 7 63 32 108 26 201-7v75H-18Z" fill={`url(#${hillId})`} />
       <path d="M-22 150c84-30 146-31 217-7 63 22 111 18 173-4 66-24 120-20 179 2 58 21 115 18 195-10v48H-22Z" fill={scene.deepHill} opacity=".48" />
 
-      <g fill="#fff" opacity=".72">
-        <path d="M94 42c0-9 7-15 16-15 6 0 11 3 14 8 3-2 6-3 10-3 10 0 17 7 17 16H95c-1-2-1-4-1-6Z" />
-        <path d="M274 31c0-7 6-12 13-12 5 0 9 3 11 7 2-1 5-2 7-2 8 0 13 5 13 12h-44Z" />
+      <g className="world-clouds" fill="#fff" opacity=".72">
+        <path className="world-cloud world-cloud-one" d="M94 42c0-9 7-15 16-15 6 0 11 3 14 8 3-2 6-3 10-3 10 0 17 7 17 16H95c-1-2-1-4-1-6Z" />
+        <path className="world-cloud world-cloud-two" d="M274 31c0-7 6-12 13-12 5 0 9 3 11 7 2-1 5-2 7-2 8 0 13 5 13 12h-44Z" />
       </g>
 
       {/* A little winding path makes each chapter feel like a place to travel through. */}
       <path d="M-9 147c95-61 146-52 224-22 67 26 119 18 181-13 65-32 114-33 180-8 55 21 95 18 155-13" fill="none" stroke="#b27847" strokeWidth="22" strokeLinecap="round" opacity=".36" />
       <path d="M-9 143c95-61 146-52 224-22 67 26 119 18 181-13 65-32 114-33 180-8 55 21 95 18 155-13" fill="none" stroke={`url(#${roadId})`} strokeWidth="16" strokeLinecap="round" />
-      <path d="M-9 143c95-61 146-52 224-22 67 26 119 18 181-13 65-32 114-33 180-8 55 21 95 18 155-13" fill="none" stroke="#d9b880" strokeWidth="1.5" strokeDasharray="2 10" strokeLinecap="round" opacity=".8" />
+      <path className="world-route-dashes" d="M-9 143c95-61 146-52 224-22 67 26 119 18 181-13 65-32 114-33 180-8 55 21 95 18 155-13" fill="none" stroke="#d9b880" strokeWidth="1.5" strokeDasharray="2 10" strokeLinecap="round" opacity=".8" />
 
       {/* Original candy-tree landmarks; color changes with the selected world. */}
-      <g transform="translate(132 83)">
-        <path d="M0 33v27" stroke="#8b5b42" strokeWidth="7" strokeLinecap="round" />
-        <circle cx="0" cy="15" r="20" fill={scene.accent} />
-        <circle cx="-13" cy="23" r="12" fill={scene.accentLight} />
-        <circle cx="11" cy="25" r="11" fill={scene.accent} />
-        <ellipse cx="-7" cy="5" rx="6" ry="3" fill="#fff" opacity=".55" transform="rotate(-25 -7 5)" />
+      <g className="world-tree world-tree-one">
+        <g transform="translate(132 83)">
+          <path d="M0 33v27" stroke="#8b5b42" strokeWidth="7" strokeLinecap="round" />
+          <circle cx="0" cy="15" r="20" fill={scene.accent} />
+          <circle cx="-13" cy="23" r="12" fill={scene.accentLight} />
+          <circle cx="11" cy="25" r="11" fill={scene.accent} />
+          <ellipse cx="-7" cy="5" rx="6" ry="3" fill="#fff" opacity=".55" transform="rotate(-25 -7 5)" />
+        </g>
       </g>
-      <g transform="translate(358 95)">
-        <path d="M0 27v26" stroke="#8b5b42" strokeWidth="6" strokeLinecap="round" />
-        <path d="M0-7c15 0 23 12 20 23-3 12-14 16-20 16S-17 28-20 16C-23 5-15-7 0-7Z" fill={scene.accentLight} />
-        <path d="M-9 3c3-3 7-3 10-1" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".7" />
+      <g className="world-tree world-tree-two">
+        <g transform="translate(358 95)">
+          <path d="M0 27v26" stroke="#8b5b42" strokeWidth="6" strokeLinecap="round" />
+          <path d="M0-7c15 0 23 12 20 23-3 12-14 16-20 16S-17 28-20 16C-23 5-15-7 0-7Z" fill={scene.accentLight} />
+          <path d="M-9 3c3-3 7-3 10-1" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".7" />
+        </g>
       </g>
-      <g transform="translate(554 91)">
-        <path d="M0 30v27" stroke="#8b5b42" strokeWidth="6" strokeLinecap="round" />
-        <circle cx="0" cy="9" r="17" fill={scene.accent} />
-        <circle cx="-11" cy="17" r="10" fill={scene.accentLight} />
-        <circle cx="10" cy="19" r="9" fill={scene.accent} />
-        <ellipse cx="-5" cy="1" rx="5" ry="2.5" fill="#fff" opacity=".56" transform="rotate(-25 -5 1)" />
+      <g className="world-tree world-tree-three">
+        <g transform="translate(554 91)">
+          <path d="M0 30v27" stroke="#8b5b42" strokeWidth="6" strokeLinecap="round" />
+          <circle cx="0" cy="9" r="17" fill={scene.accent} />
+          <circle cx="-11" cy="17" r="10" fill={scene.accentLight} />
+          <circle cx="10" cy="19" r="9" fill={scene.accent} />
+          <ellipse cx="-5" cy="1" rx="5" ry="2.5" fill="#fff" opacity=".56" transform="rotate(-25 -5 1)" />
+        </g>
       </g>
 
-      <g fill={scene.sun} opacity=".9">
-        <path d="m224 50 3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z" />
-        <path d="m476 54 2 5 6 1-5 4 1 6-5-3-5 3 1-6-5-4 6-1z" />
+      <g className="world-sparkles" fill={scene.sun} opacity=".9">
+        <path className="world-sparkle world-sparkle-one" d="m224 50 3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z" />
+        <path className="world-sparkle world-sparkle-two" d="m476 54 2 5 6 1-5 4 1 6-5-3-5 3 1-6-5-4 6-1z" />
       </g>
     </svg>
   );

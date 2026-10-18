@@ -42,10 +42,12 @@ export default function CharacterArt({
       </g>}
       <path d="M50 18c-19 0-33 13-33 34 0 20 12 32 33 32s33-12 33-32c0-21-14-34-33-34Z" fill={`url(#${bodyGradient})`} stroke={kind === 'boss' ? '#70445c' : '#438b56'} strokeWidth="3" />
       <path d="M50 18c-19 0-33 13-33 34 0 20 12 32 33 32s33-12 33-32c0-21-14-34-33-34Z" fill={`url(#${shineGradient})`} />
-      <ellipse cx="37" cy="55" rx="3.4" ry="4.7" fill="#392840" />
-      <ellipse cx="63" cy="55" rx="3.4" ry="4.7" fill="#392840" />
-      <circle cx="36" cy="54" r="1.1" fill="#fff" />
-      <circle cx="62" cy="54" r="1.1" fill="#fff" />
+      <g className="character-eyes">
+        <ellipse cx="37" cy="55" rx="3.4" ry="4.7" fill="#392840" />
+        <ellipse cx="63" cy="55" rx="3.4" ry="4.7" fill="#392840" />
+        <circle cx="36" cy="54" r="1.1" fill="#fff" />
+        <circle cx="62" cy="54" r="1.1" fill="#fff" />
+      </g>
       <ellipse cx="29" cy="64" rx="5" ry="2.6" fill="#ff9bb0" opacity=".72" />
       <ellipse cx="71" cy="64" rx="5" ry="2.6" fill="#ff9bb0" opacity=".72" />
       <path d={smile} fill="none" stroke="#4d3046" strokeLinecap="round" strokeWidth="3.2" />

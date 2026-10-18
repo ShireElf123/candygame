@@ -59,10 +59,10 @@ describe('board generation and resolution', () => {
     expect(matches.has(keyOf(4, 3))).toBe(true);
   });
 
-  it('drops cleared pieces, refills every cell, and returns new candy ids', () => {
+  it('drops cleared pieces, refills every cell, and reports each candy fall distance', () => {
     const board = emptyBoard();
     const originalIds = new Set(board.flat().map(candy => candy.id));
-    const { board: result, spawned } = dropMatches(board, new Set([keyOf(7, 0), keyOf(6, 0)]));
+    const { board: result, spawned, fallDistances } = dropMatches(board, new Set([keyOf(7, 0), keyOf(6, 0)]));
 
     expect(result).toHaveLength(SIZE);
     expect(result.flat()).toHaveLength(SIZE * SIZE);
@@ -70,6 +70,9 @@ describe('board generation and resolution', () => {
     expect(spawned).toHaveLength(2);
     expect(spawned.every(id => !originalIds.has(id))).toBe(true);
     expect(new Set(result.flat().map(candy => candy.id)).size).toBe(SIZE * SIZE);
+    expect(result.map(row => fallDistances[row[0].id])).toEqual(Array(SIZE).fill(2));
+    expect(Object.keys(fallDistances)).toHaveLength(SIZE);
+    expect(result.flatMap(row => row.slice(1)).some(candy => fallDistances[candy.id] !== undefined)).toBe(false);
   });
 
   it('reshuffles without creating a match or losing candies and specials', () => {

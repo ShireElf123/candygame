@@ -389,21 +389,30 @@ export function expandSpecials(board: Candy[][], initial: Set<string>): Set<stri
   return cleared;
 }
 
-export function dropMatches(input: Candy[][], matches: Set<string>): { board: Candy[][]; spawned: number[] } {
+export function dropMatches(input: Candy[][], matches: Set<string>): { board: Candy[][]; spawned: number[]; fallDistances: Record<number, number> } {
   const board = clone(input);
   matches.forEach(key => { const [r, c] = posOf(key); board[r][c] = null as unknown as Candy; });
   const spawned: number[] = [];
+  const fallDistances: Record<number, number> = {};
   for (let c = 0; c < SIZE; c++) {
-    const kept: Candy[] = [];
-    for (let r = SIZE - 1; r >= 0; r--) if (board[r][c]) kept.push(board[r][c]);
-    while (kept.length < SIZE) {
+    const kept: Array<{ candy: Candy; sourceRow: number; fresh: boolean }> = [];
+    for (let r = SIZE - 1; r >= 0; r--) {
+      if (board[r][c]) kept.push({ candy: board[r][c], sourceRow: r, fresh: false });
+    }
+    const spawnCount = SIZE - kept.length;
+    for (let index = 0; index < spawnCount; index++) {
       const candy = makeCandy();
-      kept.push(candy);
+      kept.push({ candy, sourceRow: -1, fresh: true });
       spawned.push(candy.id);
     }
-    for (let r = SIZE - 1, i = 0; r >= 0; r--, i++) board[r][c] = kept[i];
+    for (let r = SIZE - 1, i = 0; r >= 0; r--, i++) {
+      const entry = kept[i];
+      board[r][c] = entry.candy;
+      const distance = entry.fresh ? spawnCount : r - entry.sourceRow;
+      if (distance > 0) fallDistances[entry.candy.id] = distance;
+    }
   }
-  return { board, spawned };
+  return { board, spawned, fallDistances };
 }
 
 export function buildSwapSpecial(board: Candy[][], matches: Set<string>, a: Pos, b: Pos) {

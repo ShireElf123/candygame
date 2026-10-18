@@ -228,7 +228,9 @@ function App() {
   const [message, setMessage] = useState('Make a match of 3 or more');
   const [busy, setBusy] = useState(false);
   const [clearing, setClearing] = useState<string[]>([]);
-  const [freshIds, setFreshIds] = useState<number[]>([]);
+  const [fallDistances, setFallDistances] = useState<Record<number, number>>({});
+  const [shellHitCells, setShellHitCells] = useState<string[]>([]);
+  const shellHitTimeout = useRef<number | null>(null);
   const [juiceBursts, setJuiceBursts] = useState<JuiceBurst[]>([]);
   const burstSequence = useRef(0);
   const [impactPulse, setImpactPulse] = useState(0);
@@ -287,20 +289,32 @@ function App() {
     }
   }, [sound]);
 
-  const triggerBurst = useCallback((keys: string[], kind: JuiceBurst['kind']) => {
+  const triggerBurst = useCallback((keys: string[], kind: JuiceBurst['kind'], points = 0) => {
     if (!keys.length) return;
     const cells = keys.map(key => posOf(key));
     const avgRow = cells.reduce((sum, cell) => sum + cell[0], 0) / cells.length;
     const avgCol = cells.reduce((sum, cell) => sum + cell[1], 0) / cells.length;
-    const burst: JuiceBurst = {
+    const maxOrigins = kind === 'match' ? 5 : kind === 'special' ? 11 : 8;
+    const stride = Math.max(1, Math.ceil(cells.length / maxOrigins));
+    const sampledCells = cells.filter((_, index) => index % stride === 0).slice(0, maxOrigins);
+    const bursts: JuiceBurst[] = sampledCells.map(([row, col]) => ({
+      id: ++burstSequence.current,
+      x: ((col + 0.5) / SIZE) * 100,
+      y: ((row + 0.5) / SIZE) * 100,
+      kind,
+      strength: Math.min(1.35, 0.72 + keys.length / 36),
+    }));
+    bursts.push({
       id: ++burstSequence.current,
       x: ((avgCol + 0.5) / SIZE) * 100,
       y: ((avgRow + 0.5) / SIZE) * 100,
       kind,
-      strength: Math.min(1.7, 0.8 + keys.length / 10),
-    };
-    setJuiceBursts(old => [...old, burst]);
-    window.setTimeout(() => setJuiceBursts(old => old.filter(item => item.id !== burst.id)), 560);
+      strength: Math.min(1.8, 1.02 + keys.length / 22),
+      points,
+    });
+    const burstIds = new Set(bursts.map(burst => burst.id));
+    setJuiceBursts(old => [...old, ...bursts].slice(-48));
+    window.setTimeout(() => setJuiceBursts(old => old.filter(item => !burstIds.has(item.id))), kind === 'special' ? 720 : kind === 'cascade' ? 650 : 540);
   }, []);
 
   const levelData = LEVELS[level - 1];
@@ -316,6 +330,10 @@ function App() {
   useEffect(() => {
     writeSave({ level, unlocked, bestScores, bestWinScores, completedLevels, tutorialSeen, sound, boosterCounts });
   }, [level, unlocked, bestScores, bestWinScores, completedLevels, tutorialSeen, sound, boosterCounts]);
+
+  useEffect(() => () => {
+    if (shellHitTimeout.current !== null) window.clearTimeout(shellHitTimeout.current);
+  }, []);
 
   useEffect(() => {
     if (showHelp) helpActionRef.current?.focus();
@@ -390,7 +408,9 @@ function App() {
     setFocusedCell([0, 0]);
     setHinted([]);
     setClearing([]);
-    setFreshIds([]);
+    setFallDistances({});
+    setShellHitCells([]);
+    if (shellHitTimeout.current !== null) window.clearTimeout(shellHitTimeout.current);
     setJuiceBursts([]);
     setSwapMotion({});
     setImpactPulse(0);
@@ -477,12 +497,19 @@ function App() {
       if (hasGoal(config, 'shell')) {
         const shellImpactCells = new Set(expanded);
         if (cascade === 1) startingShellImpactCells.forEach(key => shellImpactCells.add(key));
+        const shellHitKeys = Array.from(shellImpactCells).filter(key => shellsNow.has(key));
         const shellDamage = damageSugarShells(shellsNow, shellImpactCells);
         shellsNow = shellDamage.shells;
         shellsHitThisCascade = shellDamage.hit;
         shellsClearedNow += shellDamage.cleared;
         if (shellsHitThisCascade > 0) {
           totalShellsHit += shellsHitThisCascade;
+          setShellHitCells(shellHitKeys);
+          if (shellHitTimeout.current !== null) window.clearTimeout(shellHitTimeout.current);
+          shellHitTimeout.current = window.setTimeout(() => {
+            setShellHitCells([]);
+            shellHitTimeout.current = null;
+          }, 360);
           setSugarShells(new Map(shellsNow));
           setShellsCleared(shellsClearedNow);
         }
@@ -498,6 +525,9 @@ function App() {
       setJelly(new Set(jellyNow));
       setClearing(Array.from(expanded));
       setImpactPulse(value => value + 1);
+      const points = expanded.size * 60 * Math.min(cascade, 6);
+      scoreNow += points;
+      setScore(scoreNow);
       setMessage(config.boss
         ? bossHealthNow <= 0 ? `${config.boss.name} is down!` : `${config.boss.name} has ${bossHealthNow} power left.`
         : shellsHitThisCascade > 0
@@ -506,21 +536,21 @@ function App() {
             ? ['Sweet cascade!', 'Tasty chain!', 'Sugar rush!', 'Unstoppable!'][Math.min(3, cascade - 2)]
             : expanded.size >= 5 ? 'Sugar rush!' : 'Nice match!');
       const burstKind: JuiceBurst['kind'] = cascade > 1 ? 'cascade' : expanded.size >= 5 ? 'special' : 'match';
-      triggerBurst(Array.from(expanded), burstKind);
+      triggerBurst(Array.from(expanded), burstKind, points);
       playCue(cascade > 1 ? 'cascade' : expanded.size >= 5 ? 'special' : 'match', sound, cascade);
-      await sleep(expanded.size >= 5 ? 165 : 154);
+      await sleep(expanded.size >= 5 ? 190 : 178);
       if (runToken !== gameRun.current) return;
 
       const dropped = dropMatches(current, expanded);
       totalCleared += expanded.size;
-      scoreNow += expanded.size * 60 * Math.min(cascade, 6);
       current = dropped.board;
       setBoard(current);
       setClearing([]);
-      setFreshIds(dropped.spawned);
-      await sleep(210);
+      setFallDistances(dropped.fallDistances);
+      const fallDuration = Math.max(190, ...Object.values(dropped.fallDistances).map(distance => Math.min(420, 175 + distance * 32)));
+      await sleep(fallDuration + 24);
       if (runToken !== gameRun.current) return;
-      setFreshIds([]);
+      setFallDistances({});
       matches = findMatches(current);
     }
 
@@ -537,7 +567,7 @@ function App() {
 
     setBoard(current);
     setClearing([]);
-    setFreshIds([]);
+    setFallDistances({});
     setSelected(null);
     const objectiveConfig = LEVELS[levelAtMove - 1];
     const objectiveMet = objectivesComplete(objectiveConfig, scoreNow, goalNow, jellyNow.size, bossHealthNow, shellsClearedNow);
@@ -704,7 +734,9 @@ function App() {
     suppressTap.current = false;
     setBusy(false);
     setClearing([]);
-    setFreshIds([]);
+    setFallDistances({});
+    setShellHitCells([]);
+    if (shellHitTimeout.current !== null) window.clearTimeout(shellHitTimeout.current);
     setSelected(null);
     setHinted([]);
     setArmed(null);
@@ -744,6 +776,7 @@ function App() {
   const renderCandy = (item: Candy, row: number, col: number) => {
     const cellKey = keyOf(row, col);
     const shellLayers = sugarShells.get(cellKey) ?? 0;
+    const fallDistance = fallDistances[item.id] ?? 0;
     const className = [
       'candy',
       COLORS[item.color],
@@ -751,12 +784,21 @@ function App() {
       selected?.[0] === row && selected?.[1] === col ? 'chosen' : '',
       hinted.some(([hintRow, hintCol]) => hintRow === row && hintCol === col) ? 'hint-target' : '',
       clearing.includes(cellKey) ? 'clearing' : '',
-      freshIds.includes(item.id) ? 'falling' : '',
+      fallDistance > 0 ? 'falling' : '',
+      shellHitCells.includes(cellKey) ? 'shell-hit' : '',
       jelly.has(cellKey) ? 'jelly' : '',
       shellLayers ? 'sugar-shelled' : '',
       item.special || '',
     ].filter(Boolean).join(' ');
     const candyName = `${COLORS[item.color]}${item.special ? ` ${item.special.replace('-', ' ')}` : ''} candy, row ${row + 1}, column ${col + 1}${jelly.has(cellKey) ? ', on jelly' : ''}${shellLayers ? `, in a sugar shell with ${shellLayers} layer${shellLayers === 1 ? '' : 's'} left` : ''}`;
+    const candyStyle = {
+      '--idle-delay': `${-((row * 5 + col * 7) % 17) * 0.19}s`,
+      ...(swapMotion[item.id] ? { '--swap-x': `${swapMotion[item.id].x}%`, '--swap-y': `${swapMotion[item.id].y}%` } : {}),
+      ...(fallDistance > 0 ? {
+        '--fall-offset': `${-fallDistance * 100}%`,
+        '--fall-duration': `${Math.min(420, 175 + fallDistance * 32)}ms`,
+      } : {}),
+    } as CSSProperties;
 
     return (
       <button
@@ -764,7 +806,7 @@ function App() {
         ref={element => { candyRefs.current[cellKey] = element; }}
         type="button"
         className={className}
-        style={swapMotion[item.id] ? ({ '--swap-x': `${swapMotion[item.id].x}%`, '--swap-y': `${swapMotion[item.id].y}%` } as CSSProperties) : undefined}
+        style={candyStyle}
         onPointerDown={event => { pointerStart.current = { r: row, c: col, x: event.clientX, y: event.clientY }; }}
         onPointerCancel={() => { pointerStart.current = null; }}
         onPointerUp={event => {
@@ -796,6 +838,7 @@ function App() {
       >
         {jelly.has(cellKey) && <span className="jelly-glaze" aria-hidden="true" />}
         {shellLayers > 0 && <span className={`sugar-shell${shellLayers > 1 ? ' has-layers' : ''}`} aria-hidden="true"><i>✧</i>{shellLayers > 1 && <b>{shellLayers}</b>}</span>}
+        {shellHitCells.includes(cellKey) && <span className="shell-hit-ripple" aria-hidden="true"><i>✦</i></span>}
         <span className="candy-face" aria-hidden="true">
           <CandyArt color={item.color} special={item.special} />
         </span>
@@ -949,7 +992,7 @@ function App() {
                   </div>
                 </div>
               </div>
-              <WorldScene chapter={mapChapter} />
+              <WorldScene key={mapChapter} chapter={mapChapter} />
               <div className="level-map-grid" aria-label={`${LEVELS[mapChapter * 10].chapterName} levels`}>
                 {Array.from({ length: 10 }, (_, index) => mapChapter * 10 + index + 1).map(number => {
                   const isLocked = number > unlocked;
@@ -978,7 +1021,7 @@ function App() {
               <div className="map-legend"><span><i className="legend-current" />Current</span><span><i className="legend-complete">★</i>Complete</span><span><i className="legend-locked">⌑</i>Locked</span></div>
             </section>
 
-            <aside className="map-detail-card" aria-label="Selected level details">
+            <aside key={mapLevelNumber} className="map-detail-card" aria-label="Selected level details">
               {mapLevelUnlocked ? <>
                 <span className="detail-kicker">{mapSelectedLevel === level ? 'YOUR NEXT LEVEL' : 'LEVEL PREVIEW'}</span>
                 <div className="detail-level-number">{String(mapLevelNumber).padStart(2, '0')}<span>/{LEVEL_COUNT}</span></div>
@@ -1024,7 +1067,7 @@ function App() {
           </div>
           <div className={`mobile-game-hud${levelData.boss ? ' is-boss-level' : ''}`}>
             <div className="mobile-hud-main">
-              <div className="mobile-hud-character">
+              <div className={`mobile-hud-character${levelData.boss && impactPulse > 0 ? ` boss-hit-${impactPulse % 2 ? 'b' : 'a'}` : ''}`}>
                 {levelData.boss
                   ? <CharacterArt kind="boss" mood="determined" color={currentBossPalette.color} accent={currentBossPalette.accent} />
                   : <CharacterArt color="#78d68b" accent="#308d5a" />}
@@ -1045,10 +1088,10 @@ function App() {
                       goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared),
                       ...(levelData.secondaryGoalType ? [goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared)] : []),
                     ].join(' · ')}</span>
-                  <span>{score.toLocaleString()} pts</span>
+                  <span key={score} className="score-live">{score.toLocaleString()} pts</span>
                 </div>
               </div>
-              <div className="mobile-hud-moves"><small>MOVES</small><b>{moves}</b></div>
+              <div className="mobile-hud-moves"><small>MOVES</small><b key={moves} className="move-tick">{moves}</b></div>
             </div>
           </div>
           <div className="play-layout">
@@ -1057,7 +1100,7 @@ function App() {
                 <div className="mission-card-head"><span>LEVEL {String(level).padStart(2, '0')}</span><Sparkles size={16} /></div>
                 <h1>{levelData.chapterName}</h1>
                 <p className="mission-subtitle">A new little challenge</p>
-                {levelData.boss && <div className="desktop-boss-card">
+                {levelData.boss && <div className={`desktop-boss-card${impactPulse > 0 ? ` boss-hit-${impactPulse % 2 ? 'b' : 'a'}` : ''}`}>
                   <CharacterArt kind="boss" mood="determined" color={currentBossPalette.color} accent={currentBossPalette.accent} />
                   <div className="boss-card-copy">
                     <span>CHAPTER BOSS</span>
@@ -1070,7 +1113,7 @@ function App() {
                   </div>
                 </div>}
                 <div className="score-display">
-                  <div><span>YOUR SCORE</span><strong>{score.toLocaleString()}</strong></div>
+                  <div><span>YOUR SCORE</span><strong key={score} className="score-tick">{score.toLocaleString()}</strong></div>
                   <span className="score-target">{levelData.boss ? 'STAR GOAL' : 'TARGET'}<br /><b>{target.toLocaleString()}</b></span>
                 </div>
                 <div className="score-progress" role="progressbar" aria-label={levelData.boss ? 'Bonus score toward the star goal' : 'Score toward level target'} aria-valuemin={0} aria-valuemax={target} aria-valuenow={Math.min(score, target)}><span style={{ width: `${progress}%` }} /></div>
@@ -1096,7 +1139,7 @@ function App() {
                 </div>}
                 <div className="objective-track" role="progressbar" aria-label={levelData.boss ? `${levelData.boss.name} power drained` : levelData.secondaryGoalType ? 'Both level objectives progress' : 'Level objective progress'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(objectivePercent)}><span style={{ width: `${objectivePercent}%` }} /></div>
                 <div className="objective-track-label"><span>{levelData.boss ? 'BOSS POWER DRAINED' : levelData.secondaryGoalType ? 'BOTH GOALS · LEAST COMPLETE' : 'OBJECTIVE PROGRESS'}</span><b>{Math.round(objectivePercent)}%</b></div>
-                <div className="moves-display"><span className="moves-icon">↗</span><div><small>MOVES LEFT</small><b>{moves}</b></div><span className="moves-hint">Plan a<br />good one.</span></div>
+                <div className="moves-display"><span className="moves-icon">↗</span><div><small>MOVES LEFT</small><b key={moves} className="move-tick">{moves}</b></div><span className="moves-hint">Plan a<br />good one.</span></div>
               </section>
               <div className="personal-best"><span>PERSONAL BEST</span><b>{best.toLocaleString()}</b><small>Saved on this device</small></div>
             </aside>
@@ -1115,7 +1158,7 @@ function App() {
                 </div>
                 <div className="board-bottom"><span><span className="board-spark">✦</span> Match 3 or more</span><span>8 × 8 puzzle</span></div>
               </div>
-              <div className="status-message" role="status" aria-live="polite"><span className="status-message-indicator" />{message}</div>
+              <div className="status-message" role="status" aria-live="polite"><span className="status-message-indicator" /><span key={message} className="status-copy">{message}</span></div>
               <div className="board-footnote"><span>TIP: LOOK FOR A MOVE THAT HELPS YOUR GOAL</span><span>{busy ? 'PLEASE WAIT' : 'NO TIMER · PLAY AT YOUR PACE'}</span></div>
             </section>
 
@@ -1176,7 +1219,7 @@ function App() {
                 ? `You outmatched ${levelData.boss.name} and cleared ${levelData.chapterName}. `
                 : 'You scored ' }{levelData.boss && <>You scored </>}<b>{score.toLocaleString()}</b> points. {levelData.boss ? 'What a finish!' : 'That was a lovely bit of strategy.'}</p>
               <div className="result-stars" aria-label={`${stars} stars earned`}>
-                {[1, 2, 3].map(star => <Star key={star} size={34} fill="currentColor" className={stars >= star ? 'is-earned' : ''} />)}
+                {[1, 2, 3].map(star => <Star key={star} size={34} fill="currentColor" style={{ '--star-delay': `${(star - 1) * 100}ms` } as CSSProperties} className={stars >= star ? 'is-earned' : ''} />)}
               </div>
               <div className="result-reward"><span>CAMPAIGN PROGRESS</span><b>{Math.min(LEVEL_COUNT, completedCount)} / {LEVEL_COUNT} levels cleared</b></div>
               <button className="primary-button result-action" type="button" ref={resultActionRef} onClick={() => level < LEVEL_COUNT ? startLevel(level + 1) : setScreen('map')}>
