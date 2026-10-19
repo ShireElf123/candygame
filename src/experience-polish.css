@@ -126,11 +126,7 @@
 /* Don't reserve a compositor layer for every candy; promote only active pieces. */
 .app-shell.is-playing .candy { will-change: auto; }
 .app-shell.is-playing .candy.swap-motion,
-.app-shell.is-playing .candy.swap-rejected,
-.app-shell.is-playing .candy.clearing,
-.app-shell.is-playing .candy.falling,
-.app-shell.is-playing .candy.chosen,
-.app-shell.is-playing .candy.hint-target { will-change: transform, opacity; }
+.app-shell.is-playing .candy.swap-rejected { will-change: transform; }
 .app-shell.is-playing .candy-art { will-change: auto; }
 
 /* Extra detail in original map and character art, with gentle low-amplitude motion. */

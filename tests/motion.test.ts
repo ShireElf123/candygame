@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import postcss, { type Declaration } from 'postcss';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fallAnimationDuration, GAME_MOTION, prefersReducedMotion } from '../src/game/motion';
+import { boardImpactClass, fallAnimationDuration, GAME_MOTION, prefersReducedMotion } from '../src/game/motion';
 
 const juiceStyles = postcss.parse(readFileSync(new URL('../src/juice.css', import.meta.url), 'utf8'));
 const experienceStyles = postcss.parse(readFileSync(new URL('../src/experience-polish.css', import.meta.url), 'utf8'));
@@ -63,6 +63,17 @@ describe('motion preference', () => {
 });
 
 describe('responsive gameplay motion budget', () => {
+  it('does not shake the board before an actual match impact', () => {
+    expect(boardImpactClass(0)).toBeNull();
+    expect(boardImpactClass(1)).toBe('juice-impact-a');
+    expect(boardImpactClass(2)).toBe('juice-impact-b');
+  });
+
+  it('wires the guarded board impact class into the rendered board', () => {
+    expect(appSource).toContain('const boardImpact = boardImpactClass(impactPulse);');
+    expect(appSource).toContain("${boardImpact ? ` ${boardImpact}` : ''}");
+  });
+
   it('awaits every gameplay animation by the class and CSS keyframe name', () => {
     expect(appSource).toContain("await waitForBoardAnimation('.candy.swap-motion', 'candy-swap', controller)");
     expect(appSource).toContain("await waitForBoardAnimation('.candy.swap-rejected', 'candy-reject', controller)");
@@ -74,6 +85,8 @@ describe('responsive gameplay motion budget', () => {
     expect(animationFor('.candy.swap-motion')).toContain(`candy-swap ${GAME_MOTION.swapAnimationMs}ms`);
     expect(animationFor('.candy.swap-rejected')).toContain(`candy-reject ${GAME_MOTION.rejectAnimationMs}ms`);
     expect(animationFor('.candy.clearing')).toContain(`candy-pop ${GAME_MOTION.clearAnimationMs}ms`);
+    expect(animationFor('.candy-board.juice-impact-a')).toContain(`board-impact-a ${GAME_MOTION.clearAnimationMs}ms`);
+    expect(animationFor('.candy-board.juice-impact-b')).toContain(`board-impact-b ${GAME_MOTION.clearAnimationMs}ms`);
   });
 
   it('uses pixel offsets for swaps and falls so grid gaps are included', () => {

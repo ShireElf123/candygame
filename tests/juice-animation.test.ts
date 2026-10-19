@@ -51,6 +51,7 @@ describe('candy layer promotion', () => {
     let restingWillChange: Declaration | undefined;
     let clearingWillChange: Declaration | undefined;
     let swapWillChange: Declaration | undefined;
+    const gameplayPromotionRules: Rule[] = [];
     juiceStyles.walkRules(rule => {
       if (rule.selector === '.candy') {
         restingWillChange = rule.nodes.find((node): node is Declaration => node.type === 'decl' && node.prop === 'will-change');
@@ -62,9 +63,18 @@ describe('candy layer promotion', () => {
         swapWillChange = rule.nodes.find((node): node is Declaration => node.type === 'decl' && node.prop === 'will-change');
       }
     });
+    experienceStyles.walkRules(rule => {
+      const declaration = rule.nodes.find((node): node is Declaration => node.type === 'decl' && node.prop === 'will-change');
+      if (declaration && declaration.value !== 'auto') gameplayPromotionRules.push(rule);
+    });
     expect(restingWillChange).toBeUndefined();
     expect(clearingWillChange).toBeUndefined();
     expect(swapWillChange?.value).toBe('transform');
+    expect(gameplayPromotionRules).toHaveLength(1);
+    expect(gameplayPromotionRules[0].selector).toContain('.candy.swap-motion');
+    expect(gameplayPromotionRules[0].selector).toContain('.candy.swap-rejected');
+    expect(gameplayPromotionRules[0].selector).not.toMatch(/\.candy\.(clearing|falling|chosen|hint-target)/);
+    expect(gameplayPromotionRules[0].nodes.find((node): node is Declaration => node.type === 'decl' && node.prop === 'will-change')?.value).toBe('transform');
   });
 });
 

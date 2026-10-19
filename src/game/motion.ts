@@ -8,6 +8,11 @@ export const GAME_MOTION = {
   fallMaxMs: 220,
 } as const;
 
+export function boardImpactClass(pulse: number): 'juice-impact-a' | 'juice-impact-b' | null {
+  if (!Number.isInteger(pulse) || pulse <= 0) return null;
+  return pulse % 2 === 1 ? 'juice-impact-a' : 'juice-impact-b';
+}
+
 export function fallAnimationDuration(distance: number): number {
   const safeDistance = Number.isFinite(distance) ? Math.max(0, distance) : 0;
   return Math.min(

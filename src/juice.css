@@ -20,8 +20,9 @@
 @media (max-height: 560px) and (orientation: landscape) {
   .candy-board { --juice-effects-inset: 4px; }
 }
-.candy-board.juice-impact-a { animation: board-impact-a 180ms cubic-bezier(.2, .8, .25, 1); }
-.candy-board.juice-impact-b { animation: board-impact-b 180ms cubic-bezier(.2, .8, .25, 1); }
+/* Keep the nudge within the clear phase so it finishes before candies fall. */
+.candy-board.juice-impact-a { animation: board-impact-a 96ms cubic-bezier(.2, .8, .25, 1); }
+.candy-board.juice-impact-b { animation: board-impact-b 96ms cubic-bezier(.2, .8, .25, 1); }
 
 /* A few candies breathe out of phase while the player plans a move. */
 .candy-row:nth-child(odd) .candy:nth-child(4n + 1) .candy-art,

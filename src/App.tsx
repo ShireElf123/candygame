@@ -55,7 +55,7 @@ import { transitionGamePhase, type GamePhase } from './game/phase';
 import { buildResolutionPlan, type ResolutionPlan } from './game/resolution';
 import { starsForCampaign, starsForScore } from './game/progress';
 import { readSave, writeSave } from './game/save';
-import { fallAnimationDuration, prefersReducedMotion } from './game/motion';
+import { boardImpactClass, fallAnimationDuration, prefersReducedMotion } from './game/motion';
 
 const HINT_IDLE_DELAY_MS = 6500;
 
@@ -239,6 +239,7 @@ function App() {
   const [juiceBursts, setJuiceBursts] = useState<JuiceBurst[]>([]);
   const burstSequence = useRef(0);
   const [impactPulse, setImpactPulse] = useState(0);
+  const boardImpact = boardImpactClass(impactPulse);
   const [swapMotion, setSwapMotion] = useState<Record<number, MotionOffset & { rejected?: boolean }>>({});
   const [boosterCounts, setBoosterCounts] = useState<Record<Booster, number>>(save.boosterCounts);
   const [armed, setArmed] = useState<Booster | null>(null);
@@ -1379,7 +1380,7 @@ function App() {
               </div>
               <div className="game-board-wrap" style={{ '--board-fit-width': `${54 * levelData.columns / levelData.rows}svh`, '--board-aspect-ratio': `${levelData.columns} / ${levelData.rows}` } as CSSProperties}>
                 <div className="board-top"><span>LEVEL {String(level).padStart(2, '0')}</span><span>{busy ? 'SWEET THINGS IN MOTION' : 'SWAP TO MATCH'}</span></div>
-                <div ref={boardRef} className={`candy-board${busy ? ' resolving' : ''}${impactPulse % 2 ? ' juice-impact-a' : ' juice-impact-b'}`} style={{ '--board-columns': levelData.columns, '--board-rows': levelData.rows, '--board-ratio': levelData.columns / levelData.rows } as CSSProperties} role="group" aria-label="Candy puzzle board">
+                <div ref={boardRef} className={`candy-board${busy ? ' resolving' : ''}${boardImpact ? ` ${boardImpact}` : ''}`} style={{ '--board-columns': levelData.columns, '--board-rows': levelData.rows, '--board-ratio': levelData.columns / levelData.rows } as CSSProperties} role="group" aria-label="Candy puzzle board">
                   <span id="board-instructions" className="visually-hidden">Choose a candy and an adjacent candy to swap, or swipe a candy. Use arrow keys to move around the board.</span>
                   <JuiceBurstLayer effects={juiceBursts} />
                   {board.map((row, rowIndex) => <div className="candy-row" key={rowIndex} role="presentation">{row.map((item, colIndex) => renderCandy(item, rowIndex, colIndex))}</div>)}
