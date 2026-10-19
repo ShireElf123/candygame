@@ -11,6 +11,7 @@ import './immersive.css';
 import './arcade-skin.css';
 import './game-ui.css';
 import './mobile-game-skin.css';
+import './juice-polish.css';
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

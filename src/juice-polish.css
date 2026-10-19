@@ -1,0 +1,117 @@
+/* Small, purposeful feedback tuned for the brighter game board. */
+.app-shell.is-playing .juice-burst {
+  color: #f59e0b;
+  filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 8px currentColor);
+}
+.app-shell.is-playing .juice-burst--special {
+  color: #7c3aed;
+  filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 9px rgba(124, 58, 237, .82));
+}
+.app-shell.is-playing .juice-burst--cascade {
+  color: #db2777;
+  filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 10px rgba(236, 72, 153, .82));
+}
+.app-shell.is-playing .juice-burst--special::before {
+  width: 20px;
+  height: 20px;
+  border-width: 3px;
+  border-radius: 32%;
+}
+.app-shell.is-playing .juice-burst--cascade::after { animation-delay: 55ms; }
+.app-shell.is-playing .juice-points {
+  color: #fff;
+  font-family: "Fredoka Variable", "Nunito Variable", sans-serif;
+  font-size: clamp(12px, 1.55vw, 16px);
+  font-weight: 700;
+  letter-spacing: -.025em;
+  -webkit-text-stroke: .5px #6b21a8;
+  paint-order: stroke fill;
+  text-shadow: 0 2px 0 #6b21a8, 0 4px 0 rgba(76, 29, 149, .48), 0 0 10px rgba(253, 224, 71, .82);
+}
+
+/* Matching reads as a soft flash; existing board nudge remains untouched. */
+.app-shell.is-playing .candy-board {
+  transition: box-shadow 160ms ease-out, border-color 160ms ease-out;
+}
+.app-shell.is-playing .candy-board.resolving {
+  border-color: #fff;
+  box-shadow:
+    inset 0 4px 11px rgba(14, 116, 144, .12),
+    0 0 0 2px rgba(255, 255, 255, .86),
+    0 0 16px rgba(250, 204, 21, .62),
+    0 2px 0 rgba(255, 255, 255, .52);
+}
+
+/* The armed booster gently breathes so the next tap is unmistakable. */
+.app-shell.is-playing .powerup-list .power-button.is-armed {
+  animation: booster-ready-glow 1.05s ease-in-out infinite alternate;
+}
+@keyframes booster-ready-glow {
+  from { box-shadow: 0 0 0 2px rgba(253, 224, 71, .3), 0 4px 0 #9a3412, inset 0 1px 0 rgba(255, 255, 255, .65); }
+  to { box-shadow: 0 0 0 4px rgba(253, 224, 71, .62), 0 4px 0 #9a3412, 0 0 16px rgba(236, 72, 153, .32), inset 0 1px 0 rgba(255, 255, 255, .75); }
+}
+
+/* Progress eases rather than snapping; controls give a crisp, consistent press. */
+.app-shell.is-playing .score-progress > span,
+.app-shell.is-playing .level-objective-track > span,
+.app-shell.is-playing .boss-health-track > span {
+  transition: width 420ms cubic-bezier(.2, .82, .24, 1);
+}
+.app-shell.is-playing .level-objective-track > span,
+.app-shell.is-playing .boss-health-track > span {
+  box-shadow: 0 0 7px rgba(16, 185, 129, .24);
+}
+.app-shell.is-playing .power-button,
+.app-shell.is-playing .utility-button,
+.app-shell.is-playing .primary-button,
+.app-shell.is-playing .play-topline .back-link,
+.app-shell.is-playing .play-icon-button,
+.app-shell.is-playing .icon-action {
+  transition: transform 130ms cubic-bezier(.2, .8, .25, 1), box-shadow 130ms ease, filter 130ms ease;
+}
+.app-shell.is-playing .power-button:active:not(:disabled),
+.app-shell.is-playing .utility-button:active:not(:disabled),
+.app-shell.is-playing .primary-button:active:not(:disabled),
+.app-shell.is-playing .play-topline .back-link:active,
+.app-shell.is-playing .play-icon-button:active,
+.app-shell.is-playing .icon-action:active {
+  transform: translateY(2px) scale(.98);
+}
+
+/* A brief confetti glint rewards a win without adding a permanent screen effect. */
+.app-shell.is-playing .result-card:not(.result-card-lose) { isolation: isolate; }
+.app-shell.is-playing .result-card:not(.result-card-lose)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background-image:
+    radial-gradient(circle at 7% 12%, #ec4899 0 2px, transparent 3px),
+    radial-gradient(circle at 16% 28%, #38bdf8 0 2px, transparent 3px),
+    radial-gradient(circle at 28% 9%, #fbbf24 0 2px, transparent 3px),
+    radial-gradient(circle at 77% 12%, #10b981 0 2px, transparent 3px),
+    radial-gradient(circle at 89% 26%, #8b5cf6 0 2px, transparent 3px),
+    radial-gradient(circle at 96% 9%, #f97316 0 2px, transparent 3px),
+    radial-gradient(circle at 8% 58%, #fbbf24 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 92% 64%, #ec4899 0 1.5px, transparent 2.5px);
+  opacity: 0;
+  pointer-events: none;
+  animation: victory-confetti-glint 920ms ease-out 100ms both;
+}
+.app-shell.is-playing .result-card:not(.result-card-lose) > * { position: relative; z-index: 1; }
+@keyframes victory-confetti-glint {
+  0% { opacity: 0; transform: translateY(-5px) scale(.98); }
+  28% { opacity: .8; }
+  100% { opacity: 0; transform: translateY(3px) scale(1.01); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell.is-playing .powerup-list .power-button.is-armed,
+  .app-shell.is-playing .result-card:not(.result-card-lose)::before { animation: none !important; }
+  .app-shell.is-playing .candy-board,
+  .app-shell.is-playing .score-progress > span,
+  .app-shell.is-playing .level-objective-track > span,
+  .app-shell.is-playing .boss-health-track > span,
+  .app-shell.is-playing button { transition: none !important; }
+}
