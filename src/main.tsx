@@ -1,6 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import '@fontsource-variable/fredoka';
+import '@fontsource-variable/nunito';
 import './index.css';
 import './pro.css';
 import './juice.css';
@@ -8,6 +10,7 @@ import './theme.css';
 import './immersive.css';
 import './arcade-skin.css';
 import './game-ui.css';
+import './mobile-game-skin.css';
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

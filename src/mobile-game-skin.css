@@ -1,0 +1,248 @@
+/* Modern mobile-game finish: sunny world, friendly type, loud touch feedback. */
+:root {
+  color-scheme: light;
+  font-family: "Nunito Variable", ui-rounded, system-ui, sans-serif;
+}
+body,
+button,
+input,
+select,
+textarea { font-family: "Nunito Variable", ui-rounded, system-ui, sans-serif; }
+h1, h2, h3, h4, h5, h6,
+.font-display,
+.brand-copy,
+.intro-wordmark,
+.map-intro-row h1,
+.world-panel-heading h2,
+.map-detail-card h2,
+.level-hud-copy > b,
+.card-heading,
+.mission-card h1 { font-family: "Fredoka Variable", "Nunito Variable", ui-rounded, sans-serif; }
+
+/* The splash screen and map already use the sunny-meadow palette; echo it in play. */
+.app-shell.is-intro {
+  color: #172554;
+  background:
+    radial-gradient(ellipse at 87% 8%, rgba(253, 224, 71, .4), transparent 20rem),
+    radial-gradient(ellipse at 5% 92%, rgba(34, 197, 94, .44), transparent 29rem),
+    radial-gradient(ellipse at 96% 86%, rgba(236, 72, 153, .22), transparent 26rem),
+    linear-gradient(180deg, #38bdf8 0%, #bfdbfe 38%, #d9f99d 76%, #4ade80 100%);
+}
+.app-shell.is-intro::before {
+  opacity: .25;
+  mix-blend-mode: multiply;
+  background-image:
+    radial-gradient(circle, rgba(236, 72, 153, .62) .8px, transparent 1px),
+    radial-gradient(circle, rgba(251, 191, 36, .74) .8px, transparent 1px),
+    linear-gradient(rgba(79, 70, 229, .06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 70, 229, .06) 1px, transparent 1px);
+  background-size: 18px 18px, 27px 27px, 10px 10px, 10px 10px;
+  background-position: 2px 1px, 12px 8px, 0 0, 0 0;
+}
+.app-shell.is-intro .hero-card {
+  border-color: rgba(255, 255, 255, .92);
+  background:
+    radial-gradient(ellipse at 88% 10%, rgba(253, 224, 71, .48), transparent 18rem),
+    radial-gradient(ellipse at 10% 92%, rgba(52, 211, 153, .28), transparent 20rem),
+    linear-gradient(135deg, #38bdf8 0%, #67e8f9 48%, #34d399 100%);
+  box-shadow: 0 8px 0 #15803d, 0 23px 48px rgba(21, 128, 61, .23), inset 0 2px 0 rgba(255, 255, 255, .58);
+}
+.app-shell.is-intro .hero-card h1 { color: #172554; text-shadow: 0 2px 0 rgba(255, 255, 255, .38); }
+.app-shell.is-intro .hero-card h1 em { color: #be123c; text-shadow: 0 1px 0 rgba(255, 255, 255, .35); }
+.app-shell.is-intro .hero-copy > p { color: #1e3a8a; }
+.app-shell.is-intro .chapter-pill {
+  color: #7c2d12;
+  border-color: #fff;
+  background: linear-gradient(100deg, #fffdf5, #fef3c7);
+  box-shadow: 0 3px 0 rgba(217, 119, 6, .24), inset 0 1px 0 #fff;
+}
+.app-shell.is-intro .hero-caption,
+.app-shell.is-intro .hero-caption b { color: #172554; }
+.app-shell.is-intro .hero-caption span { color: #1e40af; }
+.app-shell.is-intro .hero-caption i { background: #f59e0b; }
+.app-shell.is-intro .hero-spark { color: #facc15; text-shadow: 0 0 14px rgba(250, 204, 21, .8); }
+.app-shell.is-intro .hero-spark-two { color: #fff; }
+
+/* Gameplay: sky, meadow and warm UI chrome instead of a dark PC-style panel stack. */
+.app-shell.is-playing {
+  color: #1e1b4b;
+  background:
+    radial-gradient(ellipse at 86% 5%, rgba(253, 224, 71, .48), transparent 21rem),
+    radial-gradient(ellipse at 0% 84%, rgba(34, 197, 94, .42), transparent 28rem),
+    radial-gradient(ellipse at 100% 92%, rgba(236, 72, 153, .18), transparent 26rem),
+    linear-gradient(180deg, #38bdf8 0%, #bfdbfe 36%, #dcfce7 72%, #4ade80 100%);
+}
+.app-shell.is-playing::before {
+  opacity: .23;
+  mix-blend-mode: multiply;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, .9) 1px, transparent 1.2px),
+    radial-gradient(circle, rgba(236, 72, 153, .5) .8px, transparent 1px),
+    linear-gradient(rgba(79, 70, 229, .06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 70, 229, .06) 1px, transparent 1px);
+  background-size: 24px 24px, 31px 31px, 10px 10px, 10px 10px;
+  background-position: 3px 2px, 15px 17px, 0 0, 0 0;
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .66) 74%, transparent 100%);
+}
+.app-shell.is-playing .play-topline .back-link,
+.app-shell.is-playing .play-icon-button,
+.app-shell.is-playing .play-world-label {
+  color: #4c1d95;
+  border-color: rgba(255, 255, 255, .95);
+  background: linear-gradient(145deg, #fff, #fef3c7);
+  box-shadow: 0 4px 0 rgba(217, 119, 6, .28), 0 8px 16px rgba(30, 64, 175, .12), inset 0 1px 0 #fff;
+}
+.app-shell.is-playing .play-world-label { color: #6b21a8; }
+.app-shell.is-playing .play-world-label i { background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, .18); }
+.app-shell.is-playing .play-topline .back-link:hover,
+.app-shell.is-playing .play-icon-button:hover { color: #fff; border-color: #fff; background: linear-gradient(145deg, #ec4899, #8b5cf6); }
+
+/* Clear, glanceable level scoreboard with a toy-like moves counter. */
+.app-shell.is-playing .level-hud {
+  color: #312e81;
+  border-color: rgba(245, 158, 11, .48);
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(56, 189, 248, .14), transparent 45%),
+    linear-gradient(120deg, #fffef7 0%, #fef3c7 52%, #fce7f3 100%);
+  box-shadow: 0 6px 0 #16a34a, 0 15px 26px rgba(21, 128, 61, .2), inset 0 2px 0 #fff;
+}
+.app-shell.is-playing .level-hud.is-boss-level { border-color: #ec4899; }
+.app-shell.is-playing .level-hud-kicker {
+  color: #fff;
+  border-color: #fbcfe8;
+  background: linear-gradient(100deg, #ec4899, #8b5cf6);
+  text-shadow: 0 1px 2px rgba(76, 29, 149, .36);
+}
+.app-shell.is-playing .level-hud-copy > b { color: #312e81; text-shadow: none; }
+.app-shell.is-playing .level-boss-epithet { color: #6b5b83; }
+.app-shell.is-playing .level-hud-subline { color: #5b647a; }
+.app-shell.is-playing .level-hud-subline > span:first-child {
+  color: #1e40af;
+  border-color: rgba(14, 165, 233, .24);
+  background: #e0f2fe;
+}
+.app-shell.is-playing .score-live {
+  color: #7c2d12;
+  border-color: rgba(245, 158, 11, .42);
+  background: #fef3c7;
+}
+.app-shell.is-playing .hud-star-count {
+  color: #713f12;
+  border-color: #fff0a3;
+  background: linear-gradient(145deg, #fef08a, #fbbf24);
+  box-shadow: 0 2px 0 #d97706;
+}
+.app-shell.is-playing .hud-star-count b { color: #713f12; }
+.app-shell.is-playing .level-objective-track,
+.app-shell.is-playing .boss-health-track {
+  border-color: #fff;
+  background: #e9d5ff;
+  box-shadow: inset 0 2px 4px rgba(76, 29, 149, .14), 0 1px 0 rgba(255, 255, 255, .85);
+}
+.app-shell.is-playing .level-objective-track > span { background: linear-gradient(90deg, #38bdf8, #10b981 42%, #ec4899 74%, #fbbf24); }
+.app-shell.is-playing .boss-health-track > span { background: linear-gradient(90deg, #fbbf24, #f97316 48%, #ec4899); }
+.app-shell.is-playing .level-hud-moves {
+  color: #7c2d12;
+  border-color: #fff;
+  background: linear-gradient(145deg, #fef08a 0%, #fbbf24 54%, #fb923c 100%);
+  box-shadow: 0 5px 0 #c2410c, 0 8px 15px rgba(249, 115, 22, .22), inset 0 2px 0 rgba(255, 255, 255, .84);
+}
+.app-shell.is-playing .level-hud-moves small,
+.app-shell.is-playing .level-hud-moves b { color: #7c2d12; }
+.app-shell.is-playing .level-hud-moves b { text-shadow: 0 1px 0 rgba(255, 255, 255, .36); }
+
+/* A bright enamel tray and saturated inner well keep attention on the candy board. */
+.app-shell.is-playing .game-board-wrap {
+  border-color: #fff;
+  background: linear-gradient(145deg, #38bdf8 0%, #67e8f9 35%, #a3e635 70%, #fbbf24 100%);
+  outline: 2px solid rgba(255, 255, 255, .84);
+  outline-offset: 1px;
+  box-shadow: 0 8px 0 #15803d, 0 22px 38px rgba(21, 128, 61, .26), inset 0 2px 0 rgba(255, 255, 255, .78);
+}
+.app-shell.is-playing .candy-board {
+  border-color: rgba(255, 255, 255, .96);
+  background-color: #bae6fd;
+  background-image: repeating-conic-gradient(#7dd3fc 0 25%, #e0f2fe 0 50%);
+  background-size: clamp(40px, 9vw, 64px) clamp(40px, 9vw, 64px);
+  box-shadow: inset 0 4px 11px rgba(14, 116, 144, .16), 0 2px 0 rgba(255, 255, 255, .52);
+}
+.app-shell.is-playing .board-title-row .eyebrow { color: #7c3aed; text-shadow: none; }
+.app-shell.is-playing .board-title-row h2 { color: #312e81; }
+.app-shell.is-playing .icon-action {
+  color: #fff;
+  border-color: #fff;
+  background: linear-gradient(145deg, #f97316, #ec4899);
+  box-shadow: 0 4px 0 #9d174d, inset 0 1px 0 rgba(255, 255, 255, .72);
+}
+.app-shell.is-playing .status-message {
+  color: #312e81;
+  border-color: rgba(245, 158, 11, .38);
+  background: linear-gradient(100deg, #fffdf5, #fef3c7);
+  box-shadow: 0 4px 0 rgba(217, 119, 6, .24), 0 8px 16px rgba(21, 128, 61, .12), inset 0 1px 0 #fff;
+}
+.app-shell.is-playing .status-message-indicator { background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, .18); }
+
+/* Booster tray: bright, color-coded touch controls with a real pressed state. */
+.app-shell.is-playing .powerups-card {
+  border-color: rgba(16, 185, 129, .44);
+  background: linear-gradient(145deg, #fffef7, #fef3c7 56%, #fce7f3);
+  box-shadow: 0 6px 0 #16a34a, 0 13px 24px rgba(21, 128, 61, .18), inset 0 2px 0 #fff;
+}
+.app-shell.is-playing .powerups-card > .card-heading { color: #4c1d95; text-shadow: none; }
+.app-shell.is-playing .powerups-card > .card-heading svg { color: #f59e0b; filter: drop-shadow(0 1px 3px rgba(245, 158, 11, .24)); }
+.app-shell.is-playing .power-button { border-color: rgba(255, 255, 255, .88); }
+.app-shell.is-playing .powerup-label b { color: #fff; text-shadow: 0 1px 2px rgba(30, 27, 75, .3); }
+.app-shell.is-playing .powerup-count { color: #4c1d95; border-color: #fff; background: #fffdf5; box-shadow: 0 2px 0 rgba(76, 29, 149, .2); }
+.app-shell.is-playing .power-button.is-armed,
+.app-shell.is-playing .powerup-list .power-button.is-armed {
+  border-color: #fff;
+  background: linear-gradient(145deg, #fde047, #fb923c 55%, #ec4899);
+  box-shadow: 0 0 0 3px rgba(253, 224, 71, .48), 0 4px 0 #9a3412, inset 0 1px 0 rgba(255, 255, 255, .65);
+}
+.app-shell.is-playing .power-button:active:not(:disabled) { transform: translateY(2px); }
+.app-shell.is-playing .tool-card {
+  border-color: rgba(139, 92, 246, .24);
+  background: linear-gradient(145deg, #fffef7, #f3e8ff);
+  box-shadow: 0 5px 0 #7c3aed, 0 12px 22px rgba(76, 29, 149, .14), inset 0 1px 0 #fff;
+}
+.app-shell.is-playing .utility-button {
+  color: #fff;
+  border-color: #fff;
+  background: linear-gradient(145deg, #0ea5e9, #2563eb 65%, #4f46e5);
+  box-shadow: 0 5px 0 #1e3a8a, 0 8px 15px rgba(37, 99, 235, .18), inset 0 1px 0 rgba(255, 255, 255, .55);
+}
+.app-shell.is-playing .utility-secondary {
+  color: #fff;
+  border-color: #fbcfe8;
+  background: linear-gradient(145deg, #ec4899, #8b5cf6);
+  box-shadow: 0 5px 0 #7e22ce, 0 8px 15px rgba(126, 34, 206, .18), inset 0 1px 0 rgba(255, 255, 255, .34);
+}
+.app-shell.is-playing .utility-button:active:not(:disabled) { transform: translateY(2px); }
+
+/* Friendly popup styling completes the same sunny toy-world language. */
+.app-shell.is-playing .modal-backdrop,
+.app-shell.is-playing .result-overlay { background: rgba(49, 46, 129, .42); }
+.app-shell.is-playing .modal-card,
+.app-shell.is-playing .result-card {
+  color: #312e81;
+  border-color: #fbbf24;
+  background: linear-gradient(145deg, #fffef7, #fef3c7 56%, #fce7f3);
+  box-shadow: 0 8px 0 #d97706, 0 28px 64px rgba(49, 46, 129, .28), inset 0 2px 0 #fff;
+}
+.app-shell.is-playing .modal-card h2,
+.app-shell.is-playing .result-card h2,
+.app-shell.is-playing .help-steps b,
+.app-shell.is-playing .result-card > p b { color: #312e81; }
+.app-shell.is-playing .modal-intro,
+.app-shell.is-playing .modal-card > p,
+.app-shell.is-playing .result-card > p,
+.app-shell.is-playing .help-steps li > div > span { color: #5b647a; }
+.app-shell.is-playing .result-card .eyebrow { color: #db2777; }
+.app-shell.is-playing .result-reward { border-color: rgba(245, 158, 11, .28); background: #fff; }
+.app-shell.is-playing .result-reward span { color: #81542e; }
+.app-shell.is-playing .result-reward b { color: #4c1d95; }
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell.is-playing .level-hud,
+  .app-shell.is-playing .game-board-wrap { animation: none; }
+}
