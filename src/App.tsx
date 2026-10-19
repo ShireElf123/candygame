@@ -53,13 +53,16 @@ import {
 import { buildResolutionPlan } from './game/resolution';
 import { starsForCampaign, starsForScore } from './game/progress';
 import { readSave, writeSave } from './game/save';
+import { motionWaitMs, prefersReducedMotion } from './game/motion';
 
 const HINT_IDLE_DELAY_MS = 6500;
-const SWAP_SETTLE_MS = 188;
-const REJECT_SETTLE_MS = 188;
-const CLEAR_SETTLE_MS = 160;
-const FALL_DURATION_MAX_MS = 350;
-const fallAnimationDuration = (distance: number) => Math.min(FALL_DURATION_MAX_MS, 170 + distance * 22);
+// Keep game-state waits just ahead of CSS motion; reduced-motion users skip them.
+const SWAP_SETTLE_MS = 148;
+const REJECT_SETTLE_MS = 160;
+const CLEAR_SETTLE_MS = 126;
+const FALL_DURATION_MAX_MS = 280;
+const fallAnimationDuration = (distance: number) => Math.min(FALL_DURATION_MAX_MS, 120 + distance * 18);
+const waitForMotion = (durationMs: number) => sleep(motionWaitMs(durationMs, prefersReducedMotion()));
 
 const BOOSTERS: { id: Booster; icon: string; label: string; shortName: string; description: string }[] = [
   { id: 'hammer', icon: '🔨', label: 'Sugar hammer', shortName: 'Hammer', description: 'Clear one candy' },
@@ -535,7 +538,7 @@ function App() {
       const burstKind: JuiceBurst['kind'] = step.cascade > 1 ? 'cascade' : step.clearCells.length >= 5 ? 'special' : 'match';
       triggerBurst(step.clearCells, burstKind, step.points, config.rows, config.columns);
       playCue(step.cascade > 1 ? 'cascade' : step.clearCells.length >= 5 ? 'special' : 'match', sound, step.cascade);
-      await sleep(CLEAR_SETTLE_MS);
+      await waitForMotion(CLEAR_SETTLE_MS);
       if (runToken !== gameRun.current) return;
 
       setBoard(step.boardAfterDrop);
@@ -544,7 +547,7 @@ function App() {
       const fallDuration = Math.max(0, ...Object.values(step.fallDistances)
         .filter((distance) => distance > 0)
         .map(fallAnimationDuration));
-      await sleep(fallDuration + 18);
+      await waitForMotion(fallDuration + 12);
       if (runToken !== gameRun.current) return;
       setFallDistances({});
     }
@@ -553,9 +556,7 @@ function App() {
     if (plan.reshuffleReason === 'cascade-limit') {
       setMessage('Board reshuffled for a fair move');
     } else if (plan.reshuffleReason === 'no-valid-moves') {
-      setMessage('Shuffling for a new move…');
-      await sleep(180);
-      if (runToken !== gameRun.current) return;
+      setMessage('Board reshuffled for a fresh move');
     }
 
     setBoard(plan.board);
@@ -604,7 +605,7 @@ function App() {
         [itemB.id]: { x: (a[1] - b[1]) * 100, y: (a[0] - b[0]) * 100, rejected: true },
       });
       setBoard(copy);
-      await sleep(REJECT_SETTLE_MS);
+      await waitForMotion(REJECT_SETTLE_MS);
       if (runToken !== gameRun.current) return;
       setBoard(original);
       setSwapMotion({});
@@ -620,7 +621,7 @@ function App() {
       [itemB.id]: { x: (a[1] - b[1]) * 100, y: (a[0] - b[0]) * 100 },
     });
     setBoard(copy);
-    await sleep(SWAP_SETTLE_MS);
+    await waitForMotion(SWAP_SETTLE_MS);
     if (runToken !== gameRun.current) return;
     setSwapMotion({});
     if (specialSwap) {
