@@ -672,10 +672,6 @@
   }
 }
 
-@media (max-width: 560px) {
-  .app-shell.is-playing .juice-effects { inset: 9px 7px 25px; }
-}
-
 /* Gameplay is the product screen: keep its hierarchy closer to a native puzzle game. */
 .app-shell.is-playing {
   display: flex;

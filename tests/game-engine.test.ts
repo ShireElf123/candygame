@@ -9,6 +9,7 @@ import {
   damageSugarShells,
   dropMatches,
   expandSpecials,
+  evaluateSwap,
   findBestMove,
   findMatches,
   matchRuns,
@@ -72,6 +73,39 @@ describe('board generation and resolution', () => {
     expect(matches.size).toBe(7);
     expect(matches.has(keyOf(2, 1))).toBe(true);
     expect(matches.has(keyOf(4, 3))).toBe(true);
+  });
+
+  it('validates swaps without mutating the current board or committing rejected moves', () => {
+    const board = emptyBoard();
+    board[2][0] = makeCandy(2);
+    board[3][0] = makeCandy(2);
+    const originalIds = board.map(row => row.map(candy => candy.id));
+    const valid = evaluateSwap(board, [1, 0], [1, 1]);
+
+    expect(valid.valid).toBe(true);
+    expect(valid.activatesSpecial).toBe(false);
+    expect(valid.matches).toEqual(new Set([keyOf(1, 0), keyOf(2, 0), keyOf(3, 0)]));
+    expect(board.map(row => row.map(candy => candy.id))).toEqual(originalIds);
+    expect(valid.board[1][0].id).toBe(board[1][1].id);
+
+    const rejected = evaluateSwap(board, [0, 0], [0, 1]);
+    expect(rejected.valid).toBe(false);
+    expect(rejected.matches.size).toBe(0);
+    expect(rejected.board.map(row => row.map(candy => candy.id))).toEqual(originalIds);
+
+    const nonAdjacent = evaluateSwap(board, [0, 0], [0, 2]);
+    expect(nonAdjacent.valid).toBe(false);
+    expect(nonAdjacent.board.map(row => row.map(candy => candy.id))).toEqual(originalIds);
+  });
+
+  it('allows a special-candy swap even when ordinary matches are absent', () => {
+    const board = emptyBoard();
+    board[1][0] = makeCandy(3, 'striped-h');
+
+    const result = evaluateSwap(board, [1, 0], [1, 1]);
+    expect(result.valid).toBe(true);
+    expect(result.activatesSpecial).toBe(true);
+    expect(result.board[1][0].id).toBe(board[1][1].id);
   });
 
   it('drops cleared pieces, refills every cell, and reports each candy fall distance', () => {
@@ -208,7 +242,7 @@ describe('special candy rules', () => {
     { label: 'parallel vertical stripes', one: 'striped-v', two: 'striped-v', a: [2, 4] as [number, number], b: [3, 4] as [number, number], center: [3, 4] as [number, number] },
     { label: 'perpendicular horizontal swap', one: 'striped-h', two: 'striped-v', a: [2, 3] as [number, number], b: [2, 4] as [number, number], center: [2, 4] as [number, number] },
     { label: 'perpendicular vertical swap', one: 'striped-v', two: 'striped-h', a: [2, 3] as [number, number], b: [3, 3] as [number, number], center: [3, 3] as [number, number] },
-  ])('fires one row and one column for $label', ({ one, two, a, b, center }) => {
+  ] as const)('fires one row and one column for $label', ({ one, two, a, b, center }) => {
     const board = emptyBoard();
     board[a[0]][a[1]] = makeCandy(1, one);
     board[b[0]][b[1]] = makeCandy(4, two);

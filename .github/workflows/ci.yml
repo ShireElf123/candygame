@@ -2,9 +2,9 @@ name: Quality checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, arena/1a6f0de5-candygame]
   pull_request:
-    branches: [main]
+    branches: [main, arena/1a6f0de5-candygame]
 
 permissions:
   contents: read

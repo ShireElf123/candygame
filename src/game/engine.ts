@@ -313,7 +313,6 @@ export const makeCandy = (color?: number, special?: Special): Candy => ({
   special,
 });
 export const clone = (board: Candy[][]) => board.map(row => row.map(candy => ({ ...candy })));
-export const sleep = (ms: number) => new Promise<void>(resolve => window.setTimeout(resolve, ms));
 export const keyOf = (r: number, c: number) => r + ':' + c;
 export const posOf = (key: string): Pos => key.split(':').map(Number) as Pos;
 
@@ -342,6 +341,43 @@ export function findMatches(board: Candy[][]): Set<string> {
     }
   }
   return found;
+}
+
+export type SwapEvaluation = {
+  valid: boolean;
+  board: Candy[][];
+  matches: Set<string>;
+  activatesSpecial: boolean;
+};
+
+/**
+ * Evaluate a proposed adjacent swap without mutating the engine's current board.
+ * Invalid swaps return the original arrangement so the UI can animate a reject
+ * and then leave game state untouched.
+ */
+export function evaluateSwap(board: Candy[][], a: Pos, b: Pos): SwapEvaluation {
+  const [ar, ac] = a;
+  const [br, bc] = b;
+  const inBounds = (row: number, column: number) =>
+    Number.isInteger(row) && Number.isInteger(column) && Boolean(board[row]?.[column]);
+  const adjacent = Math.abs(ar - br) + Math.abs(ac - bc) === 1;
+  if (!inBounds(ar, ac) || !inBounds(br, bc) || !adjacent) {
+    return { valid: false, board: clone(board), matches: new Set(), activatesSpecial: false };
+  }
+
+  const first = board[ar][ac];
+  const second = board[br][bc];
+  const swapped = clone(board);
+  [swapped[ar][ac], swapped[br][bc]] = [swapped[br][bc], swapped[ar][ac]];
+  const matches = findMatches(swapped);
+  const activatesSpecial = Boolean(first.special || second.special);
+  const valid = matches.size > 0 || activatesSpecial;
+  return {
+    valid,
+    board: valid ? swapped : clone(board),
+    matches: valid ? matches : new Set(),
+    activatesSpecial,
+  };
 }
 
 export function matchRuns(board: Candy[][]) {

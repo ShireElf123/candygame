@@ -20,9 +20,9 @@ function seeded(seed: number) {
 }
 
 describe('campaign playability audit', () => {
-  it('starts every authored level full, match-free, and playable across several seeds', () => {
+  it('starts every authored level full, match-free, and playable across eight deterministic seeds', () => {
     for (const level of LEVELS) {
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      for (let attempt = 1; attempt <= 8; attempt++) {
         const start = createLevelBoard(level, seeded(level.levelId * 101 + attempt));
 
         expect(start.board).toHaveLength(level.rows);
@@ -37,9 +37,9 @@ describe('campaign playability audit', () => {
     }
   });
 
-  it('resolves goal-aware turns on representative score, collect, jelly, shell, and boss levels', () => {
-    for (const levelNumber of [1, 5, 6, 8, 10, 18, 20, 100]) {
-      const level = LEVELS[levelNumber - 1];
+  it('resolves one legal, goal-aware turn on every authored level', () => {
+    for (const level of LEVELS) {
+      const levelNumber = level.levelId;
       const { board, jelly } = createLevelBoard(level, seeded(levelNumber * 211));
       const shells = createSugarShells(levelNumber);
       const move = findBestMove(board, level.goalType, level.goalColor, jelly, level.secondaryGoalType, shells);

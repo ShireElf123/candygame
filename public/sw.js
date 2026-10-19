@@ -1,9 +1,14 @@
-const CACHE_NAME = 'jam-shift-shell-v4';
+const CACHE_NAME = 'jam-shift-shell-v6';
+const PRECACHE_ASSETS = [];
 const APP_BASE = new URL('./', self.registration.scope).href;
 const APP_SHELL = [
   APP_BASE,
   new URL('./manifest.webmanifest', APP_BASE).href,
   new URL('./jam-shift-icon.svg', APP_BASE).href,
+  new URL('./jam-shift-icon-180.png', APP_BASE).href,
+  new URL('./jam-shift-icon-192.png', APP_BASE).href,
+  new URL('./jam-shift-icon-512.png', APP_BASE).href,
+  ...PRECACHE_ASSETS.map(asset => new URL(asset, APP_BASE).href),
 ];
 
 self.addEventListener('install', event => {

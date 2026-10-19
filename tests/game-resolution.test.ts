@@ -49,6 +49,31 @@ describe('pure cascade resolution plan', () => {
     expect(board.flat().map(candy => candy.id)).toEqual(originalIds);
   });
 
+  it('preserves a deterministic refill cascade as ordered immutable board snapshots', () => {
+    const values = [0, 0, 0, 0, 0.2, 0.4];
+    let index = 0;
+    const plan = buildResolutionPlan({
+      level: threeByThreeLevel({ spawnWeights: colors }),
+      board: boardWithBottomMatch(),
+      matches: new Set([keyOf(2, 0), keyOf(2, 1), keyOf(2, 2)]),
+      score: 0,
+      goalProgress: 0,
+      jelly: new Set(),
+      bossHealth: 0,
+      sugarShells: new Map(),
+      shellsCleared: 0,
+    }, () => values[index++] ?? 0);
+
+    expect(plan.steps.map(step => step.cascade)).toEqual([1, 2]);
+    expect(plan.steps[0].clearCells).toEqual([keyOf(2, 0), keyOf(2, 1), keyOf(2, 2)]);
+    expect(plan.steps[0].boardAfterDrop[0].map(candy => candy.color)).toEqual([0, 0, 0]);
+    expect(plan.steps[1].clearCells).toEqual([keyOf(0, 0), keyOf(0, 1), keyOf(0, 2)]);
+    expect(plan.steps[1].boardAfterDrop[0].map(candy => candy.color)).toEqual([0, 1, 2]);
+    expect(plan.totalCleared).toBe(6);
+    expect(plan.reshuffleReason).toBeNull();
+    expect(plan.board).toEqual(plan.steps[1].boardAfterDrop);
+  });
+
   it('tracks jelly and shell damage as data events for the animation layer', () => {
     const level = threeByThreeLevel({ goalType: 'jelly', secondaryGoalType: 'shell', shellCount: 1 });
     const plan = buildResolutionPlan({

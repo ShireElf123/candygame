@@ -8,7 +8,7 @@ Jam Shift is an original, mobile-first match-three game with a polished campaign
 - **Player portal:** campaign overview, world map, level previews, personal bests, star totals, and a configurable pre-level booster loadout.
 - **Player feedback:** goal-focused hints, short onboarding guide, win/loss recaps, sound effects, reduced-motion support, and clear confirmation before leaving or restarting a level.
 - **Local progress:** schema-checked browser storage with a migration path for existing Jam Shift saves. Progress and power-up counts stay on the player's device; there is no account or game backend.
-- **Installable shell:** a web app manifest and versioned service worker cache the app shell and visited assets for offline use after the first successful load.
+- **Installable shell:** platform-sized PNG and scalable SVG icons accompany a versioned service worker that precaches the built JavaScript, CSS, fonts, manifest, and icons for offline startup, then refreshes successful same-origin assets.
 
 ## Run locally
 
@@ -30,7 +30,7 @@ npm run build  # Type-checks and creates the production bundle
 npm run preview
 ```
 
-The `tests/tests.json` file contains manual gameplay QA scenarios for mobile and desktop. Automated engine, portal-render, and save-data tests live in `tests/`. GitHub Actions runs the test suite, production build, and dependency audit on pushes and pull requests to `main`.
+The `tests/tests.json` file contains manual gameplay QA scenarios for mobile and desktop. Automated engine/resolution, save-data, portal-render, animation/accessibility, and PWA asset tests live in `tests/`; a deterministic smoke audit covers all 100 levels across eight start seeds and resolves one legal turn per level. `npm run typecheck` checks app, tests, and Vite config. GitHub Actions runs the test suite, production build, and dependency audit on pushes and pull requests to `main`.
 
 ## Project layout
 
