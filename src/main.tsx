@@ -7,6 +7,7 @@ import './juice.css';
 import './theme.css';
 import './immersive.css';
 import './arcade-skin.css';
+import './game-ui.css';
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
