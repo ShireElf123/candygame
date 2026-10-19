@@ -49,16 +49,21 @@ describe('candy interaction animation precedence', () => {
 describe('candy layer promotion', () => {
   it('avoids promoting every resting candy and reserves will-change for the two-tile swap', () => {
     let restingWillChange: Declaration | undefined;
+    let clearingWillChange: Declaration | undefined;
     let swapWillChange: Declaration | undefined;
     juiceStyles.walkRules(rule => {
       if (rule.selector === '.candy') {
         restingWillChange = rule.nodes.find((node): node is Declaration => node.type === 'decl' && node.prop === 'will-change');
+      }
+      if (rule.selector === '.candy.clearing') {
+        clearingWillChange = rule.nodes.find((node): node is Declaration => node.type === 'decl' && node.prop === 'will-change');
       }
       if (rule.selector === '.candy.swap-motion,\n.candy.swap-rejected') {
         swapWillChange = rule.nodes.find((node): node is Declaration => node.type === 'decl' && node.prop === 'will-change');
       }
     });
     expect(restingWillChange).toBeUndefined();
+    expect(clearingWillChange).toBeUndefined();
     expect(swapWillChange?.value).toBe('transform');
   });
 });
