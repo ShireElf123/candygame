@@ -126,6 +126,7 @@
 /* Don't reserve a compositor layer for every candy; promote only active pieces. */
 .app-shell.is-playing .candy { will-change: auto; }
 .app-shell.is-playing .candy.swap-motion,
+.app-shell.is-playing .candy.swap-rejected,
 .app-shell.is-playing .candy.clearing,
 .app-shell.is-playing .candy.falling,
 .app-shell.is-playing .candy.chosen,

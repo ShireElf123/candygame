@@ -55,6 +55,11 @@ import { starsForCampaign, starsForScore } from './game/progress';
 import { readSave, writeSave } from './game/save';
 
 const HINT_IDLE_DELAY_MS = 6500;
+const SWAP_SETTLE_MS = 128;
+const REJECT_SETTLE_MS = 160;
+const CLEAR_SETTLE_MS = 160;
+const FALL_DURATION_MAX_MS = 340;
+const fallAnimationDuration = (distance: number) => Math.min(FALL_DURATION_MAX_MS, 145 + distance * 25);
 
 const BOOSTERS: { id: Booster; icon: string; label: string; shortName: string; description: string }[] = [
   { id: 'hammer', icon: '🔨', label: 'Sugar hammer', shortName: 'Hammer', description: 'Clear one candy' },
@@ -233,7 +238,7 @@ function App() {
   const [juiceBursts, setJuiceBursts] = useState<JuiceBurst[]>([]);
   const burstSequence = useRef(0);
   const [impactPulse, setImpactPulse] = useState(0);
-  const [swapMotion, setSwapMotion] = useState<Record<number, { x: number; y: number }>>({});
+  const [swapMotion, setSwapMotion] = useState<Record<number, { x: number; y: number; rejected?: boolean }>>({});
   const [boosterCounts, setBoosterCounts] = useState<Record<Booster, number>>(save.boosterCounts);
   const [armed, setArmed] = useState<Booster | null>(null);
   const [introBoosters, setIntroBoosters] = useState<Booster[]>(['hammer', 'line', 'rainbow']);
@@ -530,14 +535,14 @@ function App() {
       const burstKind: JuiceBurst['kind'] = step.cascade > 1 ? 'cascade' : step.clearCells.length >= 5 ? 'special' : 'match';
       triggerBurst(step.clearCells, burstKind, step.points, config.rows, config.columns);
       playCue(step.cascade > 1 ? 'cascade' : step.clearCells.length >= 5 ? 'special' : 'match', sound, step.cascade);
-      await sleep(step.clearCells.length >= 5 ? 190 : 178);
+      await sleep(CLEAR_SETTLE_MS);
       if (runToken !== gameRun.current) return;
 
       setBoard(step.boardAfterDrop);
       setClearing([]);
       setFallDistances(step.fallDistances);
-      const fallDuration = Math.max(190, ...Object.values(step.fallDistances).map(distance => Math.min(420, 175 + distance * 32)));
-      await sleep(fallDuration + 24);
+      const fallDuration = Math.max(170, ...Object.values(step.fallDistances).map(fallAnimationDuration));
+      await sleep(fallDuration + 18);
       if (runToken !== gameRun.current) return;
       setFallDistances({});
     }
@@ -593,11 +598,11 @@ function App() {
       setMessage('No match — try another swap');
       playCue('invalid');
       setSwapMotion({
-        [itemA.id]: { x: (b[1] - a[1]) * 100, y: (b[0] - a[0]) * 100 },
-        [itemB.id]: { x: (a[1] - b[1]) * 100, y: (a[0] - b[0]) * 100 },
+        [itemA.id]: { x: (b[1] - a[1]) * 100, y: (b[0] - a[0]) * 100, rejected: true },
+        [itemB.id]: { x: (a[1] - b[1]) * 100, y: (a[0] - b[0]) * 100, rejected: true },
       });
       setBoard(copy);
-      await sleep(118);
+      await sleep(REJECT_SETTLE_MS);
       if (runToken !== gameRun.current) return;
       setBoard(original);
       setSwapMotion({});
@@ -613,7 +618,7 @@ function App() {
       [itemB.id]: { x: (a[1] - b[1]) * 100, y: (a[0] - b[0]) * 100 },
     });
     setBoard(copy);
-    await sleep(132);
+    await sleep(SWAP_SETTLE_MS);
     if (runToken !== gameRun.current) return;
     setSwapMotion({});
     if (specialSwap) {
@@ -765,7 +770,7 @@ function App() {
     const className = [
       'candy',
       COLORS[item.color],
-      swapMotion[item.id] ? 'swap-motion' : '',
+      swapMotion[item.id]?.rejected ? 'swap-rejected' : swapMotion[item.id] ? 'swap-motion' : '',
       selected?.[0] === row && selected?.[1] === col ? 'chosen' : '',
       hinted.some(([hintRow, hintCol]) => hintRow === row && hintCol === col) ? 'hint-target' : '',
       clearing.includes(cellKey) ? 'clearing' : '',
@@ -778,10 +783,14 @@ function App() {
     const candyName = `${COLORS[item.color]}${item.special ? ` ${item.special.replace('-', ' ')}` : ''} candy, row ${row + 1}, column ${col + 1}${jelly.has(cellKey) ? ', on jelly' : ''}${shellLayers ? `, in a sugar shell with ${shellLayers} layer${shellLayers === 1 ? '' : 's'} left` : ''}`;
     const candyStyle = {
       '--idle-delay': `${-((row * 5 + col * 7) % 17) * 0.19}s`,
-      ...(swapMotion[item.id] ? { '--swap-x': `${swapMotion[item.id].x}%`, '--swap-y': `${swapMotion[item.id].y}%` } : {}),
+      ...(swapMotion[item.id] ? {
+        '--swap-x': `${swapMotion[item.id].x}%`,
+        '--swap-y': `${swapMotion[item.id].y}%`,
+        '--swap-angle': `${swapMotion[item.id].x ? 0 : 90}deg`,
+      } : {}),
       ...(fallDistance > 0 ? {
         '--fall-offset': `${-fallDistance * 100}%`,
-        '--fall-duration': `${Math.min(420, 175 + fallDistance * 32)}ms`,
+        '--fall-duration': `${fallAnimationDuration(fallDistance)}ms`,
       } : {}),
     } as CSSProperties;
 
