@@ -55,11 +55,11 @@ import { starsForCampaign, starsForScore } from './game/progress';
 import { readSave, writeSave } from './game/save';
 
 const HINT_IDLE_DELAY_MS = 6500;
-const SWAP_SETTLE_MS = 128;
-const REJECT_SETTLE_MS = 160;
+const SWAP_SETTLE_MS = 188;
+const REJECT_SETTLE_MS = 188;
 const CLEAR_SETTLE_MS = 160;
-const FALL_DURATION_MAX_MS = 340;
-const fallAnimationDuration = (distance: number) => Math.min(FALL_DURATION_MAX_MS, 145 + distance * 25);
+const FALL_DURATION_MAX_MS = 350;
+const fallAnimationDuration = (distance: number) => Math.min(FALL_DURATION_MAX_MS, 170 + distance * 22);
 
 const BOOSTERS: { id: Booster; icon: string; label: string; shortName: string; description: string }[] = [
   { id: 'hammer', icon: '🔨', label: 'Sugar hammer', shortName: 'Hammer', description: 'Clear one candy' },
@@ -541,7 +541,9 @@ function App() {
       setBoard(step.boardAfterDrop);
       setClearing([]);
       setFallDistances(step.fallDistances);
-      const fallDuration = Math.max(170, ...Object.values(step.fallDistances).map(fallAnimationDuration));
+      const fallDuration = Math.max(0, ...Object.values(step.fallDistances)
+        .filter((distance) => distance > 0)
+        .map(fallAnimationDuration));
       await sleep(fallDuration + 18);
       if (runToken !== gameRun.current) return;
       setFallDistances({});
@@ -786,7 +788,6 @@ function App() {
       ...(swapMotion[item.id] ? {
         '--swap-x': `${swapMotion[item.id].x}%`,
         '--swap-y': `${swapMotion[item.id].y}%`,
-        '--swap-angle': `${swapMotion[item.id].x ? 0 : 90}deg`,
       } : {}),
       ...(fallDistance > 0 ? {
         '--fall-offset': `${-fallDistance * 100}%`,
