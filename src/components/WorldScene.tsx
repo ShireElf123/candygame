@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { memo, useId } from 'react';
 
 type Props = { chapter: number };
 
@@ -26,7 +26,7 @@ const SCENES: ScenePalette[] = [
   { skyTop: '#f0acd2', skyBottom: '#fff1cf', farHill: '#d28cba', nearHill: '#ae659e', deepHill: '#774d83', accent: '#e7a83a', accentLight: '#fff0a4', sun: '#fff0a4' },
 ];
 
-export default function WorldScene({ chapter }: Props) {
+function WorldScene({ chapter }: Props) {
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const scene = SCENES[((chapter % SCENES.length) + SCENES.length) % SCENES.length];
   const skyId = `world-sky-${instanceId}`;
@@ -135,3 +135,5 @@ export default function WorldScene({ chapter }: Props) {
     </svg>
   );
 }
+
+export default memo(WorldScene);

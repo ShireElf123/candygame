@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { memo, type CSSProperties } from 'react';
 
 export type JuiceBurst = {
   id: number;
@@ -13,7 +13,7 @@ type Props = {
   effects: JuiceBurst[];
 };
 
-export default function JuiceBurstLayer({ effects }: Props) {
+function JuiceBurstLayer({ effects }: Props) {
   return (
     <div className="juice-effects" aria-hidden="true">
       {effects.map(effect => {
@@ -46,3 +46,5 @@ export default function JuiceBurstLayer({ effects }: Props) {
     </div>
   );
 }
+
+export default memo(JuiceBurstLayer);

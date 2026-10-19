@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { memo, useId } from 'react';
 
 type Props = {
   kind?: 'buddy' | 'boss';
@@ -9,7 +9,7 @@ type Props = {
 };
 
 /** Small original cast portraits used for the guide character and chapter bosses. */
-export default function CharacterArt({
+function CharacterArt({
   kind = 'buddy',
   mood = 'happy',
   color = '#66c87d',
@@ -59,3 +59,5 @@ export default function CharacterArt({
     </svg>
   );
 }
+
+export default memo(CharacterArt);

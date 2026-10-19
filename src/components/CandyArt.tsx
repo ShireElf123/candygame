@@ -1,4 +1,4 @@
-import { useId, type CSSProperties } from 'react';
+import { memo, useId, type CSSProperties } from 'react';
 import type { Special } from '../game/engine';
 
 type Props = {
@@ -83,7 +83,7 @@ function ColorBombArt() {
   );
 }
 
-export default function CandyArt({ color, special, className }: Props) {
+function CandyArt({ color, special, className }: Props) {
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const fillId = `candy-gloss-${instanceId}`;
   const [highlight, midtone, shadow] = BODY_SHADES[color] ?? BODY_SHADES[0];
@@ -118,3 +118,5 @@ export default function CandyArt({ color, special, className }: Props) {
     </svg>
   );
 }
+
+export default memo(CandyArt);
