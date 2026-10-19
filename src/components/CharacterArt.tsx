@@ -50,6 +50,7 @@ export default function CharacterArt({
       </g>
       <ellipse cx="29" cy="64" rx="5" ry="2.6" fill="#ff9bb0" opacity=".72" />
       <ellipse cx="71" cy="64" rx="5" ry="2.6" fill="#ff9bb0" opacity=".72" />
+      {kind === 'buddy' && <path className="character-glint" d="m72 27 2.4 6.6L81 36l-6.6 2.4L72 45l-2.4-6.6L63 36l6.6-2.4Z" fill="#fff4a8" stroke="#fff" strokeWidth="1.4" strokeLinejoin="round" />}
       <path d={smile} fill="none" stroke="#4d3046" strokeLinecap="round" strokeWidth="3.2" />
       {kind === 'boss' && <path d="M39 44 45 42M61 42l-6 2" fill="none" stroke="#70445c" strokeLinecap="round" strokeWidth="2.5" />}
       {mood === 'dazed' && <g fill="#fff" fontFamily="system-ui, sans-serif" fontSize="10" fontWeight="800">

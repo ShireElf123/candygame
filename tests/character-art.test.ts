@@ -10,6 +10,7 @@ describe('original character portraits', () => {
 
     expect(buddy).toContain('character-art');
     expect(buddy).toContain('character-leaves');
+    expect(buddy).toContain('character-glint');
     expect(buddy).toContain('aria-hidden="true"');
     expect(boss).toContain('character-horns');
     expect(boss).toContain('✦');

@@ -94,6 +94,40 @@ export default function WorldScene({ chapter }: Props) {
         </g>
       </g>
 
+      {/* Tiny flower clusters add a foreground layer without crowding the route. */}
+      <g className="world-flower world-flower-one">
+        <g transform="translate(46 133)">
+          <path d="M0 3Q-2 14 1 27" fill="none" stroke={scene.deepHill} strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M0 18q-8-7-10-2 3 6 10 6" fill={scene.farHill} />
+          <circle cx="0" cy="0" r="3.2" fill={scene.sun} />
+          <ellipse cx="0" cy="-5" rx="2.7" ry="4" fill={scene.accentLight} />
+          <ellipse cx="5" cy="0" rx="4" ry="2.7" fill={scene.accent} />
+          <ellipse cx="0" cy="5" rx="2.7" ry="4" fill={scene.accentLight} />
+          <ellipse cx="-5" cy="0" rx="4" ry="2.7" fill={scene.accent} />
+        </g>
+      </g>
+      <g className="world-flower world-flower-two">
+        <g transform="translate(675 123) scale(.84)">
+          <path d="M0 3Q2 13 0 29" fill="none" stroke={scene.deepHill} strokeWidth="2.8" strokeLinecap="round" />
+          <path d="M1 19q8-7 10-2-3 6-10 6" fill={scene.nearHill} />
+          <circle cx="0" cy="0" r="3.1" fill={scene.sun} />
+          <ellipse cx="0" cy="-5" rx="2.8" ry="4" fill={scene.accentLight} />
+          <ellipse cx="5" cy="0" rx="4" ry="2.8" fill={scene.accent} />
+          <ellipse cx="0" cy="5" rx="2.8" ry="4" fill={scene.accentLight} />
+          <ellipse cx="-5" cy="0" rx="4" ry="2.8" fill={scene.accent} />
+        </g>
+      </g>
+      <g className="world-flower world-flower-three">
+        <g transform="translate(394 145) scale(.65)">
+          <path d="M0 3v24" fill="none" stroke={scene.deepHill} strokeWidth="3" strokeLinecap="round" />
+          <circle cx="0" cy="0" r="3" fill={scene.sun} />
+          <ellipse cx="0" cy="-5" rx="3" ry="4" fill={scene.accentLight} />
+          <ellipse cx="5" cy="0" rx="4" ry="3" fill={scene.accent} />
+          <ellipse cx="0" cy="5" rx="3" ry="4" fill={scene.accentLight} />
+          <ellipse cx="-5" cy="0" rx="4" ry="3" fill={scene.accent} />
+        </g>
+      </g>
+
       <g className="world-sparkles" fill={scene.sun} opacity=".9">
         <path className="world-sparkle world-sparkle-one" d="m224 50 3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z" />
         <path className="world-sparkle world-sparkle-two" d="m476 54 2 5 6 1-5 4 1 6-5-3-5 3 1-6-5-4 6-1z" />
