@@ -840,7 +840,7 @@ function App() {
   const currentLevelProgress = Math.min(100, completedCount / LEVEL_COUNT * 100);
 
   return (
-    <main className={`app-shell${screen === 'play' ? ' is-playing' : ''}`}>
+    <main className={`app-shell${screen === 'play' || screen === 'win' || screen === 'lose' ? ' is-playing' : ''}${screen === 'intro' ? ' is-intro' : ''}`}>
       <header className="game-header">
         <button className="brand-button" type="button" onClick={() => {
           if (screen === 'play') openLeaveDialog();
@@ -868,8 +868,21 @@ function App() {
 
       {screen === 'intro' && (
         <section className="home-view" aria-labelledby="home-title">
+          <div className="intro-topline">
+            <div className="intro-wordmark" aria-label="Jam Shift Puzzle Club">
+              <span className="brand-mark"><Sparkles size={21} strokeWidth={2.4} /></span>
+              <span>JAM SHIFT<small>PUZZLE CLUB</small></span>
+            </div>
+            <div className="intro-quick-actions">
+              <span className="intro-stars" aria-label={`${totalStars} campaign stars`}><Star size={16} fill="currentColor" /><b>{totalStars}</b></span>
+              <button className="intro-icon-button" type="button" onClick={openMap} aria-label="Open campaign map"><MapIcon size={18} /></button>
+              <button className="intro-icon-button" type="button" onClick={() => setSound(value => !value)} aria-label={sound ? 'Turn sound off' : 'Turn sound on'} aria-pressed={sound}>
+                {sound ? <Volume2 size={18} /> : <VolumeX size={18} />}
+              </button>
+            </div>
+          </div>
           <div className="page-kicker-row">
-            <span className="eyebrow"><span className="eyebrow-mark">✦</span> YOUR PUZZLE PORTAL</span>
+            <span className="eyebrow"><span className="eyebrow-mark">✦</span> A CANDY WORLD TO EXPLORE</span>
             <span className="save-indicator"><span className="status-dot" />Progress saved on this device</span>
           </div>
           <div className="home-grid">
@@ -877,9 +890,20 @@ function App() {
               <div className="hero-art" aria-hidden="true">
                 <span className="orbit orbit-one" />
                 <span className="orbit orbit-two" />
-                <span className="hero-candy hero-candy-one"><CandyArt color={2} /></span>
-                <span className="hero-candy hero-candy-two"><CandyArt color={4} /></span>
-                <span className="hero-candy hero-candy-three"><CandyArt color={1} /></span>
+                <div className="hero-preview-board">
+                  <div className="hero-preview-top"><span>LEVEL {String(level).padStart(2, '0')}</span><Sparkles size={15} /></div>
+                  <div className="hero-preview-grid">
+                    {board.slice(0, 6).map((row, rowIndex) => (
+                      <div className="hero-preview-row" key={rowIndex}>
+                        {row.slice(0, 6).map((item, colIndex) => (
+                          <span className={`hero-preview-candy ${COLORS[item.color]}`} key={`${rowIndex}-${colIndex}`}>
+                            <CandyArt color={item.color} special={item.special} />
+                          </span>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 <span className="hero-buddy"><CharacterArt color="#78d68b" accent="#308d5a" /></span>
                 <span className="hero-spark hero-spark-one">✦</span>
                 <span className="hero-spark hero-spark-two">✧</span>
@@ -1047,8 +1071,14 @@ function App() {
       {screen === 'play' && (
         <section className="play-view" aria-label={`Level ${level} game`}>
           <div className="play-topline">
-            <button className="back-link" type="button" onClick={openLeaveDialog}><ArrowLeft size={16} /> Campaign map</button>
+            <button className="back-link" type="button" onClick={openLeaveDialog} aria-label="Exit level to campaign map"><ArrowLeft size={17} /><span>Exit</span></button>
             <span className="play-world-label">WORLD {String(levelData.chapter).padStart(2, '0')} <i /> {levelData.chapterName}</span>
+            <div className="play-topline-actions">
+              <button className="play-icon-button" type="button" onClick={() => setSound(value => !value)} aria-label={sound ? 'Turn sound off' : 'Turn sound on'} aria-pressed={sound}>
+                {sound ? <Volume2 size={18} /> : <VolumeX size={18} />}
+              </button>
+              <button className="play-icon-button" type="button" onClick={() => openGuide(false)} aria-label="How to play"><CircleHelp size={19} /></button>
+            </div>
           </div>
           <div className={`level-hud${levelData.boss ? ' is-boss-level' : ''}`}>
             <div className="level-hud-main">
@@ -1073,7 +1103,8 @@ function App() {
                       goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared),
                       ...(levelData.secondaryGoalType ? [goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared)] : []),
                     ].join(' · ')}</span>
-                  <span key={score} className="score-live">{score.toLocaleString()} pts</span>
+                  <span key={score} className="score-live" aria-label={`${score.toLocaleString()} of ${target.toLocaleString()} target points`}>{score.toLocaleString()} / {target.toLocaleString()}</span>
+                  <span className="hud-star-count" aria-label={`${stars} of 3 stars`}><Star size={11} fill="currentColor" /><b>{stars}/3</b></span>
                 </div>
               </div>
               <div className="level-hud-moves"><small>MOVES</small><b key={moves} className="move-tick">{moves}</b></div>
@@ -1133,7 +1164,7 @@ function App() {
                 <div><span className="eyebrow"><i className="board-live-dot" /> LEVEL IN PLAY</span><h2 id="board-title">Make your next move count.</h2></div>
                 <button className="icon-action" type="button" onClick={() => openGuide(false)} aria-label="How to play"><CircleHelp size={19} /></button>
               </div>
-              <div className="game-board-wrap" style={{ '--board-fit-width': `${72 * levelData.columns / levelData.rows}svh` } as CSSProperties}>
+              <div className="game-board-wrap" style={{ '--board-fit-width': `${54 * levelData.columns / levelData.rows}svh`, '--board-aspect-ratio': `${levelData.columns} / ${levelData.rows}` } as CSSProperties}>
                 <div className="board-top"><span>LEVEL {String(level).padStart(2, '0')}</span><span>{busy ? 'SWEET THINGS IN MOTION' : 'SWAP TO MATCH'}</span></div>
                 <JuiceBurstLayer effects={juiceBursts} />
                 <div className={`candy-board${busy ? ' resolving' : ''}${impactPulse % 2 ? ' juice-impact-a' : ' juice-impact-b'}`} style={{ '--board-columns': levelData.columns, '--board-rows': levelData.rows, '--board-ratio': levelData.columns / levelData.rows } as CSSProperties} role="group" aria-label="Candy puzzle board">
