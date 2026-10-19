@@ -15,6 +15,7 @@ describe('Jam Shift game shell', () => {
     expect(html).toContain('candy-art');
     expect(html).toContain('character-art');
     expect(html).toContain('Play level 01');
+    expect(html).toContain('Install Jam Shift');
     expect(html).toContain('YOUR JOURNEY');
     expect(html).toContain('Explore the world map');
     expect(html).not.toContain('YOUR PUZZLE PORTAL');

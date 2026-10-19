@@ -46,7 +46,7 @@
       "additionalProperties": false,
       "required": ["type", "targetAmount"],
       "properties": {
-        "type": { "enum": ["score", "collect", "jelly", "boss", "shell"] },
+        "type": { "enum": ["score", "collect", "jelly", "boss", "shell", "special"] },
         "targetAmount": { "type": "integer", "minimum": 1 },
         "color": { "type": "integer", "minimum": 0, "maximum": 5 }
       },

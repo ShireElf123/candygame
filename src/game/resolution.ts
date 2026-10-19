@@ -19,6 +19,7 @@ export type ResolutionStep = {
   points: number;
   score: number;
   goalProgress: number;
+  specialsActivated: number;
   jelly: Set<string>;
   bossHealth: number;
   sugarShells: Map<string, number>;
@@ -34,6 +35,7 @@ export type ResolutionPlan = {
   board: Candy[][];
   score: number;
   goalProgress: number;
+  specialsActivated: number;
   jelly: Set<string>;
   bossHealth: number;
   sugarShells: Map<string, number>;
@@ -49,6 +51,7 @@ export type ResolutionInput = {
   matches: Set<string>;
   score: number;
   goalProgress: number;
+  specialsActivated?: number;
   jelly: Set<string>;
   bossHealth: number;
   sugarShells: Map<string, number>;
@@ -64,6 +67,7 @@ export function buildResolutionPlan(input: ResolutionInput, random: () => number
   let current = clone(input.board);
   let score = input.score;
   let goalProgress = input.goalProgress;
+  let specialsActivated = input.specialsActivated ?? 0;
   let jelly = new Set(input.jelly);
   let bossHealth = input.bossHealth;
   let sugarShells = new Map(input.sugarShells);
@@ -78,6 +82,11 @@ export function buildResolutionPlan(input: ResolutionInput, random: () => number
   while (matches.size && cascade < 30) {
     cascade++;
     const expanded = expandSpecials(current, matches);
+    const activatedThisWave = Array.from(expanded).reduce((count, key) => {
+      const [row, column] = posOf(key);
+      return count + (current[row]?.[column]?.special ? 1 : 0);
+    }, 0);
+    specialsActivated += activatedThisWave;
     const config = input.level;
     if (config.boss && bossHealth > 0) {
       bossHealth = Math.max(0, bossHealth - bossDamageForClear(expanded.size, cascade));
@@ -115,6 +124,7 @@ export function buildResolutionPlan(input: ResolutionInput, random: () => number
       points,
       score,
       goalProgress,
+      specialsActivated,
       jelly: new Set(jelly),
       bossHealth,
       sugarShells: new Map(sugarShells),
@@ -140,6 +150,7 @@ export function buildResolutionPlan(input: ResolutionInput, random: () => number
     board: current,
     score,
     goalProgress,
+    specialsActivated,
     jelly,
     bossHealth,
     sugarShells,

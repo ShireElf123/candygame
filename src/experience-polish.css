@@ -194,3 +194,67 @@
 .app-shell.is-playing .hud-star-count {
   font-size: max(0.72rem, 10px);
 }
+
+/* Dev-only A/B switch: keep core candy travel, suppress ambient/juice effects. */
+.app-shell.perf-effects-off .juice-effects { display: none !important; }
+.app-shell.perf-effects-off .candy-board { transition: none !important; }
+.app-shell.perf-effects-off .candy-board.juice-impact-a,
+.app-shell.perf-effects-off .candy-board.juice-impact-b { animation: none !important; }
+.app-shell.perf-effects-off .candy-art,
+.app-shell.perf-effects-off .jelly-glaze,
+.app-shell.perf-effects-off .sugar-shell::after,
+.app-shell.perf-effects-off .candy.wrapped:not(.swap-motion):not(.swap-rejected):not(.clearing):not(.falling):not(.chosen):not(.hint-target),
+.app-shell.perf-effects-off .candy.color:not(.swap-motion):not(.swap-rejected):not(.clearing):not(.falling):not(.chosen):not(.hint-target) {
+  animation: none !important;
+}
+
+/* Always offer a clear install path from the title screen, including browsers
+   that don't expose the native beforeinstallprompt event (notably iOS Safari). */
+.app-shell.is-intro .install-app-wrap { position: relative; display: inline-flex; flex: 0 0 auto; }
+.app-shell.is-intro .install-app-button {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 15px;
+  color: #58354f;
+  border: 1px solid rgba(105, 55, 88, .22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .82);
+  box-shadow: 0 3px 0 rgba(105, 55, 88, .13), inset 0 1px 0 #fff;
+  font-size: 12px;
+  font-weight: 900;
+  transition: transform .16s ease, background-color .16s ease, box-shadow .16s ease;
+}
+.app-shell.is-intro .install-app-button svg { color: #2563a6; }
+.app-shell.is-intro .install-app-button:hover { background: #fff; box-shadow: 0 4px 0 rgba(105, 55, 88, .16), 0 8px 16px rgba(105, 55, 88, .1); }
+.app-shell.is-intro .install-app-button:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(105, 55, 88, .15); }
+.app-shell.is-intro .install-app-button:focus-visible,
+.app-shell.is-intro .install-app-help button:focus-visible { outline: 3px solid #f0bd3c; outline-offset: 3px; }
+.app-shell.is-intro .install-app-help {
+  position: fixed;
+  z-index: 120;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  width: min(340px, calc(100vw - 28px));
+  padding: 14px 15px;
+  color: #51334f;
+  border: 1px solid rgba(105, 55, 88, .18);
+  border-radius: 17px;
+  background: linear-gradient(145deg, #fffef9, #f2fbff 66%, #fff2f8);
+  box-shadow: 0 12px 32px rgba(66, 50, 84, .22), inset 0 1px 0 #fff;
+}
+.install-app-help-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.install-app-help-heading b { color: #51334f; font-size: 14px; font-weight: 950; }
+.app-shell.is-intro .install-app-help-heading button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: #684c63;
+  border: 1px solid rgba(105, 55, 88, .16);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .85);
+}
+.app-shell.is-intro .install-app-help p { margin: 7px 0 0; color: #66566c; font-size: 12px; line-height: 1.5; }

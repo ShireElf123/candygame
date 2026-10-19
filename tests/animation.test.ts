@@ -67,6 +67,7 @@ describe('animation phase completion', () => {
 
     second.complete();
     await expect(result).resolves.toBe('finished');
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('treats a cancelled animation as complete even after its element is removed', async () => {
@@ -138,14 +139,83 @@ describe('animation phase completion', () => {
     });
     vi.stubGlobal('window', fakeWindow);
     const target = Object.assign(new EventTarget(), { isConnected: true });
-    const result = waitForAnimationPhase(() => [target as unknown as Element], 'candy-pop', { watchdogMs: 500 });
+    const onFrameReady = vi.fn();
+    const onAnimationsDetected = vi.fn();
+    const result = waitForAnimationPhase(() => [target as unknown as Element], 'candy-pop', {
+      watchdogMs: 500,
+      onFrameReady,
+      onAnimationsDetected,
+    });
     await advanceToAnimationFrame();
+    expect(onFrameReady).toHaveBeenCalledOnce();
+    expect(onAnimationsDetected).toHaveBeenCalledWith({
+      source: 'animation-events',
+      activeCount: 1,
+      expectedRemainingMs: GAME_MOTION.clearAnimationMs,
+    });
 
     const animationEnd = new Event('animationend');
     Object.defineProperty(animationEnd, 'animationName', { value: 'candy-pop' });
     target.dispatchEvent(animationEnd);
     await expect(result).resolves.toBe('finished');
     expect(fakeWindow.getComputedStyle).toHaveBeenCalledWith(target);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('keeps a lost CSS animation event watchdog close to its expected duration', async () => {
+    vi.useFakeTimers();
+    const fakeWindow = Object.assign(new EventTarget(), {
+      getComputedStyle: vi.fn(() => ({ animationName: 'candy-pop', animationDuration: '72ms' })),
+    });
+    vi.stubGlobal('window', fakeWindow);
+    const target = Object.assign(new EventTarget(), { isConnected: true });
+    const result = waitForAnimationPhase(() => [target as unknown as Element], 'candy-pop');
+    await advanceToAnimationFrame();
+    await vi.advanceTimersByTimeAsync(349);
+    let settled = false;
+    void result.then(() => { settled = true; });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+
+    await expect(result).resolves.toBe('timeout');
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('does not leave a CSS-animation waiter blocked when its candy is detached', async () => {
+    vi.useFakeTimers();
+    const observerState: { notifyMutation?: () => void; disconnect?: () => void } = {};
+    class TestMutationObserver {
+      observe = vi.fn();
+      disconnect = vi.fn();
+      takeRecords = vi.fn(() => []);
+
+      constructor(callback: MutationCallback) {
+        observerState.disconnect = this.disconnect;
+        observerState.notifyMutation = () => callback([], this as unknown as MutationObserver);
+      }
+    }
+    const fakeWindow = Object.assign(new EventTarget(), {
+      getComputedStyle: vi.fn(() => ({ animationName: 'candy-pop', animationDuration: `${GAME_MOTION.clearAnimationMs}ms` })),
+    });
+    const fakeDocument = Object.assign(new EventTarget(), {
+      visibilityState: 'visible' as DocumentVisibilityState,
+      documentElement: new EventTarget(),
+    });
+    vi.stubGlobal('window', fakeWindow);
+    vi.stubGlobal('document', fakeDocument);
+    vi.stubGlobal('MutationObserver', TestMutationObserver);
+
+    const target = Object.assign(new EventTarget(), { isConnected: true });
+    const result = waitForAnimationPhase(() => [target as unknown as Element], 'candy-pop', { watchdogMs: 500 });
+    await advanceToAnimationFrame();
+    expect(observerState.notifyMutation).toBeTypeOf('function');
+    Object.defineProperty(target, 'isConnected', { configurable: true, value: false });
+    observerState.notifyMutation?.();
+
+    await expect(result).resolves.toBe('finished');
+    expect(observerState.disconnect).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('fast-forwards on viewport resize so the next phase can measure its new geometry', async () => {

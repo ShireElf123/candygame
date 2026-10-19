@@ -10,7 +10,7 @@ export const COLORS = ['grape', 'lemon', 'berry', 'mint', 'blueberry', 'orange']
 export const GLYPHS = ['✿', '●', '♥', '✦', '◆', '◉'];
 export const SIZE = 8;
 export const LEVEL_COUNT = 100;
-export type GoalType = 'score' | 'collect' | 'jelly' | 'boss' | 'shell';
+export type GoalType = 'score' | 'collect' | 'jelly' | 'boss' | 'shell' | 'special';
 export type BossDefinition = {
   name: string;
   epithet: string;
@@ -34,6 +34,7 @@ export type LevelDefinition = {
   goalColor: number;
   goalCount: number;
   jellyCount: number;
+  specialCount: number;
   shellCount?: number;
   spawnWeights: SpawnWeight[];
   initialGrid?: InitialGridCell[][];
@@ -43,7 +44,7 @@ export type LevelDefinition = {
 
 type ObjectiveSet = Pick<LevelDefinition, 'goalType' | 'secondaryGoalType'>;
 type UnknownRecord = Record<string, unknown>;
-const GOAL_TYPES: GoalType[] = ['score', 'collect', 'jelly', 'boss', 'shell'];
+const GOAL_TYPES: GoalType[] = ['score', 'collect', 'jelly', 'boss', 'shell', 'special'];
 
 function isRecord(value: unknown): value is UnknownRecord {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -147,6 +148,7 @@ function parseLevelEntry(value: unknown, index: number, defaults: UnknownRecord)
   if (bossObjective && boss && bossObjective.targetAmount !== boss.maxHealth) throw new Error(`Invalid level data: ${field} boss target must match maxHealth.`);
   const collectObjective = objectives.find(objective => objective.type === 'collect');
   const shellObjective = objectives.find(objective => objective.type === 'shell');
+  const specialObjective = objectives.find(objective => objective.type === 'special');
   const defaultGoalColor = collectObjective?.color ?? (boss && typeof boss.color === 'number' ? boss.color : (levelId + 1) % COLORS.length);
   const goalColor = value.goalColor ?? defaultGoalColor;
   if (!Number.isInteger(goalColor) || (goalColor as number) < 0 || (goalColor as number) >= COLORS.length) {
@@ -167,6 +169,7 @@ function parseLevelEntry(value: unknown, index: number, defaults: UnknownRecord)
     goalColor: goalColor as number,
     goalCount: collectObjective?.targetAmount ?? 0,
     jellyCount: jellyObjective?.targetAmount ?? 0,
+    specialCount: specialObjective?.targetAmount ?? 0,
     ...(shellObjective ? { shellCount: shellObjective.targetAmount } : {}),
     spawnWeights: weights,
     ...(initialGrid ? { initialGrid } : {}),
@@ -208,13 +211,15 @@ export function objectivesComplete(
   jellyRemaining: number,
   bossHealthRemaining = level.boss?.maxHealth ?? 0,
   shellsCleared = 0,
+  specialsActivated = 0,
 ): boolean {
   return goalsForLevel(level).every(goalType => {
     if (goalType === 'score') return score >= level.target;
     if (goalType === 'collect') return collected >= level.goalCount;
     if (goalType === 'jelly') return jellyRemaining === 0;
     if (goalType === 'boss') return bossHealthRemaining <= 0;
-    return shellsCleared >= (level.shellCount ?? 0);
+    if (goalType === 'shell') return shellsCleared >= (level.shellCount ?? 0);
+    return specialsActivated >= level.specialCount;
   });
 }
 
@@ -227,6 +232,7 @@ export function objectiveProgressPercent(
   jellyTotal: number,
   bossHealthRemaining = level.boss?.maxHealth ?? 0,
   shellsCleared = 0,
+  specialsActivated = 0,
 ): number {
   const percentages = goalsForLevel(level).map(goalType => {
     if (goalType === 'score') return level.target > 0 ? Math.min(100, score / level.target * 100) : 100;
@@ -237,7 +243,8 @@ export function objectiveProgressPercent(
         ? Math.min(100, Math.max(0, level.boss.maxHealth - bossHealthRemaining) / level.boss.maxHealth * 100)
         : 100;
     }
-    return level.shellCount && level.shellCount > 0 ? Math.min(100, shellsCleared / level.shellCount * 100) : 100;
+    if (goalType === 'shell') return level.shellCount && level.shellCount > 0 ? Math.min(100, shellsCleared / level.shellCount * 100) : 100;
+    return level.specialCount > 0 ? Math.min(100, specialsActivated / level.specialCount * 100) : 100;
   });
   return Math.min(...percentages);
 }
@@ -679,6 +686,12 @@ export function findBestMove(
         if (goals.includes('boss')) value += Math.min(20, cleared.size) * 1.5;
         if (goals.includes('shell') && sugarShells) {
           for (const key of cleared) if (sugarShells.has(key)) value += 15;
+        }
+        if (goals.includes('special')) {
+          for (const key of cleared) {
+            const [specialRow, specialColumn] = posOf(key);
+            if (candidate[specialRow]?.[specialColumn]?.special) value += 16;
+          }
         }
 
         if (activatesSpecial) value += 4;

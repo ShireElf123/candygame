@@ -7,11 +7,19 @@ export type AnimationWaitResult =
   | 'resized'
   | 'timeout';
 
+export type AnimationDetectionInfo = {
+  source: 'web-animations' | 'animation-events' | 'none';
+  activeCount: number;
+  expectedRemainingMs?: number;
+};
+
 export type AnimationWaitOptions = {
   signal?: AbortSignal;
   reducedMotion?: boolean;
   watchdogMs?: number;
   watchResize?: boolean;
+  onFrameReady?: () => void;
+  onAnimationsDetected?: (info: AnimationDetectionInfo) => void;
 };
 
 const MIN_WATCHDOG_MS = 350;
@@ -93,21 +101,53 @@ function hasNamedCssAnimation(element: Element, expectedName: string): boolean {
   }
 }
 
-function watchdogFor(animations: readonly Animation[]): number {
-  const remaining = animations.map(animation => {
-    try {
-      const timing = animation.effect?.getComputedTiming();
-      const endTime = Number(timing?.endTime);
-      const currentTime = Number(animation.currentTime ?? 0);
-      const rate = Math.abs(animation.playbackRate);
-      if (!Number.isFinite(endTime) || !Number.isFinite(currentTime) || !Number.isFinite(rate) || rate === 0) return 0;
-      return Math.max(0, (endTime - currentTime) / rate);
-    } catch {
-      return 0;
-    }
-  });
-  const desired = Math.max(...remaining, 0) + WATCHDOG_GRACE_MS;
+function remainingAnimationMs(animation: Animation): number {
+  try {
+    const timing = animation.effect?.getComputedTiming();
+    const endTime = Number(timing?.endTime);
+    const currentTime = Number(animation.currentTime ?? 0);
+    const rate = Math.abs(animation.playbackRate);
+    if (!Number.isFinite(endTime) || !Number.isFinite(currentTime) || !Number.isFinite(rate) || rate === 0) return 0;
+    return Math.max(0, (endTime - currentTime) / rate);
+  } catch {
+    return 0;
+  }
+}
+
+function boundedWatchdog(expectedRemainingMs: number): number {
+  const desired = Math.max(0, expectedRemainingMs) + WATCHDOG_GRACE_MS;
   return Math.min(MAX_WATCHDOG_MS, Math.max(MIN_WATCHDOG_MS, Math.ceil(desired)));
+}
+
+function watchdogFor(animations: readonly Animation[]): number {
+  return boundedWatchdog(Math.max(...animations.map(remainingAnimationMs), 0));
+}
+
+function cssTimeMs(value: string | undefined): number {
+  if (!value) return 0;
+  const amount = Number.parseFloat(value);
+  if (!Number.isFinite(amount)) return 0;
+  return value.trim().endsWith('ms') ? amount : amount * 1_000;
+}
+
+function cssAnimationRemainingMs(element: Element, expectedName: string): number {
+  if (typeof window === 'undefined' || typeof window.getComputedStyle !== 'function') return 0;
+  try {
+    const style = window.getComputedStyle(element);
+    const names = style.animationName.split(',').map(name => name.trim());
+    const index = names.indexOf(expectedName);
+    if (index < 0) return 0;
+    const durations = style.animationDuration.split(',').map(value => value.trim());
+    const delays = style.animationDelay?.split(',').map(value => value.trim()) ?? ['0s'];
+    const iterations = style.animationIterationCount?.split(',').map(value => value.trim()) ?? ['1'];
+    const duration = cssTimeMs(durations[index % durations.length]);
+    const delay = cssTimeMs(delays[index % delays.length]);
+    const iteration = Number.parseFloat(iterations[index % iterations.length] ?? '1');
+    if (!Number.isFinite(iteration) || iteration <= 0) return 0;
+    return Math.max(0, duration * iteration + delay);
+  } catch {
+    return 0;
+  }
 }
 
 function cancelAnimations(animations: readonly Animation[]) {
@@ -179,11 +219,26 @@ function waitForCompletion(
 
 function waitForAnimationEvents(elements: readonly Element[], animationName: string, options: AnimationWaitOptions): Promise<AnimationWaitResult> {
   const animations = new Set(elements.filter(element => element.isConnected && hasNamedCssAnimation(element, animationName)));
-  if (!animations.size) return Promise.resolve('no-animation');
+  if (!animations.size) {
+    options.onAnimationsDetected?.({ source: 'none', activeCount: 0, expectedRemainingMs: 0 });
+    return Promise.resolve('no-animation');
+  }
+
+  const expectedRemainingMs = Math.max(...Array.from(animations, element => cssAnimationRemainingMs(element, animationName)), 0);
+  options.onAnimationsDetected?.({
+    source: 'animation-events',
+    activeCount: animations.size,
+    expectedRemainingMs,
+  });
 
   let cleanup: () => void = () => undefined;
   const completion = new Promise<void>(resolve => {
     const pending = new Set(animations);
+    let detachObserver: MutationObserver | null = null;
+    const finishDetached = () => {
+      for (const element of pending) if (!element.isConnected) pending.delete(element);
+      if (!pending.size) resolve();
+    };
     const onAnimationDone = (event: Event) => {
       const animationEvent = event as AnimationEvent;
       if (animationEvent.animationName !== animationName) return;
@@ -194,21 +249,37 @@ function waitForAnimationEvents(elements: readonly Element[], animationName: str
       element.addEventListener('animationend', onAnimationDone);
       element.addEventListener('animationcancel', onAnimationDone);
     }
+    if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined' && document.documentElement) {
+      try {
+        detachObserver = new MutationObserver(finishDetached);
+        detachObserver.observe(document.documentElement, { childList: true, subtree: true });
+      } catch {
+        detachObserver = null;
+      }
+    }
     cleanup = () => {
+      detachObserver?.disconnect();
       for (const element of animations) {
         element.removeEventListener('animationend', onAnimationDone);
         element.removeEventListener('animationcancel', onAnimationDone);
       }
     };
+    finishDetached();
   });
 
-  return waitForCompletion(completion, [], { ...options, watchdogMs: options.watchdogMs ?? MAX_WATCHDOG_MS }, cleanup);
+  return waitForCompletion(
+    completion,
+    [],
+    { ...options, watchdogMs: options.watchdogMs ?? boundedWatchdog(expectedRemainingMs) },
+    cleanup,
+  );
 }
 
 /**
- * Wait for every active CSS animation with the requested name on the supplied
- * elements. Call after the state change that applies the animation class. It
- * checks after a rendered frame, so React's class update is visible first.
+ * Wait for all active CSS animations with the requested name. The first rAF is
+ * only a render handoff: it lets React commit the class update before sampling
+ * the Web Animations API. Normal completion is event/promise driven; watchdogs
+ * are only a bounded recovery path for lost browser completion signals.
  */
 export async function waitForAnimationPhase(
   getElements: () => Iterable<Element>,
@@ -220,15 +291,20 @@ export async function waitForAnimationPhase(
 
   const frameResult = await waitForNextFrame(options);
   if (frameResult !== 'frame') return frameResult;
+  options.onFrameReady?.();
   if (options.signal?.aborted) return 'aborted';
 
   let elements: Element[];
   try {
     elements = Array.from(getElements()).filter(element => element.isConnected);
   } catch {
+    options.onAnimationsDetected?.({ source: 'none', activeCount: 0, expectedRemainingMs: 0 });
     return 'no-animation';
   }
-  if (!elements.length) return 'no-animation';
+  if (!elements.length) {
+    options.onAnimationsDetected?.({ source: 'none', activeCount: 0, expectedRemainingMs: 0 });
+    return 'no-animation';
+  }
 
   const activeAnimations: Animation[] = [];
   let sawNamedAnimation = false;
@@ -250,12 +326,20 @@ export async function waitForAnimationPhase(
   }
 
   if (activeAnimations.length) {
+    options.onAnimationsDetected?.({
+      source: 'web-animations',
+      activeCount: activeAnimations.length,
+      expectedRemainingMs: Math.max(...activeAnimations.map(remainingAnimationMs), 0),
+    });
     const completion = Promise.all(activeAnimations.map(animation =>
       animation.finished.then(() => undefined, () => undefined),
     )).then(() => undefined);
     return waitForCompletion(completion, activeAnimations, options);
   }
 
-  if (sawNamedAnimation) return 'no-animation';
+  if (sawNamedAnimation) {
+    options.onAnimationsDetected?.({ source: 'none', activeCount: 0, expectedRemainingMs: 0 });
+    return 'no-animation';
+  }
   return waitForAnimationEvents(elements, animationName, options);
 }

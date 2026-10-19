@@ -38,6 +38,20 @@ describe('data-driven campaign levels', () => {
     expect(LEVELS.every(level => level.spawnWeights.length >= 3)).toBe(true);
   });
 
+  it('authors special-candy activation as a secondary goal on five milestone levels', () => {
+    const milestones = [15, 35, 55, 75, 95].map(levelId => LEVELS[levelId - 1]);
+    expect(milestones.map(level => [level.levelId, level.secondaryGoalType, level.specialCount])).toEqual([
+      [15, 'special', 1],
+      [35, 'special', 2],
+      [55, 'special', 2],
+      [75, 'special', 3],
+      [95, 'special', 3],
+    ]);
+    expect(milestones.every(level => level.objectives.some(objective =>
+      objective.type === 'special' && objective.targetAmount === level.specialCount,
+    ))).toBe(true);
+  });
+
   it('rejects malformed objectives and board matrices before play', () => {
     expect(() => parseLevelManifest(oneLevel({ objectives: [{ type: 'teleport', targetAmount: 1 }] })))
       .toThrow(/unknown objective type/);

@@ -4,11 +4,15 @@ Jam Shift is an original, mobile-first match-three game with a polished campaign
 
 ## What is in the build
 
-- **Playable campaign:** 8×8 boards, tap/swipe/keyboard controls, match validation, cascades, striped/wrapped/color specials, three base objective families (score, color collect, jelly), and late-world mixed-goal levels that require two objectives together.
+- **Playable campaign:** 8×8 boards, tap/swipe/keyboard controls, match validation, cascades, striped/wrapped/color specials, and six objective types: score, color collect, jelly, chapter bosses, sugar shells, and special-candy activation. Levels 15, 35, 55, 75, and 95 pair an activation target with their existing goal.
 - **Player portal:** campaign overview, world map, level previews, personal bests, star totals, and a configurable pre-level booster loadout.
 - **Player feedback:** goal-focused hints, short onboarding guide, win/loss recaps, sound effects, reduced-motion support, and clear confirmation before leaving or restarting a level.
 - **Local progress:** schema-checked browser storage with a migration path for existing Jam Shift saves. Progress and power-up counts stay on the player's device; there is no account or game backend.
-- **Installable shell:** platform-sized PNG and scalable SVG icons accompany a versioned service worker that precaches the built JavaScript, CSS, fonts, manifest, and icons for offline startup, then refreshes successful same-origin assets.
+- **Installable shell:** a visible “Install Jam Shift” action opens supported browser install prompts and gives device-specific Home Screen steps when a native prompt is unavailable. Platform-sized PNG and scalable SVG icons accompany a versioned service worker that precaches the built JavaScript, CSS, fonts, manifest, and icons for offline startup, then refreshes successful same-origin assets.
+
+### Installed app updates
+
+The home-screen icon opens the same deployed web app; it does not automatically receive edits from a developer’s local workspace. Once an update is published to this URL, online launches fetch the refreshed app files. If an installed copy looks old, fully close it and reopen it while connected.
 
 ## Run locally
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { keyOf, LEVELS, makeCandy, type LevelDefinition } from '../src/game/engine';
+import { buildSwapSpecial, evaluateSwap, keyOf, LEVELS, makeCandy, type LevelDefinition } from '../src/game/engine';
 import { buildResolutionPlan } from '../src/game/resolution';
 
 const colors = [0, 1, 2, 3, 4, 5].map(color => ({ color, weight: 1 }));
@@ -72,6 +72,76 @@ describe('pure cascade resolution plan', () => {
     expect(plan.totalCleared).toBe(6);
     expect(plan.reshuffleReason).toBeNull();
     expect(plan.board).toEqual(plan.steps[1].boardAfterDrop);
+  });
+
+  it('counts activated specials cumulatively without counting a newly-created special', () => {
+    const board = boardWithBottomMatch();
+    board[2][2] = makeCandy(0, 'striped-v');
+    const values = [0.1, 0.4, 0.8];
+    let index = 0;
+    const activatedPlan = buildResolutionPlan({
+      level: threeByThreeLevel({ goalType: 'score', secondaryGoalType: 'special', specialCount: 3 }),
+      board,
+      matches: new Set([keyOf(2, 0), keyOf(2, 1), keyOf(2, 2)]),
+      score: 0,
+      goalProgress: 0,
+      specialsActivated: 2,
+      jelly: new Set(),
+      bossHealth: 0,
+      sugarShells: new Map(),
+      shellsCleared: 0,
+    }, () => values[index++ % values.length]);
+
+    expect(activatedPlan.steps).toHaveLength(1);
+    expect(activatedPlan.steps[0].specialsActivated).toBe(3);
+    expect(activatedPlan.specialsActivated).toBe(3);
+
+    const cascadeBoard = [
+      [makeCandy(1), makeCandy(2), makeCandy(3), makeCandy(0, 'striped-h')],
+      [makeCandy(2), makeCandy(3), makeCandy(4), makeCandy(5)],
+      [makeCandy(3), makeCandy(4), makeCandy(5), makeCandy(1)],
+      [makeCandy(0), makeCandy(0), makeCandy(0), makeCandy(2)],
+    ];
+    const cascadeValues = [0, 0, 0, 0, 0.2, 0.4, 0.6];
+    let cascadeIndex = 0;
+    const cascadePlan = buildResolutionPlan({
+      level: threeByThreeLevel({ rows: 4, columns: 4, goalType: 'score', secondaryGoalType: 'special', specialCount: 1 }),
+      board: cascadeBoard,
+      matches: new Set([keyOf(3, 0), keyOf(3, 1), keyOf(3, 2)]),
+      score: 0,
+      goalProgress: 0,
+      jelly: new Set(),
+      bossHealth: 0,
+      sugarShells: new Map(),
+      shellsCleared: 0,
+    }, () => cascadeValues[cascadeIndex++] ?? 0.8);
+    expect(cascadePlan.steps.map(step => step.specialsActivated)).toEqual([0, 1]);
+    expect(cascadePlan.specialsActivated).toBe(1);
+
+    const fourMatchBoard = [
+      [makeCandy(3), makeCandy(4), makeCandy(0), makeCandy(5)],
+      [makeCandy(0), makeCandy(0), makeCandy(1), makeCandy(0)],
+      [makeCandy(1), makeCandy(2), makeCandy(3), makeCandy(4)],
+      [makeCandy(2), makeCandy(3), makeCandy(4), makeCandy(5)],
+    ];
+    const evaluation = evaluateSwap(fourMatchBoard, [0, 2], [1, 2]);
+    expect(evaluation.valid).toBe(true);
+    buildSwapSpecial(evaluation.board, evaluation.matches, [0, 2], [1, 2]);
+    expect(evaluation.board[1][2].special).toBe('striped-v');
+    expect(evaluation.matches.has(keyOf(1, 2))).toBe(false);
+
+    const createdPlan = buildResolutionPlan({
+      level: threeByThreeLevel({ rows: 4, columns: 4, goalType: 'score', secondaryGoalType: 'special', specialCount: 1 }),
+      board: evaluation.board,
+      matches: evaluation.matches,
+      score: 0,
+      goalProgress: 0,
+      jelly: new Set(),
+      bossHealth: 0,
+      sugarShells: new Map(),
+      shellsCleared: 0,
+    }, () => 0.1);
+    expect(createdPlan.specialsActivated).toBe(0);
   });
 
   it('tracks jelly and shell damage as data events for the animation layer', () => {

@@ -94,6 +94,49 @@
     "expected": "Match shapes create specials; every striped-plus-striped swap clears one full row and one full column regardless of stripe orientation, and special swaps consume both candies without leaving the board locked."
   },
   {
+    "name": "Special-candy activation milestones",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "secondary activation targets on levels 15, 35, 55, 75, and 95",
+      "special creation does not count as activation",
+      "activation counter persists across moves and cascades",
+      "both objectives are required to win",
+      "objective progress and accessibility text update"
+    ],
+    "description": "Confirms that the five authored campaign milestones require actually firing specials and preserve that progress through normal gameplay.",
+    "steps": [
+      "Using a QA save with milestone levels unlocked, open levels 15, 35, 55, 75, and 95 and verify activation targets of 1, 2, 2, 3, and 3 alongside the original goal",
+      "On a milestone, make a four-match and confirm the new special is created without advancing the activation counter",
+      "Activate the special in a later clear and verify the counter and combined progress bar update",
+      "Leave the original goal incomplete and confirm the level does not win; finish both goals to confirm the normal win flow"
+    ],
+    "expected": "Only specials actually included in a clear count; the activation total persists between moves, updates in the HUD, and cannot substitute for the level’s original objective."
+  },
+  {
+    "name": "Seeded motion A/B, rapid input, and interruption recovery",
+    "viewport": "desktop and mobile",
+    "covers": [
+      "compact versus readable motion profiles",
+      "seeded same-board replay",
+      "performance trace completion",
+      "rapid-tap input lock",
+      "restart during a cascade",
+      "resize during an animation",
+      "reduced-motion completion"
+    ],
+    "description": "Uses the development-only profiler to compare the same move and verify cancellation paths without changing production defaults.",
+    "steps": [
+      "In development, open the same level with ?perfTrace=1&motion=compact&perfSeed=12345 and make a legal move",
+      "Repeat from the same level with ?perfTrace=1&motion=readable&perfSeed=12345 and the same board move; compare board fingerprints and move reports",
+      "Repeat with ?perfTrace=1&motion=compact&perfSeed=12345&perfEffects=off to isolate ambient and burst effects",
+      "Tap another pair rapidly during a clear or fall, then verify no extra move starts",
+      "Restart during a multi-wave cascade and verify the new board accepts input",
+      "Resize the viewport during a swap or fall and verify the move settles",
+      "Enable the operating-system reduced-motion preference and try both a legal and rejected swap"
+    ],
+    "expected": "Seeded runs use matching boards and coordinates, completed moves record input unlock with phase timings, rapid input never overlaps a resolver, restart and resize cannot leave a stale lock, and reduced motion still resolves the game state."
+  },
+  {
     "name": "Campaign progression and booster economy",
     "viewport": "desktop",
     "covers": [
@@ -121,5 +164,24 @@
       "Complete or lose a level, then reload"
     ],
     "expected": "The map shows ten levels per world, locked levels cannot be opened, selected late-world milestone levels clearly show two required objectives, campaign stars use a winning run rather than a failed personal best, each power-up use consumes one charge and one move, and campaign progress remains on the device after reload."
+  },
+  {
+    "name": "In-game install option and Home Screen launch",
+    "viewport": "mobile",
+    "covers": [
+      "visible Install Jam Shift control on the title screen",
+      "native beforeinstallprompt flow where supported",
+      "Android browser menu instructions when native prompting is unavailable",
+      "iOS Safari Add to Home Screen instructions",
+      "installed standalone mode hides the install control"
+    ],
+    "description": "Checks that players can find installation again after dismissing an earlier browser prompt, including the manual iOS path.",
+    "steps": [
+      "Open the HTTPS game link in Android Chrome and confirm Install Jam Shift is visible on the title screen",
+      "Tap the button; accept or dismiss the native install prompt, then confirm the fallback instructions remain available if needed",
+      "Open the same link in iPhone Safari, tap Install Jam Shift, and follow Share then Add to Home Screen",
+      "Launch the installed icon and confirm the in-browser install action is hidden while running standalone"
+    ],
+    "expected": "The button either opens the browser install prompt or shows platform-appropriate steps. After installation, the standalone app opens without showing a redundant install action."
   }
 ]

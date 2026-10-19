@@ -270,6 +270,18 @@ describe('special candy rules', () => {
     expect(objectivesComplete(scoreAndCollect, scoreAndCollect.target, scoreAndCollect.goalCount, 0)).toBe(true);
   });
 
+  it('requires special-candy activations and tracks their mixed-objective progress', () => {
+    const level = LEVELS[14];
+    expect(level.levelId).toBe(15);
+    expect(goalsForLevel(level)).toEqual(['score', 'special']);
+    expect(level.specialCount).toBe(1);
+
+    expect(objectivesComplete(level, level.target, 0, 0, 0, 0, 0)).toBe(false);
+    expect(objectivesComplete(level, level.target, 0, 0, 0, 0, level.specialCount)).toBe(true);
+    expect(objectiveProgressPercent(level, level.target, 0, 0, 0, 0, 0, 0)).toBe(0);
+    expect(objectiveProgressPercent(level, level.target, 0, 0, 0, 0, 0, level.specialCount)).toBe(100);
+  });
+
   it('adds a named boss finale to every chapter and tracks remaining boss power', () => {
     const bossLevels = LEVELS.filter(level => level.boss);
     expect(bossLevels).toHaveLength(10);

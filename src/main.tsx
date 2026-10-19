@@ -1,6 +1,7 @@
-import { StrictMode } from 'react';
+import { Profiler, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { PERFORMANCE_TRACE_ENABLED, recordReactProfile } from './game/performance';
 import '@fontsource-variable/fredoka';
 import '@fontsource-variable/nunito';
 import './index.css';
@@ -23,8 +24,12 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   });
 }
 
+const app = PERFORMANCE_TRACE_ENABLED
+  ? <Profiler id="app" onRender={recordReactProfile}><App /></Profiler>
+  : <App />;
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {app}
   </StrictMode>,
 );

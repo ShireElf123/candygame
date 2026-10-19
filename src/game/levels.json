@@ -282,6 +282,10 @@
         {
           "type": "score",
           "targetAmount": 1445
+        },
+        {
+          "type": "special",
+          "targetAmount": 1
         }
       ]
     },
@@ -634,6 +638,10 @@
         {
           "type": "jelly",
           "targetAmount": 9
+        },
+        {
+          "type": "special",
+          "targetAmount": 2
         }
       ]
     },
@@ -987,6 +995,10 @@
           "type": "collect",
           "color": 2,
           "targetAmount": 12
+        },
+        {
+          "type": "special",
+          "targetAmount": 2
         }
       ]
     },
@@ -1339,6 +1351,10 @@
           "type": "collect",
           "color": 4,
           "targetAmount": 14
+        },
+        {
+          "type": "special",
+          "targetAmount": 3
         }
       ]
     },
@@ -1695,6 +1711,10 @@
         {
           "type": "score",
           "targetAmount": 2795
+        },
+        {
+          "type": "special",
+          "targetAmount": 3
         }
       ]
     },
