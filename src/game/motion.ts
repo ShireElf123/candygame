@@ -1,11 +1,14 @@
-/** CSS animation durations and the matching duration function for fall motion. */
+/**
+ * Compact motion budget: a basic match (swap + clear + one-row fall) is 216ms
+ * of CSS motion; each cascade clear/drop step is capped at 200ms.
+ */
 export const GAME_MOTION = {
-  swapAnimationMs: 116,
-  rejectAnimationMs: 128,
-  clearAnimationMs: 96,
-  fallBaseMs: 92,
-  fallPerRowMs: 15,
-  fallMaxMs: 220,
+  swapAnimationMs: 88,
+  rejectAnimationMs: 100,
+  clearAnimationMs: 72,
+  fallBaseMs: 48,
+  fallPerRowMs: 8,
+  fallMaxMs: 128,
 } as const;
 
 export function boardImpactClass(pulse: number): 'juice-impact-a' | 'juice-impact-b' | null {

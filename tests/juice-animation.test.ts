@@ -78,6 +78,24 @@ describe('candy layer promotion', () => {
   });
 });
 
+describe('resolution motion budget', () => {
+  it('pauses passive board effects while the interactive tiles are resolving', () => {
+    let resolvingRule: Rule | undefined;
+    juiceStyles.walkRules(rule => {
+      if (rule.selector.includes('.candy-board.resolving') && rule.nodes.some(node => node.type === 'decl' && node.prop === 'animation-play-state')) {
+        resolvingRule = rule;
+      }
+    });
+    const playState = resolvingRule?.nodes.find((node): node is Declaration => node.type === 'decl' && node.prop === 'animation-play-state');
+    expect(playState?.value).toBe('paused');
+    expect(resolvingRule?.selector).toContain('.candy-art');
+    expect(resolvingRule?.selector).toContain('.jelly-glaze');
+    expect(resolvingRule?.selector).toContain('.sugar-shell::after');
+    expect(resolvingRule?.selector).toContain('.candy.wrapped');
+    expect(resolvingRule?.selector).toContain('.candy.color');
+  });
+});
+
 describe('board touch accessibility', () => {
   it('keeps one-finger swipe input while allowing browser pinch zoom', () => {
     let touchAction: Declaration | undefined;

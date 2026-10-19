@@ -96,10 +96,17 @@ describe('responsive gameplay motion budget', () => {
     expect(firstKeyframeTransform('candy-fall')).toContain('var(--fall-y, -40px)');
   });
 
+  it('keeps a basic move inside a compact timing budget', () => {
+    const basicMoveMs = GAME_MOTION.swapAnimationMs + GAME_MOTION.clearAnimationMs + fallAnimationDuration(1);
+    expect(basicMoveMs).toBe(216);
+    expect(basicMoveMs).toBeLessThanOrEqual(220);
+    expect(GAME_MOTION.clearAnimationMs + GAME_MOTION.fallMaxMs).toBeLessThanOrEqual(200);
+  });
+
   it('keeps candy fall timing proportional for short drops and caps long drops', () => {
     expect(animationFor('.candy.falling')).toContain(`var(--fall-duration, ${fallAnimationDuration(1)}ms)`);
-    expect(fallAnimationDuration(1)).toBe(107);
-    expect(fallAnimationDuration(4)).toBe(152);
+    expect(fallAnimationDuration(1)).toBe(56);
+    expect(fallAnimationDuration(4)).toBe(80);
     expect(fallAnimationDuration(20)).toBe(GAME_MOTION.fallMaxMs);
     expect(fallAnimationDuration(-2)).toBe(GAME_MOTION.fallBaseMs);
   });

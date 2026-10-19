@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { waitForAnimationPhase } from '../src/game/animation';
+import { GAME_MOTION } from '../src/game/motion';
 
 type TestAnimation = Animation & { complete: () => void };
 
@@ -133,7 +134,7 @@ describe('animation phase completion', () => {
   it('uses animation events as a fallback when the Web Animations API is unavailable', async () => {
     vi.useFakeTimers();
     const fakeWindow = Object.assign(new EventTarget(), {
-      getComputedStyle: vi.fn(() => ({ animationName: 'candy-pop', animationDuration: '96ms' })),
+      getComputedStyle: vi.fn(() => ({ animationName: 'candy-pop', animationDuration: `${GAME_MOTION.clearAnimationMs}ms` })),
     });
     vi.stubGlobal('window', fakeWindow);
     const target = Object.assign(new EventTarget(), { isConnected: true });

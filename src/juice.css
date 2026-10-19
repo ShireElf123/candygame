@@ -5,10 +5,10 @@
 }
 .candy.swap-motion,
 .candy.swap-rejected { will-change: transform; }
-.candy.swap-motion { animation: candy-swap 116ms cubic-bezier(.18, .78, .26, 1) both; z-index: 6; }
-.candy.swap-rejected { animation: candy-reject 128ms cubic-bezier(.18, .78, .26, 1) both; z-index: 6; }
-.candy.clearing { animation: candy-pop 96ms cubic-bezier(.18, .78, .25, 1) both; z-index: 7; }
-.candy.falling { animation: candy-fall var(--fall-duration, 107ms) cubic-bezier(.18, .72, .25, 1) both; z-index: 3; }
+.candy.swap-motion { animation: candy-swap 88ms cubic-bezier(.18, .78, .26, 1) both; z-index: 6; }
+.candy.swap-rejected { animation: candy-reject 100ms cubic-bezier(.18, .78, .26, 1) both; z-index: 6; }
+.candy.clearing { animation: candy-pop 72ms cubic-bezier(.18, .78, .25, 1) both; z-index: 7; }
+.candy.falling { animation: candy-fall var(--fall-duration, 56ms) cubic-bezier(.18, .72, .25, 1) both; z-index: 3; }
 .candy.chosen { animation: candy-selected 420ms ease-in-out infinite alternate; }
 /* Special idle shimmers use the animation shorthand, so only run when no higher-priority interaction is active. */
 .candy.wrapped:not(.swap-motion):not(.swap-rejected):not(.clearing):not(.falling):not(.chosen):not(.hint-target) { animation: wrapped-charge 740ms ease-in-out infinite alternate; }
@@ -21,8 +21,8 @@
   .candy-board { --juice-effects-inset: 4px; }
 }
 /* Keep the nudge within the clear phase so it finishes before candies fall. */
-.candy-board.juice-impact-a { animation: board-impact-a 96ms cubic-bezier(.2, .8, .25, 1); }
-.candy-board.juice-impact-b { animation: board-impact-b 96ms cubic-bezier(.2, .8, .25, 1); }
+.candy-board.juice-impact-a { animation: board-impact-a 72ms cubic-bezier(.2, .8, .25, 1); }
+.candy-board.juice-impact-b { animation: board-impact-b 72ms cubic-bezier(.2, .8, .25, 1); }
 
 /* A few candies breathe out of phase while the player plans a move. */
 .candy-row:nth-child(odd) .candy:nth-child(4n + 1) .candy-art,
@@ -40,6 +40,14 @@
 .candy.clearing .candy-art,
 .candy.falling .candy-art,
 .candy.chosen .candy-art { animation: none !important; }
+/* Pause nonessential board ambience while input is locked and tiles are moving. */
+.candy-board.resolving .candy-art,
+.candy-board.resolving .jelly-glaze,
+.candy-board.resolving .sugar-shell::after,
+.candy-board.resolving .candy.wrapped:not(.swap-motion):not(.swap-rejected):not(.clearing):not(.falling):not(.chosen):not(.hint-target),
+.candy-board.resolving .candy.color:not(.swap-motion):not(.swap-rejected):not(.clearing):not(.falling):not(.chosen):not(.hint-target) {
+  animation-play-state: paused;
+}
 .jelly-glaze { animation: jelly-glimmer 3.4s ease-in-out var(--idle-delay, 0s) infinite; }
 .sugar-shell::after { animation: shell-glimmer 3.2s ease-in-out infinite; }
 
