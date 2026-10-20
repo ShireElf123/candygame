@@ -2,7 +2,7 @@ import levelManifestJson from './levels.json';
 
 /* Pure match-3 rules and board utilities. UI code renders the engine's results. */
 export type Special = 'striped-h' | 'striped-v' | 'wrapped' | 'color';
-export type Candy = { id: number; color: number; special?: Special; kind?: 'ingredient' };
+export type Candy = { id: number; color: number; special?: Special; kind?: 'ingredient' | 'void' };
 export type Screen = 'intro' | 'map' | 'play' | 'win' | 'lose';
 export type Booster = 'hammer' | 'line' | 'rainbow';
 export type Pos = [number, number];
@@ -23,6 +23,7 @@ export type BossDefinition = {
 export type SpawnWeight = { color: number; weight: number };
 export type LevelObjective = { type: GoalType; targetAmount: number; color?: number };
 export type InitialGridCell = number | 'J' | 'I';
+export type BoardMask = string[];
 export type LevelDefinition = {
   levelId: number;
   chapter: number;
@@ -42,6 +43,8 @@ export type LevelDefinition = {
   cascadeCount: number;
   spawnWeights: SpawnWeight[];
   initialGrid?: InitialGridCell[][];
+  /** '#' cells are playable; '.' cells are inert cut-outs that split gravity runs. */
+  boardMask?: BoardMask;
   objectives: LevelObjective[];
   boss?: BossDefinition;
 };
@@ -113,6 +116,32 @@ function parseInitialGrid(value: unknown, rows: number, columns: number, field: 
   });
 }
 
+function parseBoardMask(value: unknown, rows: number, columns: number, field: string): BoardMask | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length !== rows) throw new Error(`Invalid level data: ${field} must have ${rows} rows.`);
+  const mask = value.map((row, rowIndex) => {
+    if (typeof row !== 'string' || row.length !== columns || !/^[#.]+$/.test(row)) {
+      throw new Error(`Invalid level data: ${field}[${rowIndex}] must be ${columns} characters of "." and "#".`);
+    }
+    return row;
+  });
+  const playableCellCount = mask.reduce((total, row) => total + [...row].filter(cell => cell === '#').length, 0);
+  if (playableCellCount < 9) throw new Error(`Invalid level data: ${field} must contain at least nine playable cells.`);
+  let hasPlayableThreeByThree = false;
+  for (let row = 0; row <= rows - 3 && !hasPlayableThreeByThree; row++) {
+    for (let column = 0; column <= columns - 3 && !hasPlayableThreeByThree; column++) {
+      hasPlayableThreeByThree = [0, 1, 2].every(dr => [0, 1, 2].every(dc => mask[row + dr][column + dc] === '#'));
+    }
+  }
+  if (!hasPlayableThreeByThree) throw new Error(`Invalid level data: ${field} must contain at least one fully playable 3×3 area.`);
+  return mask;
+}
+
+export function isPlayableCell(level: Pick<LevelDefinition, 'rows' | 'columns' | 'boardMask'>, row: number, column: number): boolean {
+  return row >= 0 && row < level.rows && column >= 0 && column < level.columns &&
+    (!level.boardMask || level.boardMask[row]?.[column] === '#');
+}
+
 function parseLevelEntry(value: unknown, index: number, defaults: UnknownRecord): LevelDefinition {
   const field = `levels[${index}]`;
   if (!isRecord(value)) throw new Error(`Invalid level data: ${field} must be an object.`);
@@ -132,17 +161,48 @@ function parseLevelEntry(value: unknown, index: number, defaults: UnknownRecord)
   }
   const weights = parseSpawnWeights(value.spawnWeights ?? defaults.spawnWeights, `${field}.spawnWeights`);
   const initialGrid = parseInitialGrid(value.initialGrid, rows, columns, `${field}.initialGrid`);
+  const boardMask = parseBoardMask(value.boardMask, rows, columns, `${field}.boardMask`);
   const jellyObjective = objectives.find(objective => objective.type === 'jelly');
   const ingredientObjective = objectives.find(objective => objective.type === 'ingredient');
+  const shellObjective = objectives.find(objective => objective.type === 'shell');
   const cascadeObjective = objectives.find(objective => objective.type === 'cascade');
+  if (boardMask && ingredientObjective) {
+    for (let column = 0; column < columns; column++) {
+      const firstPlayableRow = boardMask.findIndex(row => row[column] === '#');
+      if (firstPlayableRow >= 0 && boardMask.slice(firstPlayableRow).some(row => row[column] !== '#')) {
+        throw new Error(`Invalid level data: ${field}.boardMask must keep ingredient drop lanes continuous to the exit row.`);
+      }
+    }
+  }
   if (cascadeObjective && cascadeObjective.targetAmount > 30) {
     throw new Error(`Invalid level data: ${field} cascade target cannot exceed the resolver's 30-wave limit.`);
   }
-  const jellyCells = initialGrid?.flat().filter(cell => cell === 'J').length ?? 0;
-  const ingredientCells = initialGrid?.flat().filter(cell => cell === 'I').length ?? 0;
+  if (initialGrid && boardMask) {
+    for (let row = 0; row < rows; row++) for (let column = 0; column < columns; column++) {
+      if (boardMask[row][column] === '.' && (initialGrid[row][column] === 'J' || initialGrid[row][column] === 'I')) {
+        throw new Error(`Invalid level data: ${field}.initialGrid cannot place objectives in a void cell.`);
+      }
+    }
+  }
+  const initialCells = initialGrid?.flatMap((row, rowIndex) => row.map((cell, columnIndex) => ({ cell, rowIndex, columnIndex })))
+    .filter(({ rowIndex, columnIndex }) => !boardMask || boardMask[rowIndex][columnIndex] === '#') ?? [];
+  const jellyCells = initialCells.filter(({ cell }) => cell === 'J').length;
+  const ingredientCells = initialCells.filter(({ cell }) => cell === 'I').length;
   if (jellyCells > 0 && !jellyObjective) throw new Error(`Invalid level data: ${field} has jelly tiles but no jelly objective.`);
   if (initialGrid && jellyObjective && jellyCells !== jellyObjective.targetAmount) {
     throw new Error(`Invalid level data: ${field} jelly objective must equal the number of J cells in initialGrid.`);
+  }
+  if (boardMask && jellyObjective) {
+    const activeCells = boardMask.reduce((total, row) => total + [...row].filter(cell => cell === '#').length, 0);
+    if (jellyObjective.targetAmount > activeCells - (ingredientObjective?.targetAmount ?? 0)) {
+      throw new Error(`Invalid level data: ${field} jelly objective exceeds its playable cells.`);
+    }
+  }
+  if (boardMask && shellObjective) {
+    const activeCells = boardMask.reduce((total, row) => total + [...row].filter(cell => cell === '#').length, 0);
+    if (shellObjective.targetAmount > activeCells - (ingredientObjective?.targetAmount ?? 0)) {
+      throw new Error(`Invalid level data: ${field} shell objective exceeds its playable cells.`);
+    }
   }
   if (ingredientCells > 0 && !ingredientObjective) throw new Error(`Invalid level data: ${field} has ingredients but no ingredient objective.`);
   if (initialGrid && ingredientObjective && ingredientCells !== ingredientObjective.targetAmount) {
@@ -168,7 +228,6 @@ function parseLevelEntry(value: unknown, index: number, defaults: UnknownRecord)
   if (Boolean(bossObjective) !== Boolean(boss)) throw new Error(`Invalid level data: ${field} must define boss metadata and a boss objective together.`);
   if (bossObjective && boss && bossObjective.targetAmount !== boss.maxHealth) throw new Error(`Invalid level data: ${field} boss target must match maxHealth.`);
   const collectObjective = objectives.find(objective => objective.type === 'collect');
-  const shellObjective = objectives.find(objective => objective.type === 'shell');
   const specialObjective = objectives.find(objective => objective.type === 'special');
   const defaultGoalColor = collectObjective?.color ?? (boss && typeof boss.color === 'number' ? boss.color : (levelId + 1) % COLORS.length);
   const goalColor = value.goalColor ?? defaultGoalColor;
@@ -196,6 +255,7 @@ function parseLevelEntry(value: unknown, index: number, defaults: UnknownRecord)
     cascadeCount: cascadeObjective?.targetAmount ?? 0,
     spawnWeights: weights,
     ...(initialGrid ? { initialGrid } : {}),
+    ...(boardMask ? { boardMask } : {}),
     objectives,
     ...(boss ? { boss: boss as unknown as BossDefinition } : {}),
   };
@@ -230,14 +290,20 @@ export function hasGoal(level: ObjectiveSet, goalType: GoalType): boolean {
   return goalsForLevel(level).includes(goalType);
 }
 
-function ingredientStartPositions(level: Pick<LevelDefinition, 'rows' | 'columns' | 'ingredientCount' | 'initialGrid'>): Pos[] {
+function ingredientStartPositions(level: Pick<LevelDefinition, 'rows' | 'columns' | 'ingredientCount' | 'initialGrid' | 'boardMask'>): Pos[] {
   if (level.initialGrid) {
     return level.initialGrid.flatMap((row, rowIndex) => row.flatMap((cell, columnIndex) =>
-      cell === 'I' ? [[rowIndex, columnIndex] as Pos] : [],
+      cell === 'I' && isPlayableCell(level, rowIndex, columnIndex) ? [[rowIndex, columnIndex] as Pos] : [],
     ));
   }
-  const count = Math.max(0, Math.min(level.ingredientCount, level.columns));
-  return Array.from({ length: count }, (_, index) => [0, Math.floor((index + 1) * level.columns / (count + 1))] as Pos);
+  const dropColumns = Array.from({ length: level.columns }, (_, column) => column)
+    .filter(column => Array.from({ length: level.rows }, (_, row) => isPlayableCell(level, row, column)).some(Boolean));
+  const count = Math.max(0, Math.min(level.ingredientCount, dropColumns.length));
+  return Array.from({ length: count }, (_, index) => {
+    const column = dropColumns[Math.floor((index + 1) * dropColumns.length / (count + 1))];
+    const row = Array.from({ length: level.rows }, (_, candidate) => candidate).find(candidate => isPlayableCell(level, candidate, column)) ?? 0;
+    return [row, column] as Pos;
+  });
 }
 
 export function objectivesComplete(
@@ -298,16 +364,22 @@ export function bossDamageForClear(clearedCells: number, cascade: number): numbe
   return Math.max(1, Math.floor(Math.max(0, clearedCells) / 4)) + Math.max(0, cascade - 1);
 }
 
-export function createJelly(levelNumber: number): Set<string> {
-  const safeLevel = Math.max(1, Math.min(LEVEL_COUNT, Math.floor(levelNumber)));
-  const level = LEVELS[safeLevel - 1];
+export function createJelly(levelOrDefinition: number | LevelDefinition): Set<string> {
+  const level = typeof levelOrDefinition === 'number'
+    ? LEVELS[Math.max(1, Math.min(LEVEL_COUNT, Math.floor(levelOrDefinition))) - 1]
+    : levelOrDefinition;
   if (!hasGoal(level, 'jelly')) return new Set();
   if (level.initialGrid) {
-    return new Set(level.initialGrid.flatMap((row, r) => row.flatMap((cell, c) => cell === 'J' ? [keyOf(r, c)] : [])));
+    return new Set(level.initialGrid.flatMap((row, r) => row.flatMap((cell, c) =>
+      cell === 'J' && isPlayableCell(level, r, c) ? [keyOf(r, c)] : [],
+    )));
   }
   const ingredientCells = new Set(ingredientStartPositions(level).map(([row, column]) => keyOf(row, column)));
   const cells = Array.from({ length: level.rows * level.columns }, (_, index) => keyOf(Math.floor(index / level.columns), index % level.columns))
-    .filter(key => !ingredientCells.has(key));
+    .filter(key => {
+      const [row, column] = posOf(key);
+      return isPlayableCell(level, row, column) && !ingredientCells.has(key);
+    });
   if (level.jellyCount > cells.length) throw new Error(`Level ${level.levelId} has more jelly than available cells after ingredient placement.`);
   cells.sort((a, b) => {
     const [ar, ac] = posOf(a); const [br, bc] = posOf(b);
@@ -322,9 +394,11 @@ const SUGAR_SHELL_LAYOUT: Pos[] = [
 ];
 
 /** Deterministic shell placement scaled from the 8x8 design to the authored board shape. */
-export function createSugarShells(levelNumber: number): Map<string, number> {
-  const safeLevel = Math.max(1, Math.min(LEVEL_COUNT, Math.floor(levelNumber)));
-  const level = LEVELS[safeLevel - 1];
+export function createSugarShells(levelOrDefinition: number | LevelDefinition): Map<string, number> {
+  const safeLevel = typeof levelOrDefinition === 'number'
+    ? Math.max(1, Math.min(LEVEL_COUNT, Math.floor(levelOrDefinition)))
+    : levelOrDefinition.levelId;
+  const level = typeof levelOrDefinition === 'number' ? LEVELS[safeLevel - 1] : levelOrDefinition;
   const shellCount = level.shellCount ?? 0;
   if (!hasGoal(level, 'shell') || shellCount <= 0) return new Map();
 
@@ -335,7 +409,7 @@ export function createSugarShells(levelNumber: number): Map<string, number> {
     Math.min(level.columns - 1, Math.floor(column * level.columns / SIZE)),
   ] as Pos);
   for (let r = 0; r < level.rows; r++) for (let c = 0; c < level.columns; c++) positions.push([r, c]);
-  const availablePositions = positions.filter(([row, column]) => !ingredientCells.has(keyOf(row, column)));
+  const availablePositions = positions.filter(([row, column]) => isPlayableCell(level, row, column) && !ingredientCells.has(keyOf(row, column)));
   if (availablePositions.length < shellCount) throw new Error(`Level ${level.levelId} has more sugar shells than available cells.`);
   const chosen = new Set<string>();
   for (let offset = 0; chosen.size < shellCount && offset < availablePositions.length; offset++) {
@@ -371,6 +445,7 @@ export const makeCandy = (color?: number, special?: Special): Candy => ({
 });
 
 export const makeIngredient = (): Candy => ({ id: nextCandyId++, color: 0, kind: 'ingredient' });
+export const makeVoidCell = (): Candy => ({ id: nextCandyId++, color: 0, kind: 'void' });
 export const clone = (board: Candy[][]) => board.map(row => row.map(candy => ({ ...candy })));
 export const keyOf = (r: number, c: number) => r + ':' + c;
 export const posOf = (key: string): Pos => key.split(':').map(Number) as Pos;
@@ -381,7 +456,7 @@ export function findMatches(board: Candy[][]): Set<string> {
   const columns = board[0]?.length ?? 0;
   const colorAt = (row: number, column: number) => {
     const piece = board[row]?.[column];
-    return piece?.kind === 'ingredient' ? undefined : piece?.color;
+    return !piece || piece.kind === 'ingredient' || piece.kind === 'void' ? undefined : piece.color;
   };
   for (let r = 0; r < rows; r++) {
     let c = 0;
@@ -421,8 +496,10 @@ export type SwapEvaluation = {
 export function evaluateSwap(board: Candy[][], a: Pos, b: Pos): SwapEvaluation {
   const [ar, ac] = a;
   const [br, bc] = b;
-  const inBounds = (row: number, column: number) =>
-    Number.isInteger(row) && Number.isInteger(column) && Boolean(board[row]?.[column]);
+  const inBounds = (row: number, column: number) => {
+    const piece = board[row]?.[column];
+    return Number.isInteger(row) && Number.isInteger(column) && Boolean(piece) && piece.kind !== 'void';
+  };
   const adjacent = Math.abs(ar - br) + Math.abs(ac - bc) === 1;
   if (!inBounds(ar, ac) || !inBounds(br, bc) || !adjacent) {
     return { valid: false, board: clone(board), matches: new Set(), activatesSpecial: false };
@@ -430,7 +507,7 @@ export function evaluateSwap(board: Candy[][], a: Pos, b: Pos): SwapEvaluation {
 
   const first = board[ar][ac];
   const second = board[br][bc];
-  if (first.kind === 'ingredient' || second.kind === 'ingredient') {
+  if (first.kind === 'ingredient' || second.kind === 'ingredient' || first.kind === 'void' || second.kind === 'void') {
     return { valid: false, board: clone(board), matches: new Set(), activatesSpecial: false };
   }
   const swapped = clone(board);
@@ -452,7 +529,7 @@ export function matchRuns(board: Candy[][]) {
   const columns = board[0]?.length ?? 0;
   const colorAt = (row: number, column: number) => {
     const piece = board[row]?.[column];
-    return piece?.kind === 'ingredient' ? undefined : piece?.color;
+    return !piece || piece.kind === 'ingredient' || piece.kind === 'void' ? undefined : piece.color;
   };
   for (let r = 0; r < rows; r++) {
     let c = 0;
@@ -477,6 +554,24 @@ export function matchRuns(board: Candy[][]) {
   return runs;
 }
 
+/** Move keyboard focus in one direction, stepping over inert mask cells. */
+export function nextPlayableCell(
+  board: readonly (readonly Candy[])[],
+  from: Pos,
+  direction: Pos,
+): Pos | null {
+  const [dr, dc] = direction;
+  if (Math.abs(dr) + Math.abs(dc) !== 1) return null;
+  let row = from[0] + dr;
+  let column = from[1] + dc;
+  while (row >= 0 && row < board.length && column >= 0 && column < (board[row]?.length ?? 0)) {
+    if (board[row][column]?.kind !== 'void') return [row, column];
+    row += dr;
+    column += dc;
+  }
+  return null;
+}
+
 export function hasMove(board: Candy[][]): boolean {
   const rows = board.length;
   const columns = board[0]?.length ?? 0;
@@ -484,7 +579,7 @@ export function hasMove(board: Candy[][]): boolean {
     for (const [dr, dc] of [[0, 1], [1, 0]]) {
       const nr = r + dr, nc = c + dc;
       if (nr >= rows || nc >= columns) continue;
-      if (board[r][c]?.kind === 'ingredient' || board[nr][nc]?.kind === 'ingredient') continue;
+      if (!board[r][c] || !board[nr][nc] || board[r][c].kind === 'ingredient' || board[nr][nc].kind === 'ingredient' || board[r][c].kind === 'void' || board[nr][nc].kind === 'void') continue;
       // Special swaps are valid activations even without a normal match.
       if (board[r][c]?.special || board[nr][nc]?.special) return true;
       const test = clone(board);
@@ -510,15 +605,24 @@ export function createBoard(
   spawnWeights: SpawnWeight[] = COLORS.map((_, color) => ({ color, weight: 1 })),
   rows = SIZE,
   columns = SIZE,
+  boardMask?: BoardMask,
 ): Candy[][] {
   const board: Candy[][] = [];
   for (let r = 0; r < rows; r++) {
     board[r] = [];
     for (let c = 0; c < columns; c++) {
+      if (boardMask && boardMask[r]?.[c] !== '#') {
+        board[r][c] = makeVoidCell();
+        continue;
+      }
       let color = chooseSpawnColor(random, spawnWeights);
       for (let attempt = 0; attempt < 40; attempt++) {
-        const makesHorizontal = c >= 2 && board[r][c - 1].color === color && board[r][c - 2].color === color;
-        const makesVertical = r >= 2 && board[r - 1][c].color === color && board[r - 2][c].color === color;
+        const left = board[r][c - 1];
+        const left2 = board[r][c - 2];
+        const above = board[r - 1]?.[c];
+        const above2 = board[r - 2]?.[c];
+        const makesHorizontal = c >= 2 && left?.kind !== 'void' && left2?.kind !== 'void' && left?.color === color && left2?.color === color;
+        const makesVertical = r >= 2 && above?.kind !== 'void' && above2?.kind !== 'void' && above?.color === color && above2?.color === color;
         if (!makesHorizontal && !makesVertical) break;
         const alternatives = spawnWeights.filter(entry => entry.color !== color);
         if (!alternatives.length) break;
@@ -535,44 +639,77 @@ export function freshBoard(
   spawnWeights: SpawnWeight[] = COLORS.map((_, color) => ({ color, weight: 1 })),
   rows = SIZE,
   columns = SIZE,
+  boardMask?: BoardMask,
 ): Candy[][] {
   if (!Number.isInteger(rows) || !Number.isInteger(columns) || rows < 3 || columns < 3) {
     throw new Error('A playable board needs at least 3 rows and 3 columns.');
   }
+  const validatedMask = parseBoardMask(boardMask, rows, columns, 'boardMask');
   for (let attempt = 0; attempt < 200; attempt++) {
-    const board = createBoard(random, spawnWeights, rows, columns);
+    const board = createBoard(random, spawnWeights, rows, columns, validatedMask);
     if (!findMatches(board).size && hasMove(board)) return board;
   }
-  // Deterministic fallback has no triples and a guaranteed top-row match after
-  // swapping (0,1) with (1,1), even when the level weights only three colors.
+  // A deterministic fallback preserves the mask and installs a guaranteed
+  // match-producing swap in a fully playable 3x3 patch.
   const palette = spawnWeights.map(entry => entry.color);
-  const board = Array.from({ length: rows }, (_, r) =>
-    Array.from({ length: columns }, (_, c) => makeCandy(palette[(r * 2 + Math.floor(c / 2)) % palette.length]))
-  );
-  const [a, b, c] = palette;
-  board[0][0] = makeCandy(a); board[0][1] = makeCandy(b); board[0][2] = makeCandy(a);
-  board[1][0] = makeCandy(b); board[1][1] = makeCandy(a); board[1][2] = makeCandy(c);
-  board[2][0] = makeCandy(c); board[2][1] = makeCandy(c); board[2][2] = makeCandy(b);
-  if (findMatches(board).size || !hasMove(board)) throw new Error('Could not generate a playable board from these spawn weights.');
-  return board;
+  const safeFill = (phase: number): Candy[][] => {
+    const board = Array.from({ length: rows }, (_, row) => Array.from({ length: columns }, (_, column) =>
+      validatedMask && validatedMask[row][column] !== '#' ? makeVoidCell() : makeCandy(palette[0]),
+    ));
+    for (let row = 0; row < rows; row++) for (let column = 0; column < columns; column++) {
+      if (board[row][column].kind === 'void') continue;
+      const preference = (row * 2 + Math.floor(column / 2) + phase) % palette.length;
+      let selected = -1;
+      for (let offset = 0; offset < palette.length; offset++) {
+        const color = palette[(preference + offset) % palette.length];
+        const left = board[row][column - 1];
+        const left2 = board[row][column - 2];
+        const above = board[row - 1]?.[column];
+        const above2 = board[row - 2]?.[column];
+        const makesHorizontal = column >= 2 && left?.kind !== 'void' && left2?.kind !== 'void' && left?.color === color && left2?.color === color;
+        const makesVertical = row >= 2 && above?.kind !== 'void' && above2?.kind !== 'void' && above?.color === color && above2?.color === color;
+        if (!makesHorizontal && !makesVertical) { selected = color; break; }
+      }
+      if (selected < 0) throw new Error('Could not construct a match-free fallback board.');
+      board[row][column] = makeCandy(selected);
+    }
+    return board;
+  };
+  for (let phase = 0; phase < palette.length; phase++) {
+    const base = safeFill(phase);
+    for (let row = 0; row <= rows - 3; row++) for (let column = 0; column <= columns - 3; column++) {
+      if (![0, 1, 2].every(dr => [0, 1, 2].every(dc => base[row + dr][column + dc].kind !== 'void'))) continue;
+      for (let rotation = 0; rotation < palette.length; rotation++) {
+        const [a, b, c] = [0, 1, 2].map(offset => palette[(rotation + offset) % palette.length]);
+        base[row][column] = makeCandy(a); base[row][column + 1] = makeCandy(b); base[row][column + 2] = makeCandy(a);
+        base[row + 1][column] = makeCandy(b); base[row + 1][column + 1] = makeCandy(a); base[row + 1][column + 2] = makeCandy(c);
+        base[row + 2][column] = makeCandy(c); base[row + 2][column + 1] = makeCandy(c); base[row + 2][column + 2] = makeCandy(b);
+        if (!findMatches(base).size && hasMove(base)) return base;
+      }
+    }
+  }
+  throw new Error('Could not generate a playable board from these spawn weights and board mask.');
 }
 
 export type LevelStart = { board: Candy[][]; jelly: Set<string> };
 
 export function createLevelBoard(level: LevelDefinition, random: () => number = Math.random): LevelStart {
   if (!level.initialGrid) {
-    const jelly = hasGoal(level, 'jelly') ? createJelly(level.levelId) : new Set<string>();
+    const jelly = hasGoal(level, 'jelly') ? createJelly(level) : new Set<string>();
     for (let attempt = 0; attempt < (level.ingredientCount > 0 ? 64 : 1); attempt++) {
-      const board = freshBoard(random, level.spawnWeights, level.rows, level.columns);
+      const board = freshBoard(random, level.spawnWeights, level.rows, level.columns, level.boardMask);
       for (const [row, column] of ingredientStartPositions(level)) board[row][column] = makeIngredient();
       if (!findMatches(board).size && hasMove(board)) return { board, jelly };
     }
     throw new Error(`Level ${level.levelId} could not start with a playable ingredient board.`);
   }
-  const hasRandomJelly = level.initialGrid.some(row => row.includes('J'));
+  const hasRandomJelly = level.initialGrid.some((row, r) => row.some((cell, c) =>
+    cell === 'J' && isPlayableCell(level, r, c),
+  ));
   for (let attempt = 0; attempt < (hasRandomJelly ? 64 : 1); attempt++) {
     const jelly = new Set<string>();
     const board = level.initialGrid.map((row, r) => row.map((cell, c) => {
+      if (!isPlayableCell(level, r, c)) return makeVoidCell();
       if (cell === 'J') {
         jelly.add(keyOf(r, c));
         return makeCandy(chooseSpawnColor(random, level.spawnWeights));
@@ -592,71 +729,63 @@ export function shuffleBoard(
 ): Candy[][] {
   const rows = input.length;
   const columns = input[0]?.length ?? 0;
-  const originalCandies = input.flat().map(candy => ({ ...candy }));
+  const boardMask = input.map(row => row.map(candy => candy.kind === 'void' ? '.' : '#').join(''));
   const ingredientSlots = new Map<string, Candy>();
-  originalCandies.forEach((candy, index) => {
-    if (candy.kind === 'ingredient') ingredientSlots.set(keyOf(Math.floor(index / columns), index % columns), candy);
-  });
-
-  if (ingredientSlots.size) {
-    const movable = originalCandies.filter(candy => candy.kind !== 'ingredient').map(candy => ({ ...candy }));
-    const rebuild = (pieces: Candy[]) => {
-      let pieceIndex = 0;
-      return Array.from({ length: rows }, (_, row) => Array.from({ length: columns }, (_, column) => {
-        const fixed = ingredientSlots.get(keyOf(row, column));
-        return fixed ? { ...fixed } : { ...pieces[pieceIndex++] };
-      }));
-    };
-    for (let attempt = 0; attempt < 160; attempt++) {
-      const shuffled = movable.map(candy => ({ ...candy }));
-      for (let index = shuffled.length - 1; index > 0; index--) {
-        const swapIndex = Math.floor(random() * (index + 1));
-        [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
-      }
-      const candidate = rebuild(shuffled);
-      if (!findMatches(candidate).size && hasMove(candidate)) return candidate;
+  const movable = [] as Candy[];
+  for (let row = 0; row < rows; row++) for (let column = 0; column < columns; column++) {
+    const candy = input[row][column];
+    if (candy.kind === 'ingredient') ingredientSlots.set(keyOf(row, column), { ...candy });
+    else if (candy.kind !== 'void') {
+      movable.push({ ...candy });
     }
-    for (let offset = 1; offset < movable.length; offset++) {
-      const rotated = movable.slice(offset).concat(movable.slice(0, offset));
-      const candidate = rebuild(rotated);
-      if (!findMatches(candidate).size && hasMove(candidate)) return candidate;
-    }
-    for (let attempt = 0; attempt < 160; attempt++) {
-      const candidate = freshBoard(random, spawnWeights, rows, columns);
-      ingredientSlots.forEach((ingredient, key) => {
-        const [row, column] = posOf(key);
-        candidate[row][column] = { ...ingredient };
-      });
-      if (!findMatches(candidate).size && hasMove(candidate)) return candidate;
-    }
-    throw new Error('Could not shuffle a playable board while preserving its ingredients.');
   }
+  const rebuild = (pieces: Candy[]) => {
+    let pieceIndex = 0;
+    return Array.from({ length: rows }, (_, row) => Array.from({ length: columns }, (_, column) => {
+      const current = input[row][column];
+      if (current.kind === 'void') return { ...current };
+      const fixedIngredient = ingredientSlots.get(keyOf(row, column));
+      return fixedIngredient ? { ...fixedIngredient } : { ...pieces[pieceIndex++] };
+    }));
+  };
+  const tryCandidate = (pieces: Candy[]) => {
+    const candidate = rebuild(pieces);
+    return !findMatches(candidate).size && hasMove(candidate) ? candidate : null;
+  };
 
-  const candies = originalCandies.map(candy => ({ ...candy }));
   for (let attempt = 0; attempt < 160; attempt++) {
-    for (let i = candies.length - 1; i > 0; i--) {
-      const j = Math.floor(random() * (i + 1));
-      [candies[i], candies[j]] = [candies[j], candies[i]];
+    const shuffled = movable.map(candy => ({ ...candy }));
+    for (let index = shuffled.length - 1; index > 0; index--) {
+      const swapIndex = Math.floor(random() * (index + 1));
+      [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
     }
-    const candidate = Array.from({ length: rows }, (_, r) => candies.slice(r * columns, (r + 1) * columns).map(candy => ({ ...candy })));
+    const candidate = tryCandidate(shuffled);
+    if (candidate) return candidate;
+  }
+  // Deterministic cycles keep voids and ingredients fixed while changing the
+  // playable candy positions whenever random shuffles repeatedly miss a move.
+  for (let offset = 1; offset < movable.length; offset++) {
+    const rotated = movable.slice(offset).concat(movable.slice(0, offset));
+    const candidate = tryCandidate(rotated);
+    if (candidate) return candidate;
+  }
+  for (let attempt = 0; attempt < 160; attempt++) {
+    const candidate = freshBoard(random, spawnWeights, rows, columns, boardMask);
+    ingredientSlots.forEach((ingredient, key) => {
+      const [row, column] = posOf(key);
+      candidate[row][column] = { ...ingredient };
+    });
     if (!findMatches(candidate).size && hasMove(candidate)) return candidate;
   }
-  // Random shuffles can repeatedly land on dead boards. Try cyclic offsets before
-  // replacing the board, preserving candy identity and specials where possible.
-  for (let offset = 1; offset < originalCandies.length; offset++) {
-    const rotated = originalCandies.slice(offset).concat(originalCandies.slice(0, offset));
-    const candidate = Array.from({ length: rows }, (_, r) =>
-      rotated.slice(r * columns, (r + 1) * columns).map(candy => ({ ...candy }))
-    );
-    if (!findMatches(candidate).size && hasMove(candidate)) return candidate;
-  }
-  return freshBoard(random, spawnWeights, rows, columns);
+  // Ingredients must stay anchored, but the fresh masked board can provide a
+  // legal candy arrangement even if preserving every original candy cannot.
+  throw new Error(`Could not shuffle a playable board while preserving ${ingredientSlots.size ? 'its ingredients' : 'its mask'}.`);
 }
 
 export function expandSpecials(board: Candy[][], initial: Set<string>): Set<string> {
   const isClearable = (row: number, column: number) => {
     const piece = board[row]?.[column];
-    return Boolean(piece) && piece.kind !== 'ingredient';
+    return Boolean(piece) && piece.kind !== 'ingredient' && piece.kind !== 'void';
   };
   const cleared = new Set(Array.from(initial).filter(key => {
     const [row, column] = posOf(key);
@@ -685,7 +814,7 @@ export function expandSpecials(board: Candy[][], initial: Set<string>): Set<stri
     } else {
       for (let y = 0; y < rows; y++) for (let x = 0; x < columns; x++) {
         const target = board[y][x];
-        if (target.kind !== 'ingredient' && target.color === candy.color) add(y, x);
+        if (target.kind !== 'ingredient' && target.kind !== 'void' && target.color === candy.color) add(y, x);
       }
     }
   }
@@ -703,41 +832,52 @@ export function dropMatches(
   const columns = board[0]?.length ?? 0;
   matches.forEach(key => {
     const [row, column] = posOf(key);
-    if (board[row]?.[column] && board[row][column].kind !== 'ingredient') board[row][column] = null as unknown as Candy;
+    const cell = board[row]?.[column];
+    if (cell && cell.kind !== 'ingredient' && cell.kind !== 'void') board[row][column] = null as unknown as Candy;
   });
   const spawned: number[] = [];
   const fallDistances: Record<number, number> = {};
   const deliveredIngredientCells = new Set<string>();
   const deliveredIngredientsByColumn = new Map<number, { candy: Candy; sourceRow: number }>();
   let ingredientsDelivered = 0;
-  for (let c = 0; c < columns; c++) {
-    const kept: Array<{ candy: Candy; sourceRow: number; fresh: boolean }> = [];
-    for (let r = rows - 1; r >= 0; r--) {
-      if (board[r][c]) kept.push({ candy: board[r][c], sourceRow: r, fresh: false });
-    }
-    const survivors: typeof kept = [];
-    let destinationRow = rows - 1;
-    for (const entry of kept) {
-      if (entry.candy.kind === 'ingredient' && destinationRow === rows - 1) {
-        ingredientsDelivered++;
-        deliveredIngredientCells.add(keyOf(rows - 1, c));
-        deliveredIngredientsByColumn.set(c, { candy: entry.candy, sourceRow: entry.sourceRow });
-        continue;
+
+  for (let column = 0; column < columns; column++) {
+    let row = rows - 1;
+    while (row >= 0) {
+      if (board[row][column]?.kind === 'void') { row--; continue; }
+      const segmentBottom = row;
+      while (row >= 0 && board[row][column]?.kind !== 'void') row--;
+      const segmentTop = row + 1;
+      const segmentLength = segmentBottom - segmentTop + 1;
+      const kept: Array<{ candy: Candy; sourceRow: number; fresh: boolean }> = [];
+      for (let sourceRow = segmentBottom; sourceRow >= segmentTop; sourceRow--) {
+        const candy = board[sourceRow][column];
+        if (candy) kept.push({ candy, sourceRow, fresh: false });
       }
-      survivors.push(entry);
-      destinationRow--;
-    }
-    const spawnCount = rows - survivors.length;
-    for (let index = 0; index < spawnCount; index++) {
-      const candy = makeCandy(chooseSpawnColor(random, spawnWeights));
-      survivors.push({ candy, sourceRow: -1, fresh: true });
-      spawned.push(candy.id);
-    }
-    for (let r = rows - 1, i = 0; r >= 0; r--, i++) {
-      const entry = survivors[i];
-      board[r][c] = entry.candy;
-      const distance = entry.fresh ? spawnCount : r - entry.sourceRow;
-      if (distance > 0) fallDistances[entry.candy.id] = distance;
+      const survivors: typeof kept = [];
+      let destinationRow = segmentBottom;
+      for (const entry of kept) {
+        if (entry.candy.kind === 'ingredient' && segmentBottom === rows - 1 && destinationRow === rows - 1) {
+          ingredientsDelivered++;
+          deliveredIngredientCells.add(keyOf(rows - 1, column));
+          deliveredIngredientsByColumn.set(column, { candy: entry.candy, sourceRow: entry.sourceRow });
+          continue;
+        }
+        survivors.push(entry);
+        destinationRow--;
+      }
+      const spawnCount = segmentLength - survivors.length;
+      for (let index = 0; index < spawnCount; index++) {
+        const candy = makeCandy(chooseSpawnColor(random, spawnWeights));
+        survivors.push({ candy, sourceRow: -1, fresh: true });
+        spawned.push(candy.id);
+      }
+      for (let destinationRow = segmentBottom, index = 0; destinationRow >= segmentTop; destinationRow--, index++) {
+        const entry = survivors[index];
+        board[destinationRow][column] = entry.candy;
+        const distance = entry.fresh ? spawnCount : destinationRow - entry.sourceRow;
+        if (distance > 0) fallDistances[entry.candy.id] = distance;
+      }
     }
   }
   const boardForFallAnimation = clone(board);
@@ -812,7 +952,7 @@ export function findBestMove(
 
         const first = board[r][c];
         const second = board[nr][nc];
-        if (first.kind === 'ingredient' || second.kind === 'ingredient') continue;
+        if (!first || !second || first.kind === 'ingredient' || second.kind === 'ingredient' || first.kind === 'void' || second.kind === 'void') continue;
         const candidate = clone(board);
         [candidate[r][c], candidate[nr][nc]] = [candidate[nr][nc], candidate[r][c]];
         const matches = findMatches(candidate);
@@ -871,20 +1011,23 @@ export function findBestMove(
 }
 
 export function applySpecialSwap(board: Candy[][], a: Pos, b: Pos, existingMatches: Set<string>) {
+  const first = board[a[0]]?.[a[1]];
+  const second = board[b[0]]?.[b[1]];
+  if (!first || !second || first.kind === 'void' || second.kind === 'void') {
+    return { matches: new Set<string>(), message: '' };
+  }
   const matches = new Set(Array.from(existingMatches).filter(key => {
     const [row, column] = posOf(key);
-    return board[row]?.[column]?.kind !== 'ingredient';
+    return board[row]?.[column]?.kind !== 'ingredient' && board[row]?.[column]?.kind !== 'void';
   }));
   const rows = board.length;
   const columns = board[0]?.length ?? 0;
-  const first = board[a[0]][a[1]];
-  const second = board[b[0]][b[1]];
   const one = first.special;
   const two = second.special;
   if (!one && !two) return { matches, message: '' };
 
   const addCell = (row: number, column: number) => {
-    if (board[row]?.[column] && board[row][column].kind !== 'ingredient') matches.add(keyOf(row, column));
+    if (board[row]?.[column] && board[row][column].kind !== 'ingredient' && board[row][column].kind !== 'void') matches.add(keyOf(row, column));
   };
   const addRow = (r: number) => { for (let c = 0; c < columns; c++) addCell(r, c); };
   const addColumn = (c: number) => { for (let r = 0; r < rows; r++) addCell(r, c); };
@@ -905,7 +1048,7 @@ export function applySpecialSwap(board: Candy[][], a: Pos, b: Pos, existingMatch
     board[bombPos[0]][bombPos[1]] = { ...board[bombPos[0]][bombPos[1]], special: undefined };
     addCell(bombPos[0], bombPos[1]);
     for (let r = 0; r < rows; r++) for (let c = 0; c < columns; c++) {
-      if (board[r][c].kind === 'ingredient' || board[r][c].color !== partner.color) continue;
+      if (board[r][c].kind === 'ingredient' || board[r][c].kind === 'void' || board[r][c].color !== partner.color) continue;
       if (partner.special && partner.special !== 'color') board[r][c] = { ...board[r][c], special: partner.special };
       addCell(r, c);
     }

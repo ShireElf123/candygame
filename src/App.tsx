@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import CandyArt from './components/CandyArt';
+import ShapeLab from './ShapeLab';
 import CharacterArt from './components/CharacterArt';
 import IngredientArt from './components/IngredientArt';
 import JuiceBurstLayer, { type JuiceBurst } from './components/JuiceBurstLayer';
@@ -60,6 +61,7 @@ import { buildResolutionPlan, type ResolutionPlan } from './game/resolution';
 import { starsForCampaign, starsForScore } from './game/progress';
 import { DEFAULT_SAVE, readSave, writeSave } from './game/save';
 import { parsePlaytestLaunch } from './game/playtest';
+import { parseShapeLabLaunch } from './game/shape-lab-launch';
 import { boardImpactClass, fallAnimationDuration, GAME_MOTION, GAME_MOTION_PROFILE, prefersReducedMotion } from './game/motion';
 import {
   createSeededRandom,
@@ -265,7 +267,7 @@ function HelpDialog({
   );
 }
 
-function App() {
+function CampaignApp() {
   const playtestLaunch = parsePlaytestLaunch(
     typeof window === 'undefined' ? '' : window.location.search,
     import.meta.env.DEV,
@@ -1866,6 +1868,16 @@ function App() {
 
 function TargetMark() {
   return <span className="target-mark" aria-hidden="true">◎</span>;
+}
+
+function App() {
+  const shapeLabLaunch = parseShapeLabLaunch(
+    typeof window === 'undefined' ? '' : window.location.search,
+    import.meta.env.DEV,
+  );
+  return shapeLabLaunch.enabled
+    ? <ShapeLab initialPrototypeId={shapeLabLaunch.prototypeId} />
+    : <CampaignApp />;
 }
 
 export default App;

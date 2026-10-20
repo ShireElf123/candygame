@@ -17,7 +17,7 @@
     "steps": [
       "Open Jam Shift on a fresh save",
       "Tap Play level 01",
-      "Read the quick guide and choose Got it \u2014 let's play!",
+      "Read the quick guide and choose Got it — let's play!",
       "Make an invalid swap, choose Restart level, and confirm the restart",
       "Tap two adjacent candies"
     ],
@@ -110,7 +110,7 @@
       "Activate the special in a later clear and verify the counter and combined progress bar update",
       "Leave the original goal incomplete and confirm the level does not win; finish both goals to confirm the normal win flow"
     ],
-    "expected": "Only specials actually included in a clear count; the activation total persists between moves, updates in the HUD, and cannot substitute for the level\u2019s original objective."
+    "expected": "Only specials actually included in a clear count; the activation total persists between moves, updates in the HUD, and cannot substitute for the level’s original objective."
   },
   {
     "name": "Sugar rush cascade-chain milestones",
@@ -215,14 +215,14 @@
       "existing saves unlock beyond level 100 without losing saved records",
       "worlds 11 and 12 navigate as ten-level chapters",
       "new boss finales on levels 110 and 120",
-      "four-color Moon Mix boards on levels 111\u2013120",
+      "four-color Moon Mix boards on levels 111–120",
       "lightweight original prism and moon map illustrations"
     ],
     "description": "Checks the campaign extension and its distinct, four-color final-world rule without resetting legacy player progress.",
     "steps": [
       "Use a QA save with level 100 complete; reload and confirm level 101 is unlocked and earlier scores/stars remain",
-      "Open world 11, inspect levels 101\u2013110 and the Lady Luma chapter-finale preview",
-      "Open world 12 and confirm levels 111\u2013120, the Mallow Nova finale, and the Moon Mix four-color palette label",
+      "Open world 11, inspect levels 101–110 and the Lady Luma chapter-finale preview",
+      "Open world 12 and confirm levels 111–120, the Mallow Nova finale, and the Moon Mix four-color palette label",
       "Start one Moon Mix level and confirm only grape, lemon, blueberry, and orange candies spawn; reload and verify progress remains saved",
       "On a narrow mobile viewport, verify the new chapter art and ten level buttons keep the existing board/map layout usable"
     ],
@@ -264,5 +264,35 @@
       "Open a production build with the same query and confirm normal campaign access rules remain in effect"
     ],
     "expected": "Valid playtest URLs open directly to a requested level in development mode with in-memory progress only; malformed levels fall back safely, and production ignores the query."
+  },
+  {
+    "name": "Development-only irregular board shape lab",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "six isolated 8 by 8 board silhouettes",
+      "identical level-one score goal, move budget and spawn mix across prototypes",
+      "shared seeded opening layout for fair shape comparisons",
+      "void cells cannot be swapped, matched, filled or receive objectives",
+      "gravity and special effects skip holes safely",
+      "shape-lab sessions do not read or write campaign progress",
+      "production ignores the shape-lab query",
+      "session-local human outcome and subjective feedback with JSON export",
+      "campaign-timed swap and rejected-swap animation",
+      "event-driven clear and segmented-gravity animations",
+      "reduced-motion and interrupted animation recovery"
+    ],
+    "description": "Lets testers compare original board silhouettes without adding levels to the campaign or changing its rules and balance.",
+    "steps": [
+      "Run npm run dev and open the preview URL with ?shapelab=1",
+      "Use the shape selector to try Bellflower, Twin Isles, Tide Bowl, Switchback, Crescent Reach and Pocket Current; confirm the frame remains 8 by 8 and score goal/moves stay constant",
+      "Confirm shared playable cells begin with the same candy colors across layouts; play a legal swap and an invalid swap and observe the normal swap and reject motions",
+      "In Pocket Current, make matches above and below the central void and confirm candies never fall into or across the empty cells; activate a stripe and confirm it only clears playable cells",
+      "In Pocket Current, make a match and follow the clear, drop and cascade animations; verify candies do not fall into or across the central holes",
+      "Restart during a clear/fall, then repeat with reduced motion enabled and after resizing; confirm the board always becomes responsive",
+      "Leave the feedback selections blank and confirm Record attempt is disabled; choose the actual outcome and both ratings, add an optional note, then record and download the JSON",
+      "Replay shapes, then exit the lab and confirm ordinary campaign progress remains unchanged",
+      "Open a production build with the same query and confirm the isolated lab does not launch"
+    ],
+    "expected": "All six prototypes are playable only in development; shared cells use a consistent seeded opening, voids remain inert through swaps, objectives, refills, specials and shuffles, and the existing event-driven campaign swap/clear/fall animations play within their normal ordered phases. Restart, resize, detached nodes and reduced motion never leave the prototype input-locked; campaign data and saves remain unchanged, and feedback is recorded only after the tester supplies the outcome and both ratings."
   }
 ]

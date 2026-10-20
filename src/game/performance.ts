@@ -177,6 +177,7 @@ export function createSeededRandom(seed: number): () => number {
 export function fingerprintBoard(board: readonly (readonly { color: number; special?: string; kind?: string }[])[]): string {
   return board.map(row => row.map(candy => {
     if (candy.kind === 'ingredient') return 'ingredient';
+    if (candy.kind === 'void') return 'void';
     return `${candy.color}${candy.special ? `:${candy.special}` : ''}`;
   }).join(',')).join('/');
 }

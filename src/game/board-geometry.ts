@@ -30,20 +30,26 @@ export function calculateFallOffsets<T extends { id: number }>(
 
       const destination = getCellPoint(row, col);
       if (!destination) continue;
-
       const sourceRow = row - distance;
-      let source: CellPoint | null;
-      if (sourceRow >= 0) {
-        source = getCellPoint(sourceRow, col);
-      } else {
-        const first = getCellPoint(0, col);
-        const second = getCellPoint(1, col);
-        if (!first || !second) continue;
-        const rowPitch = second.top - first.top;
-        if (!Number.isFinite(rowPitch) || rowPitch <= 0) continue;
-        source = { left: first.left, top: first.top + sourceRow * rowPitch };
+      let source: CellPoint | null = sourceRow >= 0 ? getCellPoint(sourceRow, col) : null;
+      if (!source) {
+        // A new candy can enter above a column's first playable cell, or above
+        // a lower gravity segment whose preceding rows are intentional voids.
+        // Estimate the row pitch from the destination and the nearest measured
+        // active cell in that column instead of treating a hole as a candy.
+        let rowPitch: number | null = null;
+        for (let offset = 1; offset < board.length && rowPitch === null; offset += 1) {
+          const below = getCellPoint(row + offset, col);
+          if (below) rowPitch = (below.top - destination.top) / offset;
+          else {
+            const above = getCellPoint(row - offset, col);
+            if (above) rowPitch = (destination.top - above.top) / offset;
+          }
+        }
+        if (rowPitch !== null && Number.isFinite(rowPitch) && rowPitch > 0) {
+          source = { left: destination.left, top: destination.top + (sourceRow - row) * rowPitch };
+        }
       }
-
       if (source) offsets[candy.id] = translationBetween(destination, source);
     }
   }
