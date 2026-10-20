@@ -52,6 +52,54 @@ describe('data-driven campaign levels', () => {
     ))).toBe(true);
   });
 
+  it('authors ingredient-drop objectives on four campaign milestones and starts them above the exit', () => {
+    const milestones = [25, 45, 64, 85].map(levelId => LEVELS[levelId - 1]);
+    expect(milestones.map(level => [level.levelId, level.secondaryGoalType, level.ingredientCount])).toEqual([
+      [25, 'ingredient', 1],
+      [45, 'ingredient', 1],
+      [64, 'ingredient', 2],
+      [85, 'ingredient', 2],
+    ]);
+
+    const start = createLevelBoard(LEVELS[24], () => 0.2);
+    const jarCells = start.board.flatMap((row, rowIndex) => row.flatMap((piece, columnIndex) =>
+      piece.kind === 'ingredient' ? [[rowIndex, columnIndex]] : [],
+    ));
+    expect(jarCells).toHaveLength(1);
+    expect(jarCells[0][0]).toBe(0);
+    expect(findMatches(start.board).size).toBe(0);
+    expect(hasMove(start.board)).toBe(true);
+  });
+
+  it('accepts authored I ingredient cells only with a matching objective above the exit row', () => {
+    const manifest = oneLevel({
+      rows: 3,
+      columns: 3,
+      objectives: [{ type: 'ingredient', targetAmount: 1 }],
+      initialGrid: [
+        [0, 1, 0],
+        [1, 0, 'I'],
+        [2, 1, 2],
+      ],
+    });
+    const authoredLevel = parseLevelManifest(manifest)[0];
+    expect(authoredLevel.initialGrid?.[1][2]).toBe('I');
+    const authoredStart = createLevelBoard(authoredLevel, () => 0.2);
+    expect(authoredStart.board.flat().filter(piece => piece.kind === 'ingredient')).toHaveLength(1);
+    expect(hasMove(authoredStart.board)).toBe(true);
+    expect(() => parseLevelManifest(oneLevel({
+      rows: 3,
+      columns: 3,
+      initialGrid: [[0, 1, 2], [1, 2, 0], ['I', 0, 1]],
+    }))).toThrow(/has ingredients but no ingredient objective/);
+    expect(() => parseLevelManifest(oneLevel({
+      rows: 3,
+      columns: 3,
+      objectives: [{ type: 'ingredient', targetAmount: 1 }],
+      initialGrid: [[0, 1, 2], [1, 2, 0], ['I', 0, 1]],
+    }))).toThrow(/cannot start on the exit row/);
+  });
+
   it('rejects malformed objectives and board matrices before play', () => {
     expect(() => parseLevelManifest(oneLevel({ objectives: [{ type: 'teleport', targetAmount: 1 }] })))
       .toThrow(/unknown objective type/);

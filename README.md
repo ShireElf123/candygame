@@ -4,7 +4,7 @@ Jam Shift is an original, mobile-first match-three game with a polished campaign
 
 ## What is in the build
 
-- **Playable campaign:** 8×8 boards, tap/swipe/keyboard controls, match validation, cascades, striped/wrapped/color specials, and six objective types: score, color collect, jelly, chapter bosses, sugar shells, and special-candy activation. Levels 15, 35, 55, 75, and 95 pair an activation target with their existing goal.
+- **Playable campaign:** 8×8 boards, tap/swipe/keyboard controls, match validation, cascades, striped/wrapped/color specials, and seven objective types: score, color collect, jelly, chapter bosses, sugar shells, special-candy activation, and gravity-driven jam-jar delivery. Levels 15, 35, 55, 75, and 95 pair an activation target with their existing goal; levels 25, 45, 64, and 85 add ingredient-drop goals.
 - **Player portal:** campaign overview, world map, level previews, personal bests, star totals, and a configurable pre-level booster loadout.
 - **Player feedback:** goal-focused hints, short onboarding guide, win/loss recaps, sound effects, reduced-motion support, and clear confirmation before leaving or restarting a level.
 - **Local progress:** schema-checked browser storage with a migration path for existing Jam Shift saves. Progress and power-up counts stay on the player's device; there is no account or game backend.

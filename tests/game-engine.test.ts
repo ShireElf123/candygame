@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   applySpecialSwap,
   bossDamageForClear,
+  clone,
   buildSwapSpecial,
   COLORS,
   createJelly,
+  createLevelBoard,
   createSugarShells,
   damageSugarShells,
   dropMatches,
@@ -20,6 +22,7 @@ import {
   keyOf,
   LEVELS,
   makeCandy,
+  makeIngredient,
   objectiveProgressPercent,
   objectivesComplete,
   shuffleBoard,
@@ -122,6 +125,52 @@ describe('board generation and resolution', () => {
     expect(result.map(row => fallDistances[row[0].id])).toEqual(Array(SIZE).fill(2));
     expect(Object.keys(fallDistances)).toHaveLength(SIZE);
     expect(result.flatMap(row => row.slice(1)).some(candy => fallDistances[candy.id] !== undefined)).toBe(false);
+  });
+
+  it('keeps jam jars non-matchable, non-swappable, and gravity-driven until delivery', () => {
+    const ingredient = makeIngredient();
+    const board = [
+      [makeCandy(0), makeCandy(1, 'striped-h'), makeCandy(2)],
+      [makeCandy(1), ingredient, makeCandy(0)],
+      [makeCandy(2), makeCandy(3), makeCandy(4)],
+      [makeCandy(1), makeCandy(1), makeCandy(1)],
+    ];
+    const bottomMatch = new Set([keyOf(3, 0), keyOf(3, 1), keyOf(3, 2)]);
+
+    expect(findMatches(board)).toEqual(bottomMatch);
+    expect(evaluateSwap(board, [1, 0], [1, 1]).valid).toBe(false);
+    expect(evaluateSwap(board, [2, 1], [1, 1]).valid).toBe(false);
+    const specialBoard = clone(board);
+    specialBoard[0][0] = makeIngredient();
+    expect(expandSpecials(specialBoard, new Set([keyOf(0, 1)])).has(keyOf(0, 0))).toBe(false);
+
+    const firstDrop = dropMatches(board, bottomMatch, undefined, () => 0.4);
+    expect(firstDrop.ingredientsDelivered).toBe(0);
+    expect(firstDrop.board[2][1]).toMatchObject({ id: ingredient.id, kind: 'ingredient' });
+    expect(firstDrop.fallDistances[ingredient.id]).toBe(1);
+
+    const delivered = dropMatches(firstDrop.board, new Set([keyOf(3, 1)]), undefined, () => 0.4);
+    expect(delivered.ingredientsDelivered).toBe(1);
+    expect(delivered.deliveredIngredientCells).toEqual([keyOf(3, 1)]);
+    expect(delivered.board.flat().some(piece => piece.kind === 'ingredient')).toBe(false);
+    expect(delivered.boardForFallAnimation[3][1]).toMatchObject({ id: ingredient.id, kind: 'ingredient' });
+    expect(delivered.fallDistances[ingredient.id]).toBe(1);
+    expect(delivered.board.flat()).toHaveLength(12);
+  });
+
+  it('keeps ingredient drop lanes fixed when a dead board is reshuffled', () => {
+    const start = createLevelBoard(LEVELS[24], seeded(735));
+    const before = start.board.flatMap((row, rowIndex) => row.flatMap((piece, columnIndex) =>
+      piece.kind === 'ingredient' ? [keyOf(rowIndex, columnIndex)] : [],
+    ));
+    const reshuffled = shuffleBoard(start.board, seeded(736));
+    const after = reshuffled.flatMap((row, rowIndex) => row.flatMap((piece, columnIndex) =>
+      piece.kind === 'ingredient' ? [keyOf(rowIndex, columnIndex)] : [],
+    ));
+
+    expect(after).toEqual(before);
+    expect(findMatches(reshuffled).size).toBe(0);
+    expect(hasMove(reshuffled)).toBe(true);
   });
 
   it('reshuffles without creating a match or losing candies and specials', () => {
@@ -300,6 +349,17 @@ describe('special candy rules', () => {
     expect(bossDamageForClear(8, 1)).toBe(2);
     expect(bossDamageForClear(3, 2)).toBe(2);
     expect(bossDamageForClear(-1, 0)).toBe(1);
+  });
+
+  it('requires jam-jar deliveries and uses the least-complete mixed-goal progress', () => {
+    const level = LEVELS[24];
+    expect(level.levelId).toBe(25);
+    expect(goalsForLevel(level)).toEqual(['collect', 'ingredient']);
+    expect(level.ingredientCount).toBe(1);
+    expect(objectivesComplete(level, level.target, level.goalCount, 0, 0, 0, 0, 0)).toBe(false);
+    expect(objectivesComplete(level, level.target, level.goalCount, 0, 0, 0, 0, level.ingredientCount)).toBe(true);
+    expect(objectiveProgressPercent(level, level.target, level.goalCount, 0, 0, 0, 0, 0)).toBe(0);
+    expect(objectiveProgressPercent(level, level.target, level.goalCount, 0, 0, 0, 0, 0, level.ingredientCount)).toBe(100);
   });
 
   it('adds deterministic layered sugar shells as a second objective', () => {

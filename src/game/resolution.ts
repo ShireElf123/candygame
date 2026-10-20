@@ -20,6 +20,9 @@ export type ResolutionStep = {
   score: number;
   goalProgress: number;
   specialsActivated: number;
+  ingredientsDelivered: number;
+  ingredientsDeliveredThisWave: number;
+  deliveredIngredientCells: string[];
   jelly: Set<string>;
   bossHealth: number;
   sugarShells: Map<string, number>;
@@ -27,6 +30,7 @@ export type ResolutionStep = {
   shellHitCells: string[];
   shellsCleared: number;
   boardAfterDrop: Candy[][];
+  boardForFallAnimation: Candy[][];
   fallDistances: Record<number, number>;
 };
 
@@ -36,6 +40,7 @@ export type ResolutionPlan = {
   score: number;
   goalProgress: number;
   specialsActivated: number;
+  ingredientsDelivered: number;
   jelly: Set<string>;
   bossHealth: number;
   sugarShells: Map<string, number>;
@@ -52,6 +57,7 @@ export type ResolutionInput = {
   score: number;
   goalProgress: number;
   specialsActivated?: number;
+  ingredientsDelivered?: number;
   jelly: Set<string>;
   bossHealth: number;
   sugarShells: Map<string, number>;
@@ -68,6 +74,7 @@ export function buildResolutionPlan(input: ResolutionInput, random: () => number
   let score = input.score;
   let goalProgress = input.goalProgress;
   let specialsActivated = input.specialsActivated ?? 0;
+  let ingredientsDelivered = input.ingredientsDelivered ?? 0;
   let jelly = new Set(input.jelly);
   let bossHealth = input.bossHealth;
   let sugarShells = new Map(input.sugarShells);
@@ -116,6 +123,7 @@ export function buildResolutionPlan(input: ResolutionInput, random: () => number
     const points = expanded.size * 60 * Math.min(cascade, 6);
     score += points;
     const dropped = dropMatches(current, expanded, config.spawnWeights, random);
+    ingredientsDelivered += dropped.ingredientsDelivered;
     current = dropped.board;
     totalCleared += expanded.size;
     steps.push({
@@ -125,6 +133,9 @@ export function buildResolutionPlan(input: ResolutionInput, random: () => number
       score,
       goalProgress,
       specialsActivated,
+      ingredientsDelivered,
+      ingredientsDeliveredThisWave: dropped.ingredientsDelivered,
+      deliveredIngredientCells: dropped.deliveredIngredientCells,
       jelly: new Set(jelly),
       bossHealth,
       sugarShells: new Map(sugarShells),
@@ -132,6 +143,7 @@ export function buildResolutionPlan(input: ResolutionInput, random: () => number
       shellHitCells,
       shellsCleared,
       boardAfterDrop: current,
+      boardForFallAnimation: dropped.boardForFallAnimation,
       fallDistances: dropped.fallDistances,
     });
     matches = findMatches(current);
@@ -151,6 +163,7 @@ export function buildResolutionPlan(input: ResolutionInput, random: () => number
     score,
     goalProgress,
     specialsActivated,
+    ingredientsDelivered,
     jelly,
     bossHealth,
     sugarShells,

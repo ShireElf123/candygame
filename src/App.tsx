@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import CandyArt from './components/CandyArt';
 import CharacterArt from './components/CharacterArt';
+import IngredientArt from './components/IngredientArt';
 import JuiceBurstLayer, { type JuiceBurst } from './components/JuiceBurstLayer';
 import WorldScene from './components/WorldScene';
 import InstallAppAction from './components/InstallAppAction';
@@ -88,7 +89,7 @@ const CHARACTER_PALETTES = [
 const HELP_STEPS = [
   { title: 'Swap neighbours.', detail: 'Tap one candy, then an adjacent candy — or swipe to move it. Use the arrow keys to explore the board.' },
   { title: 'Match three or more.', detail: 'Four in a row makes a stripe; five makes a color candy; T and L shapes make a wrapped candy. Match or swap a special candy to fire it.' },
-  { title: 'Play every objective.', detail: 'Score points, collect colors, clear jelly, crack sugar shells, activate special candies, or outmatch a chapter boss. Some later puzzles pair two goals, so finish both before moves run out.' },
+  { title: 'Play every objective.', detail: 'Score points, collect colors, clear jelly, crack sugar shells, activate special candies, drop jam jars to the bottom, or outmatch a chapter boss. Some later puzzles pair two goals, so finish both before moves run out.' },
   { title: 'Save a power-up for the right moment.', detail: 'Choose a power-up, then tap a candy. Each use costs one move and one charge.' },
 ];
 
@@ -100,6 +101,7 @@ function goalDescription(levelNumber: number) {
     if (goalType === 'jelly') return `Clear ${createJelly(levelNumber).size} jelly tiles`;
     if (goalType === 'shell') return `Crack ${config.shellCount ?? 0} sugar shells`;
     if (goalType === 'special') return `Activate ${config.specialCount} special ${config.specialCount === 1 ? 'candy' : 'candies'}`;
+    if (goalType === 'ingredient') return `Drop ${config.ingredientCount} jam ${config.ingredientCount === 1 ? 'jar' : 'jars'} to the bottom`;
     return `Defeat ${config.boss?.name ?? 'the chapter boss'}`;
   }).join(' + ');
 }
@@ -110,10 +112,21 @@ function goalGlyph(goalType: GoalType, levelNumber: number) {
   if (goalType === 'collect') return GLYPHS[config.goalColor];
   if (goalType === 'shell') return '✧';
   if (goalType === 'special') return '⚡';
+  if (goalType === 'ingredient') return '↓';
   return '✦';
 }
 
-function goalHeadline(goalType: GoalType, levelNumber: number, score: number, collected: number, jellyLeft: number, bossHealthLeft = 0, shellsCleared = 0, specialsActivated = 0) {
+function goalHeadline(
+  goalType: GoalType,
+  levelNumber: number,
+  score: number,
+  collected: number,
+  jellyLeft: number,
+  bossHealthLeft = 0,
+  shellsCleared = 0,
+  specialsActivated = 0,
+  ingredientsDelivered = 0,
+) {
   const config = LEVELS[levelNumber - 1];
   if (goalType === 'score') return score >= config.target ? 'Score target reached' : `Reach ${config.target.toLocaleString()} points`;
   if (goalType === 'collect') {
@@ -130,11 +143,25 @@ function goalHeadline(goalType: GoalType, levelNumber: number, score: number, co
     const left = Math.max(0, config.specialCount - specialsActivated);
     return left === 0 ? 'Special candies activated' : `Activate ${left} special ${left === 1 ? 'candy' : 'candies'}`;
   }
+  if (goalType === 'ingredient') {
+    const left = Math.max(0, config.ingredientCount - ingredientsDelivered);
+    return left === 0 ? 'All jam jars delivered' : `Drop ${left} jam ${left === 1 ? 'jar' : 'jars'}`;
+  }
   const boss = config.boss;
   return bossHealthLeft <= 0 ? `${boss?.name ?? 'The boss'} defeated!` : `Outmatch ${boss?.name ?? 'the boss'}`;
 }
 
-function goalCounter(goalType: GoalType, levelNumber: number, score: number, collected: number, jellyLeft: number, bossHealthLeft = 0, shellsCleared = 0, specialsActivated = 0) {
+function goalCounter(
+  goalType: GoalType,
+  levelNumber: number,
+  score: number,
+  collected: number,
+  jellyLeft: number,
+  bossHealthLeft = 0,
+  shellsCleared = 0,
+  specialsActivated = 0,
+  ingredientsDelivered = 0,
+) {
   const config = LEVELS[levelNumber - 1];
   if (goalType === 'score') return `${Math.min(score, config.target).toLocaleString()} / ${config.target.toLocaleString()} points`;
   if (goalType === 'collect') return `${Math.min(collected, config.goalCount)} / ${config.goalCount} collected`;
@@ -144,14 +171,24 @@ function goalCounter(goalType: GoalType, levelNumber: number, score: number, col
   }
   if (goalType === 'shell') return `${Math.min(shellsCleared, config.shellCount ?? 0)} / ${config.shellCount ?? 0} cracked`;
   if (goalType === 'special') return `${Math.min(specialsActivated, config.specialCount)} / ${config.specialCount} activated`;
+  if (goalType === 'ingredient') return `${Math.min(ingredientsDelivered, config.ingredientCount)} / ${config.ingredientCount} delivered`;
   const total = config.boss?.maxHealth ?? 0;
   return `${Math.max(0, total - bossHealthLeft)} / ${total} power drained`;
 }
 
-function objectiveProgress(levelNumber: number, score: number, collected: number, jellyLeft: number, bossHealthLeft: number, shellsCleared: number, specialsActivated: number) {
+function objectiveProgress(
+  levelNumber: number,
+  score: number,
+  collected: number,
+  jellyLeft: number,
+  bossHealthLeft: number,
+  shellsCleared: number,
+  specialsActivated: number,
+  ingredientsDelivered = 0,
+) {
   const config = LEVELS[levelNumber - 1];
   const totalJelly = hasGoal(config, 'jelly') ? createJelly(levelNumber).size : 0;
-  return objectiveProgressPercent(config, score, collected, jellyLeft, totalJelly, bossHealthLeft, shellsCleared, specialsActivated);
+  return objectiveProgressPercent(config, score, collected, jellyLeft, totalJelly, bossHealthLeft, shellsCleared, specialsActivated, ingredientsDelivered);
 }
 
 function trapDialogFocus(event: ReactKeyboardEvent<HTMLElement>, onEscape?: () => void) {
@@ -238,6 +275,7 @@ function App() {
   const [score, setScore] = useState(0);
   const [goalProgress, setGoalProgress] = useState(0);
   const [specialsActivated, setSpecialsActivated] = useState(0);
+  const [ingredientsDelivered, setIngredientsDelivered] = useState(0);
   const [bossHealth, setBossHealth] = useState(LEVELS[save.level - 1].boss?.maxHealth ?? 0);
   const [sugarShells, setSugarShells] = useState<Map<string, number>>(() => new Map());
   const [shellsCleared, setShellsCleared] = useState(0);
@@ -519,7 +557,7 @@ function App() {
   const currentBossPalette = CHARACTER_PALETTES[levelData.boss?.color ?? 3];
   const progress = Math.min(100, score / target * 100);
   const stars = starsForScore(score, target);
-  const objectivePercent = objectiveProgress(level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated);
+  const objectivePercent = objectiveProgress(level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered);
   const best = bestScores[String(level)] || 0;
   const completedCount = Object.values(completedLevels).filter(Boolean).length;
   const totalStars = useMemo(() => starsForCampaign(bestWinScores), [bestWinScores]);
@@ -618,6 +656,7 @@ function App() {
     setScore(0);
     setGoalProgress(0);
     setSpecialsActivated(0);
+    setIngredientsDelivered(0);
     setBossHealth(levelConfig.boss?.maxHealth ?? 0);
     setSugarShells(createSugarShells(safeLevel));
     setShellsCleared(0);
@@ -644,9 +683,9 @@ function App() {
     setEquippedBoosters([...introBoosters]);
   }, [level, unlocked, introBoosters, tutorialSeen, cancelMotionRun, clearTransientTimers, setGamePhase]);
 
-  const finishMove = (nextScore: number, nextMoves: number, levelAtMove: number, nextGoalProgress: number, nextJelly: Set<string>, nextBossHealth: number, nextShellsCleared: number, nextSpecialsActivated: number) => {
+  const finishMove = (nextScore: number, nextMoves: number, levelAtMove: number, nextGoalProgress: number, nextJelly: Set<string>, nextBossHealth: number, nextShellsCleared: number, nextSpecialsActivated: number, nextIngredientsDelivered: number) => {
     const config = LEVELS[levelAtMove - 1];
-    const goalComplete = objectivesComplete(config, nextScore, nextGoalProgress, nextJelly.size, nextBossHealth, nextShellsCleared, nextSpecialsActivated);
+    const goalComplete = objectivesComplete(config, nextScore, nextGoalProgress, nextJelly.size, nextBossHealth, nextShellsCleared, nextSpecialsActivated, nextIngredientsDelivered);
     const finalScore = goalComplete ? nextScore + Math.max(0, nextMoves) * 100 : nextScore;
     const levelKey = String(levelAtMove);
 
@@ -654,6 +693,7 @@ function App() {
     setMoves(nextMoves);
     setGoalProgress(nextGoalProgress);
     setSpecialsActivated(nextSpecialsActivated);
+    setIngredientsDelivered(nextIngredientsDelivered);
     setBossHealth(nextBossHealth);
     setShellsCleared(nextShellsCleared);
     setJelly(new Set(nextJelly));
@@ -685,7 +725,7 @@ function App() {
   ) => {
     const config = LEVELS[levelAtMove - 1];
     const objectiveMet = objectivesComplete(
-      config, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared, plan.specialsActivated,
+      config, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered,
     );
     setBoard(plan.board);
     setClearing([]);
@@ -695,7 +735,8 @@ function App() {
     setSugarShells(new Map(plan.sugarShells));
     setShellsCleared(plan.shellsCleared);
     setSelected(null);
-    finishMove(plan.score, nextMoves, levelAtMove, plan.goalProgress, plan.jelly, plan.bossHealth, plan.shellsCleared, plan.specialsActivated);
+    setIngredientsDelivered(plan.ingredientsDelivered);
+    finishMove(plan.score, nextMoves, levelAtMove, plan.goalProgress, plan.jelly, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered);
     if (!objectiveMet && nextMoves > 0) setMessage(recoveryMessage);
   };
 
@@ -750,8 +791,8 @@ function App() {
 
       setGamePhase('falling');
       const calculateMotion = () => {
-        const getCellPoint = measureBoardPoints(step.boardAfterDrop.length, step.boardAfterDrop[0]?.length ?? 0);
-        const nextFallOffsets = calculateFallOffsets(step.boardAfterDrop, step.fallDistances, getCellPoint);
+        const getCellPoint = measureBoardPoints(step.boardForFallAnimation.length, step.boardForFallAnimation[0]?.length ?? 0);
+        const nextFallOffsets = calculateFallOffsets(step.boardForFallAnimation, step.fallDistances, getCellPoint);
         return Object.fromEntries(Object.entries(nextFallOffsets).map(([id, offset]) => [
           id,
           { ...offset, distance: step.fallDistances[Number(id)] ?? 0 },
@@ -766,7 +807,7 @@ function App() {
         fallingCandies: Object.keys(nextFallMotion).length,
       });
       stageBoardCommit(`wave-${step.cascade}-fall-state-committed`);
-      setBoard(step.boardAfterDrop);
+      setBoard(step.boardForFallAnimation);
       setClearing([]);
       setFallMotion(nextFallMotion);
       if (Object.keys(nextFallMotion).length) {
@@ -775,7 +816,17 @@ function App() {
         trace?.mark('fall-animation-skipped', { wave: step.cascade, reason: 'no-moving-candies' });
       }
       if (!isCurrentMotion(runToken, controller)) return;
+      if (step.ingredientsDeliveredThisWave > 0) {
+        stageBoardCommit(`wave-${step.cascade}-delivery-state-committed`);
+        setBoard(step.boardAfterDrop);
+      }
       setFallMotion({});
+      setIngredientsDelivered(step.ingredientsDelivered);
+      if (step.ingredientsDeliveredThisWave > 0) {
+        const delivered = step.ingredientsDeliveredThisWave;
+        setMessage(`${delivered} jam ${delivered === 1 ? 'jar' : 'jars'} delivered!`);
+        triggerBurst(step.deliveredIngredientCells, 'match', 0, config.rows, config.columns);
+      }
       trace?.mark('cascade-wave-completed', { wave: step.cascade });
     }
 
@@ -794,16 +845,19 @@ function App() {
     setFallMotion({});
     setSelected(null);
     const objectiveMet = trace
-      ? trace.measure('final-objective-check', () => objectivesComplete(config, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared, plan.specialsActivated))
-      : objectivesComplete(config, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared, plan.specialsActivated);
-    if (trace) trace.measure('final-move-state-update', () => finishMove(plan.score, nextMoves, levelAtMove, plan.goalProgress, plan.jelly, plan.bossHealth, plan.shellsCleared, plan.specialsActivated));
-    else finishMove(plan.score, nextMoves, levelAtMove, plan.goalProgress, plan.jelly, plan.bossHealth, plan.shellsCleared, plan.specialsActivated);
+      ? trace.measure('final-objective-check', () => objectivesComplete(config, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered))
+      : objectivesComplete(config, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered);
+    if (trace) trace.measure('final-move-state-update', () => finishMove(plan.score, nextMoves, levelAtMove, plan.goalProgress, plan.jelly, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered));
+    else finishMove(plan.score, nextMoves, levelAtMove, plan.goalProgress, plan.jelly, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered);
     trace?.mark('resolution-animation-phases-complete', { waves: plan.steps.length });
     if (plan.totalCleared > 0 && nextMoves > 0 && !objectiveMet && !config.boss) {
       const pointSummary = `+${(plan.score - startingScore).toLocaleString()} points`;
-      setMessage(plan.totalShellsHit > 0
-        ? `Sugar shells cracked · ${pointSummary}`
-        : plan.steps.length > 1 ? `Cascade ×${plan.steps.length} · ${pointSummary}` : pointSummary);
+      const deliveredThisMove = plan.steps.reduce((sum, step) => sum + step.ingredientsDeliveredThisWave, 0);
+      setMessage(deliveredThisMove > 0
+        ? `${deliveredThisMove} jam ${deliveredThisMove === 1 ? 'jar' : 'jars'} delivered · ${pointSummary}`
+        : plan.totalShellsHit > 0
+          ? `Sugar shells cracked · ${pointSummary}`
+          : plan.steps.length > 1 ? `Cascade ×${plan.steps.length} · ${pointSummary}` : pointSummary);
     }
   };
 
@@ -833,6 +887,11 @@ function App() {
 
   const swap = async (a: Pos, b: Pos) => {
     if (phaseRef.current !== 'idle' || inputLock.current || screen !== 'play' || showHelp || showLeaveConfirm || showRestartConfirm || Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) !== 1) return;
+    if (board[a[0]]?.[a[1]]?.kind === 'ingredient' || board[b[0]]?.[b[1]]?.kind === 'ingredient') {
+      setSelected(null);
+      setMessage('Drop jam jars by clearing candies beneath them.');
+      return;
+    }
 
     const trace = PERFORMANCE_TRACE_ENABLED
       ? startMoveTrace('swap', {
@@ -940,6 +999,7 @@ function App() {
         score: startScore,
         goalProgress,
         specialsActivated,
+        ingredientsDelivered,
         jelly,
         bossHealth: startBossHealth,
         sugarShells: startSugarShells,
@@ -995,6 +1055,11 @@ function App() {
     }
     if (inputLock.current || busy || screen !== 'play' || showHelp || showLeaveConfirm || showRestartConfirm) return;
     setHinted([]);
+    if (board[r]?.[c]?.kind === 'ingredient') {
+      setSelected(null);
+      setMessage('Drop jam jars by clearing candies beneath them.');
+      return;
+    }
 
     if (armed) {
       const booster = armed;
@@ -1050,6 +1115,7 @@ function App() {
             score: startScore,
             goalProgress,
             specialsActivated,
+            ingredientsDelivered,
             jelly,
             bossHealth,
             sugarShells: new Map(sugarShells),
@@ -1184,7 +1250,7 @@ function App() {
     const fallDistance = fallMove?.distance ?? 0;
     const className = [
       'candy',
-      COLORS[item.color],
+      item.kind === 'ingredient' ? 'ingredient' : COLORS[item.color],
       swapMotion[item.id]?.rejected ? 'swap-rejected' : swapMotion[item.id] ? 'swap-motion' : '',
       selected?.[0] === row && selected?.[1] === col ? 'chosen' : '',
       hinted.some(([hintRow, hintCol]) => hintRow === row && hintCol === col) ? 'hint-target' : '',
@@ -1195,7 +1261,9 @@ function App() {
       shellLayers ? 'sugar-shelled' : '',
       item.special || '',
     ].filter(Boolean).join(' ');
-    const candyName = `${COLORS[item.color]}${item.special ? ` ${item.special.replace('-', ' ')}` : ''} candy, row ${row + 1}, column ${col + 1}${jelly.has(cellKey) ? ', on jelly' : ''}${shellLayers ? `, in a sugar shell with ${shellLayers} layer${shellLayers === 1 ? '' : 's'} left` : ''}`;
+    const candyName = item.kind === 'ingredient'
+      ? `Jam jar ingredient, row ${row + 1}, column ${col + 1}. Clear candies below it in this column to drop it.`
+      : `${COLORS[item.color]}${item.special ? ` ${item.special.replace('-', ' ')}` : ''} candy, row ${row + 1}, column ${col + 1}${jelly.has(cellKey) ? ', on jelly' : ''}${shellLayers ? `, in a sugar shell with ${shellLayers} layer${shellLayers === 1 ? '' : 's'} left` : ''}`;
     const candyStyle = {
       '--idle-delay': `${-((row * 5 + col * 7) % 17) * 0.19}s`,
       ...(swapMotion[item.id] ? {
@@ -1253,7 +1321,7 @@ function App() {
         {shellLayers > 0 && <span className={`sugar-shell${shellLayers > 1 ? ' has-layers' : ''}`} aria-hidden="true"><i>✧</i>{shellLayers > 1 && <b>{shellLayers}</b>}</span>}
         {shellHitCells.includes(cellKey) && <span className="shell-hit-ripple" aria-hidden="true"><i>✦</i></span>}
         <span className="candy-face" aria-hidden="true">
-          <CandyArt color={item.color} special={item.special} />
+          {item.kind === 'ingredient' ? <IngredientArt /> : <CandyArt color={item.color} special={item.special} />}
         </span>
       </button>
     );
@@ -1282,7 +1350,7 @@ function App() {
       role="group"
       aria-label="Candy puzzle board"
     >
-      <span id="board-instructions" className="visually-hidden">Choose a candy and an adjacent candy to swap, or swipe a candy. Use arrow keys to move around the board.</span>
+      <span id="board-instructions" className="visually-hidden">Choose two adjacent candies to swap, or swipe a candy. Jam jars cannot be swapped; clear candies beneath them in their column to drop them. Use arrow keys to move around the board.</span>
       <JuiceBurstLayer effects={juiceBursts} />
       {board.map((row, rowIndex) => <div className="candy-row" key={rowIndex} role="presentation">{row.map((item, colIndex) => renderCandy(item, rowIndex, colIndex))}</div>)}
     </div>
@@ -1539,7 +1607,7 @@ function App() {
               </div>
               <div className="level-hud-copy">
                 <span className="level-hud-kicker">{levelData.boss ? `CHAPTER BOSS · LEVEL ${String(level).padStart(2, '0')}` : `LEVEL ${String(level).padStart(2, '0')} · ${levelData.chapterName}`}</span>
-                <b>{levelData.boss?.name ?? goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated)}</b>
+                <b>{levelData.boss?.name ?? goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered)}</b>
                 {levelData.boss && <small className="level-boss-epithet">{levelData.boss.epithet} · “{levelData.boss.taunt}”</small>}
                 {levelData.boss
                   ? <div className="boss-health-track" role="progressbar" aria-label={`${levelData.boss.name} remaining power`} aria-valuemin={0} aria-valuemax={levelData.boss.maxHealth} aria-valuenow={bossHealth}>
@@ -1550,8 +1618,8 @@ function App() {
                   <span>{levelData.boss
                     ? `${bossHealth} / ${levelData.boss.maxHealth} power`
                     : [
-                      goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated),
-                      ...(levelData.secondaryGoalType ? [goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated)] : []),
+                      goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered),
+                      ...(levelData.secondaryGoalType ? [goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered)] : []),
                     ].join(' · ')}</span>
                   <span key={score} className="score-live"><span className="visually-hidden">Score: </span>{score.toLocaleString()} / {target.toLocaleString()}</span>
                   <span className="hud-star-count" role="img" aria-label={`${stars} of 3 stars`}><Star size={11} fill="currentColor" /><b>{stars}/3</b></span>
@@ -1592,15 +1660,15 @@ function App() {
                 <div className="objective-copy">
                   <span className="objective-glyph">{goalGlyph(levelData.goalType, level)}</span>
                   <div>
-                    <b>{goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated)}</b>
-                    <small>{goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated)}</small>
+                    <b>{goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered)}</b>
+                    <small>{goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered)}</small>
                   </div>
                 </div>
                 {levelData.secondaryGoalType && <div className="objective-secondary">
                   <span className="objective-secondary-icon" aria-hidden="true">{goalGlyph(levelData.secondaryGoalType, level)}</span>
                   <div>
-                    <b>{goalHeadline(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated)}</b>
-                    <small>{goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated)}</small>
+                    <b>{goalHeadline(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered)}</b>
+                    <small>{goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered)}</small>
                   </div>
                 </div>}
                 <div className="objective-track" role="progressbar" aria-label={levelData.boss ? `${levelData.boss.name} power drained` : levelData.secondaryGoalType ? 'Both level objectives progress' : 'Level objective progress'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(objectivePercent)}><span style={{ width: `${objectivePercent}%` }} /></div>

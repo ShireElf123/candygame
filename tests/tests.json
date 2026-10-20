@@ -113,6 +113,29 @@
     "expected": "Only specials actually included in a clear count; the activation total persists between moves, updates in the HUD, and cannot substitute for the level’s original objective."
   },
   {
+    "name": "Jam jar ingredient-drop milestones",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "ingredient targets on levels 25, 45, 64, and 85",
+      "jam jars are visible non-matchable board pieces",
+      "jars cannot be swapped or cleared directly",
+      "column gravity drops jars through cleared spaces",
+      "delivery progress and mixed-goal win checks",
+      "booster and special effects preserve ingredients",
+      "hint moves favor clears beneath a jar"
+    ],
+    "description": "Checks the new gravity-driven ingredient objective and its interaction with normal clears, specials, boosters, and mixed goals.",
+    "steps": [
+      "Using a QA save, open levels 25, 45, 64, and 85 and verify ingredient targets of 1, 1, 2, and 2 alongside each original goal",
+      "On level 25, try selecting, swapping, and targeting the jam jar with a booster; confirm it stays in place and no move or booster charge is spent",
+      "Clear candies below the jar in its column, first with a normal match and then with a line or color effect; watch it fall with gravity and deliver at the bottom",
+      "Verify the delivered counter updates and the jar is removed only on delivery",
+      "Complete the original objective while leaving a jar undelivered and confirm the level does not win; deliver the remaining jar to finish",
+      "Request a hint and confirm both highlighted candies form a legal move that supports the active objectives"
+    ],
+    "expected": "Jam jars are readable, fixed objective pieces. They never match or swap, effects cannot destroy them directly, clears in their column drop them toward the exit, and every ingredient plus the paired objective is required to win."
+  },
+  {
     "name": "Seeded motion A/B, rapid input, and interruption recovery",
     "viewport": "desktop and mobile",
     "covers": [

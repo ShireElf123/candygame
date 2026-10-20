@@ -46,7 +46,7 @@
       "additionalProperties": false,
       "required": ["type", "targetAmount"],
       "properties": {
-        "type": { "enum": ["score", "collect", "jelly", "boss", "shell", "special"] },
+        "type": { "enum": ["score", "collect", "jelly", "boss", "shell", "special", "ingredient"] },
         "targetAmount": { "type": "integer", "minimum": 1 },
         "color": { "type": "integer", "minimum": 0, "maximum": 5 }
       },
@@ -72,7 +72,8 @@
     "initialCell": {
       "oneOf": [
         { "type": "integer", "minimum": 0, "maximum": 5 },
-        { "const": "J" }
+        { "const": "J" },
+        { "const": "I" }
       ]
     },
     "level": {

@@ -174,9 +174,11 @@ export function createSeededRandom(seed: number): () => number {
   };
 }
 
-export function fingerprintBoard(board: readonly (readonly { color: number; special?: string }[])[]): string {
-  return board.map(row => row.map(candy => `${candy.color}${candy.special ? `:${candy.special}` : ''}`).join(','))
-    .join('/');
+export function fingerprintBoard(board: readonly (readonly { color: number; special?: string; kind?: string }[])[]): string {
+  return board.map(row => row.map(candy => {
+    if (candy.kind === 'ingredient') return 'ingredient';
+    return `${candy.color}${candy.special ? `:${candy.special}` : ''}`;
+  }).join(',')).join('/');
 }
 
 export class MoveTraceRecorder implements MoveTraceHandle {

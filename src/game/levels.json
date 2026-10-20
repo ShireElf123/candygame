@@ -461,6 +461,10 @@
           "type": "collect",
           "color": 2,
           "targetAmount": 9
+        },
+        {
+          "type": "ingredient",
+          "targetAmount": 1
         }
       ]
     },
@@ -821,6 +825,10 @@
           "type": "collect",
           "color": 4,
           "targetAmount": 11
+        },
+        {
+          "type": "ingredient",
+          "targetAmount": 1
         }
       ]
     },
@@ -1160,6 +1168,10 @@
         {
           "type": "score",
           "targetAmount": 2260
+        },
+        {
+          "type": "ingredient",
+          "targetAmount": 2
         }
       ]
     },
@@ -1532,6 +1544,10 @@
         {
           "type": "score",
           "targetAmount": 2625
+        },
+        {
+          "type": "ingredient",
+          "targetAmount": 2
         }
       ]
     },

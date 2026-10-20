@@ -56,6 +56,7 @@ describe('development performance controls', () => {
     expect(firstSequence).not.toEqual(Array.from({ length: 5 }, () => other()));
     expect(fingerprintBoard(boardWithIds)).toBe('1,2:wrapped');
     expect(fingerprintBoard(sameBoardWithDifferentIds)).toBe('1,2:wrapped');
+    expect(fingerprintBoard([[{ color: 0, kind: 'ingredient' }]])).toBe('ingredient');
   });
 });
 

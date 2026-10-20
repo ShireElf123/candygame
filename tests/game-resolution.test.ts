@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSwapSpecial, evaluateSwap, keyOf, LEVELS, makeCandy, type LevelDefinition } from '../src/game/engine';
+import { buildSwapSpecial, evaluateSwap, keyOf, LEVELS, makeCandy, makeIngredient, objectivesComplete, type LevelDefinition } from '../src/game/engine';
 import { buildResolutionPlan } from '../src/game/resolution';
 
 const colors = [0, 1, 2, 3, 4, 5].map(color => ({ color, weight: 1 }));
@@ -142,6 +142,35 @@ describe('pure cascade resolution plan', () => {
       shellsCleared: 0,
     }, () => 0.1);
     expect(createdPlan.specialsActivated).toBe(0);
+  });
+
+  it('records ingredient delivery in ordered resolution snapshots and objective completion', () => {
+    const level = threeByThreeLevel({ goalType: 'ingredient', ingredientCount: 1 });
+    const board = [
+      [makeCandy(0), makeCandy(1), makeCandy(2)],
+      [makeCandy(1), makeIngredient(), makeCandy(0)],
+      [makeCandy(2), makeCandy(2), makeCandy(2)],
+    ];
+    const plan = buildResolutionPlan({
+      level,
+      board,
+      matches: new Set([keyOf(2, 0), keyOf(2, 1), keyOf(2, 2)]),
+      score: 0,
+      goalProgress: 0,
+      jelly: new Set(),
+      bossHealth: 0,
+      sugarShells: new Map(),
+      shellsCleared: 0,
+    }, () => 0.4);
+
+    expect(plan.steps[0].ingredientsDeliveredThisWave).toBe(1);
+    expect(plan.steps[0].ingredientsDelivered).toBe(1);
+    expect(plan.steps[0].deliveredIngredientCells).toEqual([keyOf(2, 1)]);
+    expect(plan.steps[0].boardForFallAnimation[2][1]).toMatchObject({ kind: 'ingredient' });
+    expect(plan.steps[0].boardAfterDrop[2][1].kind).toBeUndefined();
+    expect(plan.ingredientsDelivered).toBe(1);
+    expect(plan.board.flat().some(piece => piece.kind === 'ingredient')).toBe(false);
+    expect(objectivesComplete(level, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered)).toBe(true);
   });
 
   it('tracks jelly and shell damage as data events for the animation layer', () => {
