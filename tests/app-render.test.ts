@@ -32,8 +32,8 @@ describe('Jam Shift game shell', () => {
     expect(html).toContain('progress will not be saved');
     expect(html).toContain('Playtest progress is temporary');
     expect(html).toContain('Play level 79');
-    expect(html).toContain('aria-label="Level 79"');
-    expect(html).not.toContain('Level 79, locked');
+    expect(html).toContain('aria-label="Level 79, current level, available, objective: jelly clearing and score goal"');
+    expect(html).not.toContain('aria-label="Level 79, current level, locked');
   });
 
   it('routes development shape-lab URLs to the isolated six-layout playtest', () => {
@@ -56,7 +56,7 @@ describe('Jam Shift game shell', () => {
     const html = renderToString(createElement(App));
     expect(html).toContain('class="header-star-count" role="img" aria-label="0 campaign stars"');
     expect(html).toContain('class="intro-stars" role="img" aria-label="0 campaign stars"');
-    expect(appSource).toContain('className="level-map-grid" role="group" aria-label=');
+    expect(appSource).toContain('<LevelTrail');
     expect(appSource).toContain('className="detail-stars" role="group" aria-label=');
     expect(appSource).toContain('className="score-stars" role="img" aria-label=');
     expect(appSource).toContain('className="result-stars" role="img" aria-label=');

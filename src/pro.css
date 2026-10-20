@@ -281,7 +281,6 @@
 }
 .chapter-arrow:hover:not(:disabled) { color: var(--lime); border-color: rgba(213, 244, 119, .34); background: rgba(213, 244, 119, .08); }
 .chapter-arrow:disabled { opacity: .3; }
-.level-map-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(7px, 1vw, 12px); }
 .map-level {
   position: relative;
   aspect-ratio: 1.28;
@@ -662,7 +661,6 @@
   .map-overview-stats > div { text-align: left; }
   .world-panel { padding: 19px 15px; border-radius: 21px; }
   .world-panel-heading h2 { font-size: 24px; }
-  .level-map-grid { gap: 7px; }
   .map-level { aspect-ratio: 1.08; border-radius: 11px; }
   .map-level-number { font-size: 13px; }
   .map-level-star { top: 4px; right: 5px; font-size: 9px; }

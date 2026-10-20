@@ -266,6 +266,28 @@
     "expected": "Valid playtest URLs open directly to a requested level in development mode with in-memory progress only; malformed levels fall back safely, and production ignores the query."
   },
   {
+    "name": "Illustrated chapter trail and level-goal markers",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "ten clickable levels follow a winding chapter route",
+      "completed, current, locked, and boss-finale node states",
+      "mixed objectives are previewed without opening a level",
+      "route progress advances only across consecutive completed levels",
+      "keyboard focus and screen-reader labels remain meaningful",
+      "campaign map changes do not affect the gameplay board ratio"
+    ],
+    "description": "Replaces the flat ten-button grid with an original, touch-friendly route while keeping the existing campaign unlock and level-preview behavior.",
+    "steps": [
+      "Open the world map on a fresh save and inspect the current world's ten-node route",
+      "Tab through available level nodes and confirm locked nodes cannot be activated",
+      "Select a mixed-goal level and a chapter finale; compare the node markers with the objective and boss preview in the detail panel",
+      "Use a QA save with consecutive cleared levels, then confirm the route fill stops at the first incomplete level and the completed nodes show earned stars",
+      "Check at 320 CSS pixels, a typical phone width, and desktop; confirm every node stays inside the route panel and the level detail remains reachable",
+      "Start a level and confirm the existing 8×8 campaign gameplay board frame and ratio are unchanged"
+    ],
+    "expected": "Each world presents ten accessible circular stops along a soft illustrated trail. The route fill reflects consecutive clears; objective pips, boss markers, star counts, current position, and locked states agree with the selected level's detail card. The map scrolls naturally on mobile, keeps touch targets at least 42 CSS pixels, and does not change campaign rules, saves, move budgets, or board geometry."
+  },
+  {
     "name": "Local and Vercel-preview irregular board shape lab",
     "viewport": "mobile and desktop",
     "covers": [

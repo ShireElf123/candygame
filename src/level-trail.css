@@ -1,0 +1,156 @@
+/* A compact, winding world route replaces the flat campaign button grid. */
+.level-trail {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: clamp(280px, 34vw, 350px);
+  margin-top: 15px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .92);
+  border-radius: 21px;
+  background:
+    radial-gradient(ellipse at 8% 82%, rgba(151, 211, 145, .27), transparent 37%),
+    radial-gradient(ellipse at 94% 18%, rgba(255, 255, 255, .8), transparent 34%),
+    linear-gradient(155deg, #e5f7f5 0%, #fff5df 51%, #fcecf4 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .92), 0 6px 14px rgba(83, 72, 117, .08);
+}
+.level-trail::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: .32;
+  background-image: radial-gradient(rgba(117, 156, 143, .28) .75px, transparent .75px);
+  background-size: 15px 15px;
+  mask-image: linear-gradient(135deg, transparent 0%, #000 26%, #000 74%, transparent 100%);
+}
+.level-trail-art {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.level-trail-shadow,
+.level-trail-base,
+.level-trail-stitches,
+.level-trail-progress {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.level-trail-shadow { stroke: rgba(132, 82, 45, .3); stroke-width: 36; }
+.level-trail-base { stroke: #fff4dc; stroke-width: 27; }
+.level-trail-stitches { stroke: #d1a56f; stroke-width: 1.5; stroke-dasharray: 2 13; opacity: .8; }
+.level-trail-progress {
+  stroke: #d12e78;
+  stroke-width: 4.5;
+  stroke-dashoffset: 0;
+  transition: stroke-dasharray 380ms cubic-bezier(.2, .7, .2, 1);
+}
+.level-trail-node.map-level {
+  position: absolute;
+  z-index: 2;
+  width: clamp(44px, 5vw, 54px);
+  height: clamp(44px, 5vw, 54px);
+  min-height: 0;
+  aspect-ratio: 1;
+  padding: 3px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.level-trail-node.map-level:hover:not(:disabled) {
+  z-index: 3;
+  transform: translate(-50%, calc(-50% - 2px));
+}
+.level-trail-node.map-level.is-selected {
+  z-index: 4;
+  animation: level-trail-node-pop 420ms cubic-bezier(.16, .82, .25, 1.2) both;
+}
+.level-trail-node .map-level-number {
+  margin-top: 4px;
+  font-size: clamp(12px, 1.4vw, 15px);
+  font-weight: 900;
+  line-height: 1;
+}
+.level-trail-node .lock-symbol { font-size: 19px; }
+.trail-objective-marks {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  gap: 1px;
+}
+.trail-objective-mark {
+  width: 12px;
+  height: 12px;
+  display: grid;
+  place-items: center;
+  color: #70553e;
+  border: 1px solid rgba(255, 255, 255, .96);
+  border-radius: 50%;
+  background: #fff7e6;
+  box-shadow: 0 1px 2px rgba(73, 51, 61, .18);
+  font-size: 7px;
+  font-weight: 900;
+  line-height: 1;
+}
+.trail-objective-score { color: #92581c; background: #fff0c1; }
+.trail-objective-collect { color: #356c9b; background: #e2f4ff; }
+.trail-objective-jelly { color: #694d98; background: #eee4ff; }
+.trail-objective-boss { color: #a12d55; background: #ffe1eb; }
+.trail-objective-shell { color: #8b5933; background: #f7e2bf; }
+.trail-objective-special { color: #92601e; background: #fff0a7; }
+.trail-objective-ingredient { color: #25745e; background: #dcf5e4; }
+.trail-objective-cascade { color: #316c9b; background: #dcf4ff; }
+.level-trail-node .map-boss-marker {
+  top: -2px;
+  left: 1px;
+  padding: 2px 4px;
+  color: #8d3156;
+  border: 1px solid #fff;
+  border-radius: 999px;
+  background: #fff1da;
+  box-shadow: 0 2px 4px rgba(70, 52, 67, .14);
+  font-size: 5px;
+  letter-spacing: .02em;
+}
+.level-trail-node.map-level.is-selected .map-boss-marker { color: #8d3156; }
+.level-trail-node .map-level-current {
+  bottom: 4px;
+  font-size: 6px;
+  letter-spacing: .08em;
+}
+.level-trail-node .map-node-stars { bottom: 5px; gap: 2px; }
+.level-trail-node .map-node-stars i { width: 4px; height: 4px; }
+
+@keyframes level-trail-node-pop {
+  0% { transform: translate(-50%, -50%) scale(.9); }
+  68% { transform: translate(-50%, -50%) scale(1.1); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+@media (max-width: 560px) {
+  .level-trail {
+    height: 292px;
+    margin-top: 12px;
+    border-radius: 17px;
+  }
+  .level-trail-node.map-level {
+    width: 44px;
+    height: 44px;
+    padding: 2px;
+  }
+  .level-trail-node .map-level-number { font-size: 12px; }
+  .trail-objective-mark { width: 11px; height: 11px; font-size: 6px; }
+  .level-trail-node .map-boss-marker { left: 1px; font-size: 4.5px; }
+}
+
+@media (max-width: 370px) {
+  .level-trail { height: 280px; }
+  .level-trail-node.map-level { width: 42px; height: 42px; }
+  .trail-objective-marks { top: 1px; right: 1px; }
+  .trail-objective-mark { width: 10px; height: 10px; }
+}

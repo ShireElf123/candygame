@@ -14,6 +14,7 @@ import './game-ui.css';
 import './mobile-game-skin.css';
 import './juice-polish.css';
 import './experience-polish.css';
+import './level-trail.css';
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

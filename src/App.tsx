@@ -24,6 +24,7 @@ import CharacterArt from './components/CharacterArt';
 import IngredientArt from './components/IngredientArt';
 import JuiceBurstLayer, { type JuiceBurst } from './components/JuiceBurstLayer';
 import WorldScene from './components/WorldScene';
+import LevelTrail from './components/LevelTrail';
 import InstallAppAction from './components/InstallAppAction';
 import {
   applySpecialSwap,
@@ -1568,31 +1569,15 @@ function CampaignApp() {
                 </div>
               </div>
               <WorldScene key={mapChapter} chapter={mapChapter} />
-              <div className="level-map-grid" role="group" aria-label={`${LEVELS[mapChapter * LEVELS_PER_CHAPTER].chapterName} levels`}>
-                {Array.from({ length: LEVELS_PER_CHAPTER }, (_, index) => mapChapter * LEVELS_PER_CHAPTER + index + 1).map(number => {
-                  const isLocked = number > unlocked;
-                  const isComplete = Boolean(completedLevels[String(number)]);
-                  const levelStars = starsForScore(bestWinScores[String(number)] || 0, LEVELS[number - 1].target);
-                  const label = isLocked ? `Level ${number}, locked` : `Level ${number}${LEVELS[number - 1].boss ? ', chapter boss finale' : ''}${isComplete ? `, completed with ${levelStars} stars` : ''}`;
-                  return (
-                    <button
-                      key={number}
-                      type="button"
-                      className={`map-level ${number === mapSelectedLevel ? 'is-selected' : ''} ${isComplete ? 'is-complete' : ''} ${isLocked ? 'is-locked' : ''} ${LEVELS[number - 1].boss ? 'is-boss-level' : ''}`}
-                      disabled={isLocked}
-                      aria-label={label}
-                      aria-pressed={number === mapSelectedLevel}
-                      onClick={() => setMapSelectedLevel(number)}
-                    >
-                      <span className="map-level-number">{isLocked ? <span className="lock-symbol">⌑</span> : String(number).padStart(2, '0')}</span>
-                      {isComplete && <span className="map-level-star" aria-hidden="true">★</span>}
-                      {number === level && !isComplete && <span className="map-level-current" aria-hidden="true">YOU</span>}
-                      {LEVELS[number - 1].boss && <span className="map-boss-marker" aria-hidden="true">✦ BOSS</span>}
-                      {isComplete && <span className="map-node-stars" aria-hidden="true">{[1, 2, 3].map(star => <i key={star} className={levelStars >= star ? 'on' : ''} />)}</span>}
-                    </button>
-                  );
-                })}
-              </div>
+              <LevelTrail
+                chapter={mapChapter}
+                unlocked={unlocked}
+                currentLevel={level}
+                selectedLevel={mapSelectedLevel}
+                completedLevels={completedLevels}
+                bestWinScores={bestWinScores}
+                onSelectLevel={setMapSelectedLevel}
+              />
               <div className="map-legend"><span><i className="legend-current" />Current</span><span><i className="legend-complete">★</i>Complete</span><span><i className="legend-locked">⌑</i>Locked</span></div>
             </section>
 
