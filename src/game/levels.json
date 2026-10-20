@@ -234,6 +234,10 @@
           "type": "collect",
           "color": 1,
           "targetAmount": 7
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 2
         }
       ]
     },
@@ -594,6 +598,10 @@
           "type": "collect",
           "color": 3,
           "targetAmount": 9
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 2
         }
       ]
     },
@@ -954,6 +962,10 @@
           "type": "collect",
           "color": 5,
           "targetAmount": 11
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 3
         }
       ]
     },
@@ -1314,6 +1326,10 @@
           "type": "collect",
           "color": 1,
           "targetAmount": 13
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 3
         }
       ]
     },
@@ -1678,6 +1694,10 @@
           "type": "collect",
           "color": 3,
           "targetAmount": 15
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 3
         }
       ]
     },
@@ -1828,6 +1848,559 @@
         "color": 1,
         "taunt": "The crown stays with me!",
         "maxHealth": 15
+      }
+    },
+    {
+      "levelId": 101,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 28,
+      "targetScore": 3000,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 3000
+        }
+      ]
+    },
+    {
+      "levelId": 102,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 28,
+      "targetScore": 3030,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 1,
+          "targetAmount": 14
+        }
+      ]
+    },
+    {
+      "levelId": 103,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 3060,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 16
+        }
+      ]
+    },
+    {
+      "levelId": 104,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 3090,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 4,
+          "targetAmount": 14
+        },
+        {
+          "type": "shell",
+          "targetAmount": 6
+        }
+      ]
+    },
+    {
+      "levelId": 105,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 3120,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "ingredient",
+          "targetAmount": 2
+        }
+      ]
+    },
+    {
+      "levelId": 106,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 3150,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "special",
+          "targetAmount": 3
+        }
+      ]
+    },
+    {
+      "levelId": 107,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 3180,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 3,
+          "targetAmount": 15
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 3
+        }
+      ]
+    },
+    {
+      "levelId": 108,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 3210,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 3210
+        },
+        {
+          "type": "shell",
+          "targetAmount": 8
+        }
+      ]
+    },
+    {
+      "levelId": 109,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 3240,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 2,
+          "targetAmount": 16
+        },
+        {
+          "type": "special",
+          "targetAmount": 2
+        }
+      ]
+    },
+    {
+      "levelId": 110,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 3270,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 17
+        }
+      ],
+      "boss": {
+        "name": "Lady Luma",
+        "epithet": "Keeper of the Prism Orchard",
+        "color": 4,
+        "taunt": "Let’s see your brightest move!",
+        "maxHealth": 17
+      }
+    },
+    {
+      "levelId": 111,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 3300,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 3300
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 112,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 3330,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 19
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 113,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 3360,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 5,
+          "targetAmount": 16
+        },
+        {
+          "type": "shell",
+          "targetAmount": 8
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 114,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 3390,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "ingredient",
+          "targetAmount": 2
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 115,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 3420,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 1,
+          "targetAmount": 16
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 3
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 116,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 3450,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "special",
+          "targetAmount": 4
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 117,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 3480,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 21
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 118,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 3510,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 3510
+        },
+        {
+          "type": "shell",
+          "targetAmount": 10
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 119,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 22,
+      "targetScore": 3540,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 4,
+          "targetAmount": 17
+        },
+        {
+          "type": "ingredient",
+          "targetAmount": 2
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 120,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 21,
+      "targetScore": 3570,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 20
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ],
+      "boss": {
+        "name": "Mallow Nova",
+        "epithet": "Celestial confectioner",
+        "color": 5,
+        "taunt": "The moon is mine to sugar!",
+        "maxHealth": 20
       }
     }
   ]

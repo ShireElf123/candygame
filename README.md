@@ -1,10 +1,10 @@
 # Jam Shift — Puzzle Club
 
-Jam Shift is an original, mobile-first match-three game with a polished campaign hub, ten themed worlds, a 100-level progression map, collectible stars, boosters, cascades, and offline-friendly play. It uses its own name, visual identity, candy styling, and game implementation; it does not include Candy Crush artwork or proprietary assets.
+Jam Shift is an original, mobile-first match-three game with a polished campaign hub, twelve themed worlds, a 120-level progression map, collectible stars, boosters, cascades, and offline-friendly play. It uses its own name, visual identity, candy styling, and game implementation; it does not include Candy Crush artwork or proprietary assets.
 
 ## What is in the build
 
-- **Playable campaign:** 8×8 boards, tap/swipe/keyboard controls, match validation, cascades, striped/wrapped/color specials, and seven objective types: score, color collect, jelly, chapter bosses, sugar shells, special-candy activation, and gravity-driven jam-jar delivery. Levels 15, 35, 55, 75, and 95 pair an activation target with their existing goal; levels 25, 45, 64, and 85 add ingredient-drop goals.
+- **Playable campaign:** 8×8 boards, tap/swipe/keyboard controls, match validation, cascades, striped/wrapped/color specials, and eight objective types: score, color collect, jelly, chapter bosses, sugar shells, special-candy activation, gravity-driven jam-jar delivery, and cascade-chain challenges. Levels 12, 32, 52, 72, and 92 ask players to build 2- or 3-wave chains; levels 15, 35, 55, 75, and 95 pair activation targets with existing goals; levels 25, 45, 64, and 85 add ingredient-drop goals. New worlds 11–12 extend the campaign through level 120, with chapter finales at 110 and 120. Levels 111–120 use a four-color “Moon Mix” palette to create a distinct, cascade-friendly puzzle rhythm; refills and dead-board recovery both preserve that palette.
 - **Player portal:** campaign overview, world map, level previews, personal bests, star totals, and a configurable pre-level booster loadout.
 - **Player feedback:** goal-focused hints, short onboarding guide, win/loss recaps, sound effects, reduced-motion support, and clear confirmation before leaving or restarting a level.
 - **Local progress:** schema-checked browser storage with a migration path for existing Jam Shift saves. Progress and power-up counts stay on the player's device; there is no account or game backend.
@@ -34,7 +34,7 @@ npm run build  # Type-checks and creates the production bundle
 npm run preview
 ```
 
-The `tests/tests.json` file contains manual gameplay QA scenarios for mobile and desktop. Automated engine/resolution, save-data, portal-render, animation/accessibility, and PWA asset tests live in `tests/`; a deterministic smoke audit covers all 100 levels across eight start seeds and resolves one legal turn per level. `npm run typecheck` checks app, tests, and Vite config. GitHub Actions runs the test suite, production build, and dependency audit on pushes and pull requests to `main`.
+The `tests/tests.json` file contains manual gameplay QA scenarios for mobile and desktop. Automated engine/resolution, save-data, portal-render, animation/accessibility, and PWA asset tests live in `tests/`; a deterministic smoke audit covers all 120 levels across eight start seeds and resolves one legal turn per level. `npm run typecheck` checks app, tests, and Vite config. GitHub Actions runs the test suite, production build, and dependency audit on pushes and pull requests to `main`.
 
 ## Project layout
 

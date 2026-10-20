@@ -41,6 +41,7 @@ export type ResolutionPlan = {
   goalProgress: number;
   specialsActivated: number;
   ingredientsDelivered: number;
+  maxCascade: number;
   jelly: Set<string>;
   bossHealth: number;
   sugarShells: Map<string, number>;
@@ -150,10 +151,10 @@ export function buildResolutionPlan(input: ResolutionInput, random: () => number
   }
 
   if (matches.size) {
-    current = shuffleBoard(current, random);
+    current = shuffleBoard(current, random, input.level.spawnWeights);
     reshuffleReason = 'cascade-limit';
   } else if (!hasMove(current)) {
-    current = shuffleBoard(current, random);
+    current = shuffleBoard(current, random, input.level.spawnWeights);
     reshuffleReason = 'no-valid-moves';
   }
 
@@ -164,6 +165,7 @@ export function buildResolutionPlan(input: ResolutionInput, random: () => number
     goalProgress,
     specialsActivated,
     ingredientsDelivered,
+    maxCascade: cascade,
     jelly,
     bossHealth,
     sugarShells,

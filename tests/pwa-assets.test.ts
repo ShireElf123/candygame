@@ -28,7 +28,7 @@ describe('PWA icon assets', () => {
     expect(appleIcon.subarray(0, 8)).toEqual(pngSignature);
     expect(appleIcon.readUInt32BE(16)).toBe(180);
     expect(appleIcon.readUInt32BE(20)).toBe(180);
-    expect(serviceWorker).toContain("const CACHE_NAME = 'jam-shift-shell-v6'");
+    expect(serviceWorker).toContain("const CACHE_NAME = 'jam-shift-shell-v7'");
     expect(serviceWorker).toContain('...PRECACHE_ASSETS.map(asset => new URL(asset, APP_BASE).href)');
     expect(viteConfig).toContain('serviceWorkerPrecachePlugin()');
     for (const size of [180, 192, 512]) expect(serviceWorker).toContain(`./jam-shift-icon-${size}.png`);

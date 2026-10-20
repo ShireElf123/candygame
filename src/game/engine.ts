@@ -9,8 +9,10 @@ export type Pos = [number, number];
 export const COLORS = ['grape', 'lemon', 'berry', 'mint', 'blueberry', 'orange'];
 export const GLYPHS = ['✿', '●', '♥', '✦', '◆', '◉'];
 export const SIZE = 8;
-export const LEVEL_COUNT = 100;
-export type GoalType = 'score' | 'collect' | 'jelly' | 'boss' | 'shell' | 'special' | 'ingredient';
+export const LEVELS_PER_CHAPTER = 10;
+export const CHAPTER_COUNT = 12;
+export const LEVEL_COUNT = CHAPTER_COUNT * LEVELS_PER_CHAPTER;
+export type GoalType = 'score' | 'collect' | 'jelly' | 'boss' | 'shell' | 'special' | 'ingredient' | 'cascade';
 export type BossDefinition = {
   name: string;
   epithet: string;
@@ -37,6 +39,7 @@ export type LevelDefinition = {
   specialCount: number;
   shellCount?: number;
   ingredientCount: number;
+  cascadeCount: number;
   spawnWeights: SpawnWeight[];
   initialGrid?: InitialGridCell[][];
   objectives: LevelObjective[];
@@ -45,7 +48,7 @@ export type LevelDefinition = {
 
 type ObjectiveSet = Pick<LevelDefinition, 'goalType' | 'secondaryGoalType'>;
 type UnknownRecord = Record<string, unknown>;
-const GOAL_TYPES: GoalType[] = ['score', 'collect', 'jelly', 'boss', 'shell', 'special', 'ingredient'];
+const GOAL_TYPES: GoalType[] = ['score', 'collect', 'jelly', 'boss', 'shell', 'special', 'ingredient', 'cascade'];
 
 function isRecord(value: unknown): value is UnknownRecord {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -121,6 +124,7 @@ function parseLevelEntry(value: unknown, index: number, defaults: UnknownRecord)
   const moves = positiveInteger(value.maxMoves, `${field}.maxMoves`);
   const target = positiveInteger(value.targetScore, `${field}.targetScore`);
   const chapter = positiveInteger(value.chapter, `${field}.chapter`);
+  if (chapter > CHAPTER_COUNT) throw new Error(`Invalid level data: ${field}.chapter cannot exceed ${CHAPTER_COUNT}.`);
   if (typeof value.chapterName !== 'string' || !value.chapterName.trim()) throw new Error(`Invalid level data: ${field}.chapterName is required.`);
   const objectives = parseObjectives(value.objectives, `${field}.objectives`);
   if (new Set(objectives.map(objective => objective.type)).size !== objectives.length) {
@@ -130,6 +134,10 @@ function parseLevelEntry(value: unknown, index: number, defaults: UnknownRecord)
   const initialGrid = parseInitialGrid(value.initialGrid, rows, columns, `${field}.initialGrid`);
   const jellyObjective = objectives.find(objective => objective.type === 'jelly');
   const ingredientObjective = objectives.find(objective => objective.type === 'ingredient');
+  const cascadeObjective = objectives.find(objective => objective.type === 'cascade');
+  if (cascadeObjective && cascadeObjective.targetAmount > 30) {
+    throw new Error(`Invalid level data: ${field} cascade target cannot exceed the resolver's 30-wave limit.`);
+  }
   const jellyCells = initialGrid?.flat().filter(cell => cell === 'J').length ?? 0;
   const ingredientCells = initialGrid?.flat().filter(cell => cell === 'I').length ?? 0;
   if (jellyCells > 0 && !jellyObjective) throw new Error(`Invalid level data: ${field} has jelly tiles but no jelly objective.`);
@@ -185,6 +193,7 @@ function parseLevelEntry(value: unknown, index: number, defaults: UnknownRecord)
     specialCount: specialObjective?.targetAmount ?? 0,
     ...(shellObjective ? { shellCount: shellObjective.targetAmount } : {}),
     ingredientCount: ingredientObjective?.targetAmount ?? 0,
+    cascadeCount: cascadeObjective?.targetAmount ?? 0,
     spawnWeights: weights,
     ...(initialGrid ? { initialGrid } : {}),
     objectives,
@@ -201,6 +210,9 @@ export function parseLevelManifest(value: unknown): LevelDefinition[] {
   if (!levels.length || levels.length > LEVEL_COUNT) throw new Error(`Invalid level data: expected between 1 and ${LEVEL_COUNT} levels.`);
   for (let index = 1; index < levels.length; index++) {
     if (levels[index].chapter < levels[index - 1].chapter) throw new Error('Invalid level data: chapter numbers must be in order.');
+  }
+  if (levels.length === LEVEL_COUNT && levels.some((level, index) => level.chapter !== Math.floor(index / LEVELS_PER_CHAPTER) + 1)) {
+    throw new Error(`Invalid level data: the full campaign must contain ${LEVELS_PER_CHAPTER} consecutive levels per chapter.`);
   }
   return levels;
 }
@@ -237,6 +249,7 @@ export function objectivesComplete(
   shellsCleared = 0,
   specialsActivated = 0,
   ingredientsDelivered = 0,
+  bestCascade = 0,
 ): boolean {
   return goalsForLevel(level).every(goalType => {
     if (goalType === 'score') return score >= level.target;
@@ -245,7 +258,8 @@ export function objectivesComplete(
     if (goalType === 'boss') return bossHealthRemaining <= 0;
     if (goalType === 'shell') return shellsCleared >= (level.shellCount ?? 0);
     if (goalType === 'special') return specialsActivated >= level.specialCount;
-    return ingredientsDelivered >= level.ingredientCount;
+    if (goalType === 'ingredient') return ingredientsDelivered >= level.ingredientCount;
+    return bestCascade >= level.cascadeCount;
   });
 }
 
@@ -260,6 +274,7 @@ export function objectiveProgressPercent(
   shellsCleared = 0,
   specialsActivated = 0,
   ingredientsDelivered = 0,
+  bestCascade = 0,
 ): number {
   const percentages = goalsForLevel(level).map(goalType => {
     if (goalType === 'score') return level.target > 0 ? Math.min(100, score / level.target * 100) : 100;
@@ -272,7 +287,8 @@ export function objectiveProgressPercent(
     }
     if (goalType === 'shell') return level.shellCount && level.shellCount > 0 ? Math.min(100, shellsCleared / level.shellCount * 100) : 100;
     if (goalType === 'special') return level.specialCount > 0 ? Math.min(100, specialsActivated / level.specialCount * 100) : 100;
-    return level.ingredientCount > 0 ? Math.min(100, ingredientsDelivered / level.ingredientCount * 100) : 100;
+    if (goalType === 'ingredient') return level.ingredientCount > 0 ? Math.min(100, ingredientsDelivered / level.ingredientCount * 100) : 100;
+    return level.cascadeCount > 0 ? Math.min(100, bestCascade / level.cascadeCount * 100) : 100;
   });
   return Math.min(...percentages);
 }
@@ -569,7 +585,11 @@ export function createLevelBoard(level: LevelDefinition, random: () => number = 
   throw new Error(`Level ${level.levelId} initialGrid must start match-free with at least one legal move.`);
 }
 
-export function shuffleBoard(input: Candy[][], random: () => number = Math.random): Candy[][] {
+export function shuffleBoard(
+  input: Candy[][],
+  random: () => number = Math.random,
+  spawnWeights: SpawnWeight[] = COLORS.map((_, color) => ({ color, weight: 1 })),
+): Candy[][] {
   const rows = input.length;
   const columns = input[0]?.length ?? 0;
   const originalCandies = input.flat().map(candy => ({ ...candy }));
@@ -602,7 +622,7 @@ export function shuffleBoard(input: Candy[][], random: () => number = Math.rando
       if (!findMatches(candidate).size && hasMove(candidate)) return candidate;
     }
     for (let attempt = 0; attempt < 160; attempt++) {
-      const candidate = freshBoard(random, undefined, rows, columns);
+      const candidate = freshBoard(random, spawnWeights, rows, columns);
       ingredientSlots.forEach((ingredient, key) => {
         const [row, column] = posOf(key);
         candidate[row][column] = { ...ingredient };
@@ -630,7 +650,7 @@ export function shuffleBoard(input: Candy[][], random: () => number = Math.rando
     );
     if (!findMatches(candidate).size && hasMove(candidate)) return candidate;
   }
-  return freshBoard(random, undefined, rows, columns);
+  return freshBoard(random, spawnWeights, rows, columns);
 }
 
 export function expandSpecials(board: Candy[][], initial: Set<string>): Set<string> {
@@ -833,6 +853,10 @@ export function findBestMove(
             const [clearRow, clearColumn] = posOf(key);
             if (ingredientRows[clearColumn] >= 0 && clearRow > ingredientRows[clearColumn]) value += 10;
           }
+        }
+        if (goals.includes('cascade')) {
+          if (createdSpecial) value += 8;
+          value += Math.max(0, cleared.size - 3) * 1.5;
         }
 
         if (activatesSpecial) value += 4;

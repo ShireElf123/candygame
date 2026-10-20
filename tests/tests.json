@@ -17,7 +17,7 @@
     "steps": [
       "Open Jam Shift on a fresh save",
       "Tap Play level 01",
-      "Read the quick guide and choose Got it — let's play!",
+      "Read the quick guide and choose Got it \u2014 let's play!",
       "Make an invalid swap, choose Restart level, and confirm the restart",
       "Tap two adjacent candies"
     ],
@@ -110,7 +110,27 @@
       "Activate the special in a later clear and verify the counter and combined progress bar update",
       "Leave the original goal incomplete and confirm the level does not win; finish both goals to confirm the normal win flow"
     ],
-    "expected": "Only specials actually included in a clear count; the activation total persists between moves, updates in the HUD, and cannot substitute for the level’s original objective."
+    "expected": "Only specials actually included in a clear count; the activation total persists between moves, updates in the HUD, and cannot substitute for the level\u2019s original objective."
+  },
+  {
+    "name": "Sugar rush cascade-chain milestones",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "2-wave cascade targets on levels 12 and 32",
+      "3-wave cascade targets on levels 52, 72, and 92",
+      "best chain persists across moves",
+      "one-turn cascades drive chain progress",
+      "both objectives are required to win"
+    ],
+    "description": "Checks that cascade challenges reward a genuine chain from one move and preserve the best chain achieved during the level.",
+    "steps": [
+      "Using a QA save, open levels 12, 32, 52, 72, and 92 and verify chain targets of 2, 2, 3, 3, and 3 alongside their color-collect goals",
+      "On a milestone, make a match with no follow-up and confirm the best-chain counter records one wave without completing a 2-wave target",
+      "Plan a move that creates an automatic refill cascade; confirm the chain counter advances and remains after later turns",
+      "Complete the color objective while the chain target is incomplete and confirm the level does not win",
+      "Reach the required chain depth and finish the color objective to verify the normal win and score-bonus flow"
+    ],
+    "expected": "Only a single move's actual cascade waves count toward the best-chain record. The record persists for the level, and both the chain and color-collect goals are required to win."
   },
   {
     "name": "Jam jar ingredient-drop milestones",
@@ -186,7 +206,27 @@
       "Verify the charge and move count change",
       "Complete or lose a level, then reload"
     ],
-    "expected": "The map shows ten levels per world, locked levels cannot be opened, selected late-world milestone levels clearly show two required objectives, campaign stars use a winning run rather than a failed personal best, each power-up use consumes one charge and one move, and campaign progress remains on the device after reload."
+    "expected": "The map shows twelve worlds with ten levels each (120 total), locked levels cannot be opened, selected late-world milestone levels clearly show two required objectives, the star cap is 360 and stars use a winning run rather than a failed personal best, each power-up use consumes one charge and one move, and campaign progress remains on the device after reload."
+  },
+  {
+    "name": "Prism Orchard and Moonmallow Observatory expansion",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "existing saves unlock beyond level 100 without losing saved records",
+      "worlds 11 and 12 navigate as ten-level chapters",
+      "new boss finales on levels 110 and 120",
+      "four-color Moon Mix boards on levels 111\u2013120",
+      "lightweight original prism and moon map illustrations"
+    ],
+    "description": "Checks the campaign extension and its distinct, four-color final-world rule without resetting legacy player progress.",
+    "steps": [
+      "Use a QA save with level 100 complete; reload and confirm level 101 is unlocked and earlier scores/stars remain",
+      "Open world 11, inspect levels 101\u2013110 and the Lady Luma chapter-finale preview",
+      "Open world 12 and confirm levels 111\u2013120, the Mallow Nova finale, and the Moon Mix four-color palette label",
+      "Start one Moon Mix level and confirm only grape, lemon, blueberry, and orange candies spawn; reload and verify progress remains saved",
+      "On a narrow mobile viewport, verify the new chapter art and ten level buttons keep the existing board/map layout usable"
+    ],
+    "expected": "The campaign shows 120 levels across twelve ten-level worlds; previous local progress is retained, new boss levels unlock normally, Moon Mix levels use exactly four available colors, and the original inline-vector chapter art requires no external image assets."
   },
   {
     "name": "In-game install option and Home Screen launch",
@@ -206,5 +246,23 @@
       "Launch the installed icon and confirm the in-browser install action is hidden while running standalone"
     ],
     "expected": "The button either opens the browser install prompt or shows platform-appropriate steps. After installation, the standalone app opens without showing a redundant install action."
+  },
+  {
+    "name": "Development-only campaign playtest launch",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "query-selectable authored level in Vite development mode",
+      "all campaign levels unlocked only for local playtesting",
+      "normal local save is not loaded or overwritten in playtest mode",
+      "production mode ignores the playtest query"
+    ],
+    "description": "Provides a safe way to reach the flagged levels for human testing without shipping a level-unlock shortcut or contaminating campaign saves.",
+    "steps": [
+      "Run npm run dev and open the preview URL with ?playtest=79",
+      "Confirm the map selects level 79, all levels are unlocked, and the Local playtest banner says progress will not be saved",
+      "Play or leave the level, reload, and confirm the test session did not change the ordinary saved campaign",
+      "Open a production build with the same query and confirm normal campaign access rules remain in effect"
+    ],
+    "expected": "Valid playtest URLs open directly to a requested level in development mode with in-memory progress only; malformed levels fall back safely, and production ignores the query."
   }
 ]

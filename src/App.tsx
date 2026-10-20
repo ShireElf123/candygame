@@ -28,6 +28,7 @@ import {
   applySpecialSwap,
   buildSwapSpecial,
   clone,
+  CHAPTERS,
   COLORS,
   createJelly,
   createLevelBoard,
@@ -43,6 +44,7 @@ import {
   keyOf,
   LEVEL_COUNT,
   LEVELS,
+  LEVELS_PER_CHAPTER,
   posOf,
   SIZE,
   type Booster,
@@ -56,7 +58,8 @@ import { calculateFallOffsets, translationBetween, type CellPoint, type MotionOf
 import { transitionGamePhase, type GamePhase } from './game/phase';
 import { buildResolutionPlan, type ResolutionPlan } from './game/resolution';
 import { starsForCampaign, starsForScore } from './game/progress';
-import { readSave, writeSave } from './game/save';
+import { DEFAULT_SAVE, readSave, writeSave } from './game/save';
+import { parsePlaytestLaunch } from './game/playtest';
 import { boardImpactClass, fallAnimationDuration, GAME_MOTION, GAME_MOTION_PROFILE, prefersReducedMotion } from './game/motion';
 import {
   createSeededRandom,
@@ -89,7 +92,7 @@ const CHARACTER_PALETTES = [
 const HELP_STEPS = [
   { title: 'Swap neighbours.', detail: 'Tap one candy, then an adjacent candy — or swipe to move it. Use the arrow keys to explore the board.' },
   { title: 'Match three or more.', detail: 'Four in a row makes a stripe; five makes a color candy; T and L shapes make a wrapped candy. Match or swap a special candy to fire it.' },
-  { title: 'Play every objective.', detail: 'Score points, collect colors, clear jelly, crack sugar shells, activate special candies, drop jam jars to the bottom, or outmatch a chapter boss. Some later puzzles pair two goals, so finish both before moves run out.' },
+  { title: 'Play every objective.', detail: 'Score points, collect colors, clear jelly, crack sugar shells, activate special candies, drop jam jars, build cascade chains, or outmatch a chapter boss. Some later puzzles pair two goals, so finish both before moves run out.' },
   { title: 'Save a power-up for the right moment.', detail: 'Choose a power-up, then tap a candy. Each use costs one move and one charge.' },
 ];
 
@@ -102,6 +105,7 @@ function goalDescription(levelNumber: number) {
     if (goalType === 'shell') return `Crack ${config.shellCount ?? 0} sugar shells`;
     if (goalType === 'special') return `Activate ${config.specialCount} special ${config.specialCount === 1 ? 'candy' : 'candies'}`;
     if (goalType === 'ingredient') return `Drop ${config.ingredientCount} jam ${config.ingredientCount === 1 ? 'jar' : 'jars'} to the bottom`;
+    if (goalType === 'cascade') return `Trigger a ${config.cascadeCount}-wave cascade`;
     return `Defeat ${config.boss?.name ?? 'the chapter boss'}`;
   }).join(' + ');
 }
@@ -113,6 +117,7 @@ function goalGlyph(goalType: GoalType, levelNumber: number) {
   if (goalType === 'shell') return '✧';
   if (goalType === 'special') return '⚡';
   if (goalType === 'ingredient') return '↓';
+  if (goalType === 'cascade') return '⤴';
   return '✦';
 }
 
@@ -126,6 +131,7 @@ function goalHeadline(
   shellsCleared = 0,
   specialsActivated = 0,
   ingredientsDelivered = 0,
+  bestCascade = 0,
 ) {
   const config = LEVELS[levelNumber - 1];
   if (goalType === 'score') return score >= config.target ? 'Score target reached' : `Reach ${config.target.toLocaleString()} points`;
@@ -147,6 +153,9 @@ function goalHeadline(
     const left = Math.max(0, config.ingredientCount - ingredientsDelivered);
     return left === 0 ? 'All jam jars delivered' : `Drop ${left} jam ${left === 1 ? 'jar' : 'jars'}`;
   }
+  if (goalType === 'cascade') {
+    return bestCascade >= config.cascadeCount ? 'Sugar rush chain reached' : `Build a ${config.cascadeCount}-wave cascade`;
+  }
   const boss = config.boss;
   return bossHealthLeft <= 0 ? `${boss?.name ?? 'The boss'} defeated!` : `Outmatch ${boss?.name ?? 'the boss'}`;
 }
@@ -161,6 +170,7 @@ function goalCounter(
   shellsCleared = 0,
   specialsActivated = 0,
   ingredientsDelivered = 0,
+  bestCascade = 0,
 ) {
   const config = LEVELS[levelNumber - 1];
   if (goalType === 'score') return `${Math.min(score, config.target).toLocaleString()} / ${config.target.toLocaleString()} points`;
@@ -172,6 +182,7 @@ function goalCounter(
   if (goalType === 'shell') return `${Math.min(shellsCleared, config.shellCount ?? 0)} / ${config.shellCount ?? 0} cracked`;
   if (goalType === 'special') return `${Math.min(specialsActivated, config.specialCount)} / ${config.specialCount} activated`;
   if (goalType === 'ingredient') return `${Math.min(ingredientsDelivered, config.ingredientCount)} / ${config.ingredientCount} delivered`;
+  if (goalType === 'cascade') return `${Math.min(bestCascade, config.cascadeCount)} / ${config.cascadeCount} best chain`;
   const total = config.boss?.maxHealth ?? 0;
   return `${Math.max(0, total - bossHealthLeft)} / ${total} power drained`;
 }
@@ -185,10 +196,11 @@ function objectiveProgress(
   shellsCleared: number,
   specialsActivated: number,
   ingredientsDelivered = 0,
+  bestCascade = 0,
 ) {
   const config = LEVELS[levelNumber - 1];
   const totalJelly = hasGoal(config, 'jelly') ? createJelly(levelNumber).size : 0;
-  return objectiveProgressPercent(config, score, collected, jellyLeft, totalJelly, bossHealthLeft, shellsCleared, specialsActivated, ingredientsDelivered);
+  return objectiveProgressPercent(config, score, collected, jellyLeft, totalJelly, bossHealthLeft, shellsCleared, specialsActivated, ingredientsDelivered, bestCascade);
 }
 
 function trapDialogFocus(event: ReactKeyboardEvent<HTMLElement>, onEscape?: () => void) {
@@ -254,14 +266,26 @@ function HelpDialog({
 }
 
 function App() {
-  const [save] = useState(readSave);
+  const playtestLaunch = parsePlaytestLaunch(
+    typeof window === 'undefined' ? '' : window.location.search,
+    import.meta.env.DEV,
+  );
+  const [save] = useState(() => playtestLaunch.enabled
+    ? {
+        ...DEFAULT_SAVE,
+        level: playtestLaunch.level,
+        unlocked: LEVEL_COUNT,
+        tutorialSeen: true,
+        boosterCounts: { ...DEFAULT_SAVE.boosterCounts },
+      }
+    : readSave());
   const [level, setLevel] = useState(save.level);
   const [unlocked, setUnlocked] = useState(save.unlocked);
   const [bestScores, setBestScores] = useState<Record<string, number>>(save.bestScores);
   const [bestWinScores, setBestWinScores] = useState<Record<string, number>>(save.bestWinScores);
   const [completedLevels, setCompletedLevels] = useState<Record<string, boolean>>(save.completedLevels);
   const [tutorialSeen, setTutorialSeen] = useState(save.tutorialSeen);
-  const [mapChapter, setMapChapter] = useState(Math.floor((save.level - 1) / 10));
+  const [mapChapter, setMapChapter] = useState(Math.floor((save.level - 1) / LEVELS_PER_CHAPTER));
   const [mapSelectedLevel, setMapSelectedLevel] = useState<number | null>(save.level);
   const [showHelp, setShowHelp] = useState(false);
   const [guideFirstRun, setGuideFirstRun] = useState(false);
@@ -270,12 +294,13 @@ function App() {
   const [focusBoard, setFocusBoard] = useState(false);
   const [sound, setSound] = useState(save.sound);
   const [board, setBoard] = useState<Candy[][]>(() => freshBoard());
-  const [screen, setScreen] = useState<Screen>('intro');
+  const [screen, setScreen] = useState<Screen>(playtestLaunch.enabled ? 'map' : 'intro');
   const [moves, setMoves] = useState(LEVELS[save.level - 1].moves);
   const [score, setScore] = useState(0);
   const [goalProgress, setGoalProgress] = useState(0);
   const [specialsActivated, setSpecialsActivated] = useState(0);
   const [ingredientsDelivered, setIngredientsDelivered] = useState(0);
+  const [bestCascade, setBestCascade] = useState(0);
   const [bossHealth, setBossHealth] = useState(LEVELS[save.level - 1].boss?.maxHealth ?? 0);
   const [sugarShells, setSugarShells] = useState<Map<string, number>>(() => new Map());
   const [shellsCleared, setShellsCleared] = useState(0);
@@ -557,14 +582,15 @@ function App() {
   const currentBossPalette = CHARACTER_PALETTES[levelData.boss?.color ?? 3];
   const progress = Math.min(100, score / target * 100);
   const stars = starsForScore(score, target);
-  const objectivePercent = objectiveProgress(level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered);
+  const objectivePercent = objectiveProgress(level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered, bestCascade);
   const best = bestScores[String(level)] || 0;
   const completedCount = Object.values(completedLevels).filter(Boolean).length;
   const totalStars = useMemo(() => starsForCampaign(bestWinScores), [bestWinScores]);
 
   useEffect(() => {
+    if (playtestLaunch.enabled) return;
     writeSave({ level, unlocked, bestScores, bestWinScores, completedLevels, tutorialSeen, sound, boosterCounts });
-  }, [level, unlocked, bestScores, bestWinScores, completedLevels, tutorialSeen, sound, boosterCounts]);
+  }, [level, unlocked, bestScores, bestWinScores, completedLevels, tutorialSeen, sound, boosterCounts, playtestLaunch.enabled]);
 
   useEffect(() => () => {
     gameRun.current += 1;
@@ -657,6 +683,7 @@ function App() {
     setGoalProgress(0);
     setSpecialsActivated(0);
     setIngredientsDelivered(0);
+    setBestCascade(0);
     setBossHealth(levelConfig.boss?.maxHealth ?? 0);
     setSugarShells(createSugarShells(safeLevel));
     setShellsCleared(0);
@@ -683,9 +710,9 @@ function App() {
     setEquippedBoosters([...introBoosters]);
   }, [level, unlocked, introBoosters, tutorialSeen, cancelMotionRun, clearTransientTimers, setGamePhase]);
 
-  const finishMove = (nextScore: number, nextMoves: number, levelAtMove: number, nextGoalProgress: number, nextJelly: Set<string>, nextBossHealth: number, nextShellsCleared: number, nextSpecialsActivated: number, nextIngredientsDelivered: number) => {
+  const finishMove = (nextScore: number, nextMoves: number, levelAtMove: number, nextGoalProgress: number, nextJelly: Set<string>, nextBossHealth: number, nextShellsCleared: number, nextSpecialsActivated: number, nextIngredientsDelivered: number, nextBestCascade: number) => {
     const config = LEVELS[levelAtMove - 1];
-    const goalComplete = objectivesComplete(config, nextScore, nextGoalProgress, nextJelly.size, nextBossHealth, nextShellsCleared, nextSpecialsActivated, nextIngredientsDelivered);
+    const goalComplete = objectivesComplete(config, nextScore, nextGoalProgress, nextJelly.size, nextBossHealth, nextShellsCleared, nextSpecialsActivated, nextIngredientsDelivered, nextBestCascade);
     const finalScore = goalComplete ? nextScore + Math.max(0, nextMoves) * 100 : nextScore;
     const levelKey = String(levelAtMove);
 
@@ -694,6 +721,7 @@ function App() {
     setGoalProgress(nextGoalProgress);
     setSpecialsActivated(nextSpecialsActivated);
     setIngredientsDelivered(nextIngredientsDelivered);
+    setBestCascade(nextBestCascade);
     setBossHealth(nextBossHealth);
     setShellsCleared(nextShellsCleared);
     setJelly(new Set(nextJelly));
@@ -707,9 +735,13 @@ function App() {
       setCompletedLevels(old => ({ ...old, [levelKey]: true }));
       setMessage(config.boss
         ? `${config.boss.name} defeated! Chapter ${config.chapter} cleared.`
-        : nextMoves > 0
-          ? `Level clear! +${(nextMoves * 100).toLocaleString()} move bonus!`
-          : 'Level complete! Beautifully played.');
+        : hasGoal(config, 'cascade')
+          ? nextMoves > 0
+            ? `Sugar rush! ${nextBestCascade}-wave chain · +${(nextMoves * 100).toLocaleString()} move bonus!`
+            : `Sugar rush! ${nextBestCascade}-wave chain. Beautifully played!`
+          : nextMoves > 0
+            ? `Level clear! +${(nextMoves * 100).toLocaleString()} move bonus!`
+            : 'Level complete! Beautifully played.');
     } else if (nextMoves <= 0) {
       playCue('lose');
       setScreen('lose');
@@ -724,8 +756,9 @@ function App() {
     recoveryMessage: string,
   ) => {
     const config = LEVELS[levelAtMove - 1];
+    const nextBestCascade = Math.max(bestCascade, plan.maxCascade);
     const objectiveMet = objectivesComplete(
-      config, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered,
+      config, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered, nextBestCascade,
     );
     setBoard(plan.board);
     setClearing([]);
@@ -736,7 +769,8 @@ function App() {
     setShellsCleared(plan.shellsCleared);
     setSelected(null);
     setIngredientsDelivered(plan.ingredientsDelivered);
-    finishMove(plan.score, nextMoves, levelAtMove, plan.goalProgress, plan.jelly, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered);
+    setBestCascade(nextBestCascade);
+    finishMove(plan.score, nextMoves, levelAtMove, plan.goalProgress, plan.jelly, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered, nextBestCascade);
     if (!objectiveMet && nextMoves > 0) setMessage(recoveryMessage);
   };
 
@@ -779,6 +813,10 @@ function App() {
         ? step.bossHealth <= 0 ? `${config.boss.name} is down!` : `${config.boss.name} has ${step.bossHealth} power left.`
         : step.shellsHit > 0
           ? `${step.shellsHit} sugar shell${step.shellsHit === 1 ? '' : 's'} cracked!`
+          : hasGoal(config, 'cascade')
+          ? step.cascade >= config.cascadeCount && bestCascade < config.cascadeCount
+            ? `Sugar rush! ${config.cascadeCount}-wave target reached!`
+            : step.cascade > 1 ? `${step.cascade}-wave chain!` : 'Set up a sugar-rush chain'
           : step.cascade > 1
             ? ['Sweet cascade!', 'Tasty chain!', 'Sugar rush!', 'Unstoppable!'][Math.min(3, step.cascade - 2)]
             : step.clearCells.length >= 5 ? 'Sugar rush!' : 'Nice match!');
@@ -822,6 +860,7 @@ function App() {
       }
       setFallMotion({});
       setIngredientsDelivered(step.ingredientsDelivered);
+      if (hasGoal(config, 'cascade')) setBestCascade(value => Math.max(value, step.cascade));
       if (step.ingredientsDeliveredThisWave > 0) {
         const delivered = step.ingredientsDeliveredThisWave;
         setMessage(`${delivered} jam ${delivered === 1 ? 'jar' : 'jars'} delivered!`);
@@ -844,11 +883,12 @@ function App() {
     setClearing([]);
     setFallMotion({});
     setSelected(null);
+    const nextBestCascade = Math.max(bestCascade, plan.maxCascade);
     const objectiveMet = trace
-      ? trace.measure('final-objective-check', () => objectivesComplete(config, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered))
-      : objectivesComplete(config, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered);
-    if (trace) trace.measure('final-move-state-update', () => finishMove(plan.score, nextMoves, levelAtMove, plan.goalProgress, plan.jelly, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered));
-    else finishMove(plan.score, nextMoves, levelAtMove, plan.goalProgress, plan.jelly, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered);
+      ? trace.measure('final-objective-check', () => objectivesComplete(config, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered, nextBestCascade))
+      : objectivesComplete(config, plan.score, plan.goalProgress, plan.jelly.size, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered, nextBestCascade);
+    if (trace) trace.measure('final-move-state-update', () => finishMove(plan.score, nextMoves, levelAtMove, plan.goalProgress, plan.jelly, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered, nextBestCascade));
+    else finishMove(plan.score, nextMoves, levelAtMove, plan.goalProgress, plan.jelly, plan.bossHealth, plan.shellsCleared, plan.specialsActivated, plan.ingredientsDelivered, nextBestCascade);
     trace?.mark('resolution-animation-phases-complete', { waves: plan.steps.length });
     if (plan.totalCleared > 0 && nextMoves > 0 && !objectiveMet && !config.boss) {
       const pointSummary = `+${(plan.score - startingScore).toLocaleString()} points`;
@@ -1190,7 +1230,7 @@ function App() {
       openLeaveDialog();
       return;
     }
-    setMapChapter(Math.floor((level - 1) / 10));
+    setMapChapter(Math.floor((level - 1) / LEVELS_PER_CHAPTER));
     setMapSelectedLevel(level);
     setScreen('map');
   };
@@ -1212,16 +1252,16 @@ function App() {
     setArmed(null);
     setShowHelp(false);
     setShowLeaveConfirm(false);
-    setMapChapter(Math.floor((level - 1) / 10));
+    setMapChapter(Math.floor((level - 1) / LEVELS_PER_CHAPTER));
     setMapSelectedLevel(level);
     setScreen('map');
   };
 
   const changeChapter = (offset: number) => {
-    const nextChapter = Math.max(0, Math.min(9, mapChapter + offset));
+    const nextChapter = Math.max(0, Math.min(CHAPTERS.length - 1, mapChapter + offset));
     setMapChapter(nextChapter);
-    const firstLevel = nextChapter * 10 + 1;
-    const lastLevel = firstLevel + 9;
+    const firstLevel = nextChapter * LEVELS_PER_CHAPTER + 1;
+    const lastLevel = Math.min(LEVEL_COUNT, firstLevel + LEVELS_PER_CHAPTER - 1);
     if (unlocked < firstLevel) {
       setMapSelectedLevel(null);
     } else {
@@ -1327,7 +1367,7 @@ function App() {
     );
   };
 
-  const mapLevelNumber = mapSelectedLevel ?? mapChapter * 10 + 1;
+  const mapLevelNumber = mapSelectedLevel ?? mapChapter * LEVELS_PER_CHAPTER + 1;
   const mapLevelData = LEVELS[mapLevelNumber - 1];
   const mapBossPalette = CHARACTER_PALETTES[mapLevelData.boss?.color ?? 3];
   const mapLevelUnlocked = mapSelectedLevel !== null && mapSelectedLevel <= unlocked;
@@ -1383,6 +1423,12 @@ function App() {
         </div>
       </header>
 
+      {playtestLaunch.enabled && (
+        <div className="playtest-mode-banner" role="status">
+          Local playtest · all levels unlocked · progress will not be saved
+        </div>
+      )}
+
       {screen === 'intro' && (
         <section className="home-view" aria-labelledby="home-title">
           <div className="intro-topline">
@@ -1400,7 +1446,7 @@ function App() {
           </div>
           <div className="page-kicker-row">
             <span className="eyebrow"><span className="eyebrow-mark">✦</span> A CANDY WORLD TO EXPLORE</span>
-            <span className="save-indicator"><span className="status-dot" />Progress saved on this device</span>
+            <span className="save-indicator"><span className="status-dot" />{playtestLaunch.enabled ? 'Playtest progress is temporary' : 'Progress saved on this device'}</span>
           </div>
           <div className="home-grid">
             <section className="hero-card">
@@ -1428,7 +1474,7 @@ function App() {
               <div className="hero-copy">
                 <span className="chapter-pill"><Sparkles size={14} /> CHAPTER {String(levelData.chapter).padStart(2, '0')} <i /> {levelData.chapterName}</span>
                 <h1 id="home-title">Make a little<br /><em>match magic.</em></h1>
-                <p>Swap bright candies, chase satisfying cascades, and find your own sweet rhythm across 100 playful puzzles.</p>
+                <p>Swap bright candies, chase satisfying cascades, and find your own sweet rhythm across {LEVEL_COUNT} playful puzzles.</p>
                 <div className="hero-actions">
                   <button className="primary-button" type="button" onClick={() => startLevel()}>
                     Play level {String(level).padStart(2, '0')} <ArrowRight size={18} />
@@ -1486,7 +1532,7 @@ function App() {
 
               <button className="map-card-link" type="button" onClick={openMap}>
                 <span className="map-link-icon"><MapIcon size={19} /></span>
-                <span><b>Explore the world map</b><small>10 worlds · 100 levels</small></span>
+                <span><b>Explore the world map</b><small>{CHAPTERS.length} worlds · {LEVEL_COUNT} levels</small></span>
                 <ArrowRight size={17} />
               </button>
             </aside>
@@ -1498,30 +1544,30 @@ function App() {
       {screen === 'map' && (
         <section className="map-view" aria-labelledby="map-title">
           <div className="page-kicker-row">
-            <span className="eyebrow"><span className="eyebrow-mark">✦</span> CAMPAIGN · 100 LEVELS</span>
-            <span className="save-indicator"><Star size={15} fill="currentColor" /> {totalStars} / 300 stars</span>
+            <span className="eyebrow"><span className="eyebrow-mark">✦</span> CAMPAIGN · {LEVEL_COUNT} LEVELS</span>
+            <span className="save-indicator"><Star size={15} fill="currentColor" /> {totalStars} / {LEVEL_COUNT * 3} stars</span>
           </div>
           <div className="map-intro-row">
-            <div><h1 id="map-title">Choose your <em>next puzzle.</em></h1><p>Ten little worlds, one hundred chances to make a match.</p></div>
+            <div><h1 id="map-title">Choose your <em>next puzzle.</em></h1><p>{CHAPTERS.length} little worlds, {LEVEL_COUNT} chances to make a match.</p></div>
             <div className="map-overview-stats"><div><b>{completedCount}</b><span>levels cleared</span></div><div><b>{unlocked}</b><span>level unlocked</span></div></div>
           </div>
           <div className="map-layout">
             <section className="world-panel" aria-labelledby="world-title">
               <div className="world-panel-heading">
-                <div className="world-index">WORLD {String(mapChapter + 1).padStart(2, '0')} <span>· 10 LEVELS</span></div>
-                <h2 id="world-title">{LEVELS[mapChapter * 10].chapterName}</h2>
+                <div className="world-index">WORLD {String(mapChapter + 1).padStart(2, '0')} <span>· {LEVELS_PER_CHAPTER} LEVELS</span></div>
+                <h2 id="world-title">{LEVELS[mapChapter * LEVELS_PER_CHAPTER].chapterName}</h2>
                 <p>Every great run starts with one good move.</p>
                 <div className="world-controls">
-                  <span>{Object.keys(completedLevels).filter(number => Number(number) > mapChapter * 10 && Number(number) <= mapChapter * 10 + 10).length} of 10 cleared</span>
+                  <span>{Object.keys(completedLevels).filter(number => Number(number) > mapChapter * LEVELS_PER_CHAPTER && Number(number) <= mapChapter * LEVELS_PER_CHAPTER + LEVELS_PER_CHAPTER).length} of {LEVELS_PER_CHAPTER} cleared</span>
                   <div>
                     <button type="button" className="chapter-arrow" aria-label="Previous world" disabled={mapChapter === 0} onClick={() => changeChapter(-1)}><ChevronLeft size={19} /></button>
-                    <button type="button" className="chapter-arrow" aria-label="Next world" disabled={mapChapter === 9} onClick={() => changeChapter(1)}><ChevronRight size={19} /></button>
+                    <button type="button" className="chapter-arrow" aria-label="Next world" disabled={mapChapter === CHAPTERS.length - 1} onClick={() => changeChapter(1)}><ChevronRight size={19} /></button>
                   </div>
                 </div>
               </div>
               <WorldScene key={mapChapter} chapter={mapChapter} />
-              <div className="level-map-grid" role="group" aria-label={`${LEVELS[mapChapter * 10].chapterName} levels`}>
-                {Array.from({ length: 10 }, (_, index) => mapChapter * 10 + index + 1).map(number => {
+              <div className="level-map-grid" role="group" aria-label={`${LEVELS[mapChapter * LEVELS_PER_CHAPTER].chapterName} levels`}>
+                {Array.from({ length: LEVELS_PER_CHAPTER }, (_, index) => mapChapter * LEVELS_PER_CHAPTER + index + 1).map(number => {
                   const isLocked = number > unlocked;
                   const isComplete = Boolean(completedLevels[String(number)]);
                   const levelStars = starsForScore(bestWinScores[String(number)] || 0, LEVELS[number - 1].target);
@@ -1566,6 +1612,7 @@ function App() {
                   <div><small>CHAPTER FINALE</small><b>{mapLevelData.boss.name}</b><span>{mapLevelData.boss.epithet}</span></div>
                   <span className="boss-health-chip">{mapLevelData.boss.maxHealth} HP</span>
                 </div>}
+                {mapLevelData.spawnWeights.length < COLORS.length && <div className="detail-meta"><span>Board twist</span><b>Moon mix · {mapLevelData.spawnWeights.length} colors</b></div>}
                 <div className="detail-meta"><span>Moves available</span><b>{mapLevelData.moves}</b></div>
                 <div className="detail-meta"><span>Personal best</span><b>{selectedLevelBest.toLocaleString()}</b></div>
                 <button className="primary-button detail-play" type="button" onClick={() => startLevel(mapLevelNumber)}>
@@ -1576,7 +1623,7 @@ function App() {
                 <span className="detail-kicker">WORLD {String(mapChapter + 1).padStart(2, '0')}</span>
                 <h2>More sweet things ahead.</h2>
                 <p>Clear the previous levels to open this part of the map. Your next available level is {unlocked}.</p>
-                <button className="secondary-button" type="button" onClick={() => { setMapChapter(Math.floor((unlocked - 1) / 10)); setMapSelectedLevel(unlocked); }}>
+                <button className="secondary-button" type="button" onClick={() => { setMapChapter(Math.floor((unlocked - 1) / LEVELS_PER_CHAPTER)); setMapSelectedLevel(unlocked); }}>
                   Go to level {unlocked} <ArrowRight size={17} />
                 </button>
               </div>}
@@ -1607,7 +1654,7 @@ function App() {
               </div>
               <div className="level-hud-copy">
                 <span className="level-hud-kicker">{levelData.boss ? `CHAPTER BOSS · LEVEL ${String(level).padStart(2, '0')}` : `LEVEL ${String(level).padStart(2, '0')} · ${levelData.chapterName}`}</span>
-                <b>{levelData.boss?.name ?? goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered)}</b>
+                <b>{levelData.boss?.name ?? goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered, bestCascade)}</b>
                 {levelData.boss && <small className="level-boss-epithet">{levelData.boss.epithet} · “{levelData.boss.taunt}”</small>}
                 {levelData.boss
                   ? <div className="boss-health-track" role="progressbar" aria-label={`${levelData.boss.name} remaining power`} aria-valuemin={0} aria-valuemax={levelData.boss.maxHealth} aria-valuenow={bossHealth}>
@@ -1618,8 +1665,8 @@ function App() {
                   <span>{levelData.boss
                     ? `${bossHealth} / ${levelData.boss.maxHealth} power`
                     : [
-                      goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered),
-                      ...(levelData.secondaryGoalType ? [goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered)] : []),
+                      goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered, bestCascade),
+                      ...(levelData.secondaryGoalType ? [goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered, bestCascade)] : []),
                     ].join(' · ')}</span>
                   <span key={score} className="score-live"><span className="visually-hidden">Score: </span>{score.toLocaleString()} / {target.toLocaleString()}</span>
                   <span className="hud-star-count" role="img" aria-label={`${stars} of 3 stars`}><Star size={11} fill="currentColor" /><b>{stars}/3</b></span>
@@ -1660,15 +1707,15 @@ function App() {
                 <div className="objective-copy">
                   <span className="objective-glyph">{goalGlyph(levelData.goalType, level)}</span>
                   <div>
-                    <b>{goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered)}</b>
-                    <small>{goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered)}</small>
+                    <b>{goalHeadline(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered, bestCascade)}</b>
+                    <small>{goalCounter(levelData.goalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered, bestCascade)}</small>
                   </div>
                 </div>
                 {levelData.secondaryGoalType && <div className="objective-secondary">
                   <span className="objective-secondary-icon" aria-hidden="true">{goalGlyph(levelData.secondaryGoalType, level)}</span>
                   <div>
-                    <b>{goalHeadline(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered)}</b>
-                    <small>{goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered)}</small>
+                    <b>{goalHeadline(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered, bestCascade)}</b>
+                    <small>{goalCounter(levelData.secondaryGoalType, level, score, goalProgress, jelly.size, bossHealth, shellsCleared, specialsActivated, ingredientsDelivered, bestCascade)}</small>
                   </div>
                 </div>}
                 <div className="objective-track" role="progressbar" aria-label={levelData.boss ? `${levelData.boss.name} power drained` : levelData.secondaryGoalType ? 'Both level objectives progress' : 'Level objective progress'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(objectivePercent)}><span style={{ width: `${objectivePercent}%` }} /></div>
@@ -1733,7 +1780,9 @@ function App() {
                 <button className="utility-button utility-secondary" type="button" onClick={openRestartDialog} disabled={busy}><RotateCcw size={16} /> Restart level</button>
               </section>
 
-              <section className="tip-card"><span className="tip-icon"><Sparkles size={18} /></span><div><b>Sweet strategy</b><p>Matches near the bottom often create cascades when fresh candies fall into place.</p></div></section>
+              <section className="tip-card"><span className="tip-icon"><Sparkles size={18} /></span><div><b>{levelData.spawnWeights.length < COLORS.length ? 'Moon mix' : 'Sweet strategy'}</b><p>{levelData.spawnWeights.length < COLORS.length
+                ? `Only ${levelData.spawnWeights.length} candy colors appear here. Look for wide matches to start a longer chain.`
+                : 'Matches near the bottom often create cascades when fresh candies fall into place.'}</p></div></section>
             </aside>
           </div>
         </section>
@@ -1758,7 +1807,7 @@ function App() {
               <button className="primary-button result-action" type="button" ref={resultActionRef} onClick={() => level < LEVEL_COUNT ? startLevel(level + 1) : setScreen('map')}>
                 {level < LEVEL_COUNT ? 'Next level' : 'Explore the map'} <ArrowRight size={18} />
               </button>
-              <button className="text-button result-secondary" type="button" onClick={() => { setMapChapter(Math.floor((level - 1) / 10)); setMapSelectedLevel(level); setScreen('map'); }}><MapIcon size={16} /> Campaign map</button>
+              <button className="text-button result-secondary" type="button" onClick={() => { setMapChapter(Math.floor((level - 1) / LEVELS_PER_CHAPTER)); setMapSelectedLevel(level); setScreen('map'); }}><MapIcon size={16} /> Campaign map</button>
             </> : <>
               <div className="result-art result-art-lose" aria-hidden="true">{levelData.boss
                 ? <CharacterArt kind="boss" color={currentBossPalette.color} accent={currentBossPalette.accent} />
@@ -1772,7 +1821,7 @@ function App() {
               <button className="primary-button result-action" type="button" ref={resultActionRef} onClick={() => startLevel(level, 3)}>
                 Retry with +3 moves <RotateCcw size={17} />
               </button>
-              <button className="text-button result-secondary" type="button" onClick={() => { setMapChapter(Math.floor((level - 1) / 10)); setMapSelectedLevel(level); setScreen('map'); }}><MapIcon size={16} /> Campaign map</button>
+              <button className="text-button result-secondary" type="button" onClick={() => { setMapChapter(Math.floor((level - 1) / LEVELS_PER_CHAPTER)); setMapSelectedLevel(level); setScreen('map'); }}><MapIcon size={16} /> Campaign map</button>
             </>}
           </section>
         </div>
@@ -1785,7 +1834,7 @@ function App() {
             <div className="modal-icon"><MapIcon size={24} /></div>
             <span className="eyebrow">PAUSE FOR A MOMENT</span>
             <h2 id="leave-title">Leave this puzzle?</h2>
-            <p>Your current round will end, but your campaign progress and boosters are safe.</p>
+            <p>{playtestLaunch.enabled ? 'This local playtest round will end; nothing is saved to your campaign.' : 'Your current round will end, but your campaign progress and boosters are safe.'}</p>
             <div className="confirm-actions"><button className="text-button" ref={confirmActionRef} type="button" onClick={() => setShowLeaveConfirm(false)}>Keep playing</button><button className="primary-button" type="button" onClick={leaveLevelForMap}>Open world map <ArrowRight size={17} /></button></div>
           </section>
         </div>
@@ -1808,7 +1857,7 @@ function App() {
 
       <footer className="site-footer">
         <span><b>JAM SHIFT</b><i />A match-3 puzzle club</span>
-        <span><Check size={14} /> Progress saved on this device</span>
+        <span><Check size={14} /> {playtestLaunch.enabled ? 'Playtest progress is temporary' : 'Progress saved on this device'}</span>
         <span>Offline friendly <i /> Made for happy brains</span>
       </footer>
     </main>

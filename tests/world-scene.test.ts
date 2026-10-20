@@ -16,6 +16,17 @@ describe('chapter map scenery', () => {
     expect(sugar).not.toEqual(frost);
   });
 
+  it('gives the two new worlds lightweight original prism and moon landmarks', () => {
+    const prism = renderToStaticMarkup(createElement(WorldScene, { chapter: 10 }));
+    const moon = renderToStaticMarkup(createElement(WorldScene, { chapter: 11 }));
+    expect(prism).toContain('world-prism-mark');
+    expect(prism).toContain('stop-color="#c6a8df"');
+    expect(moon).toContain('world-moon');
+    expect(moon).toContain('stop-color="#47628c"');
+    expect(prism).not.toContain('<image');
+    expect(moon).not.toContain('<image');
+  });
+
   it('keeps SVG gradient IDs unique across rendered chapters', () => {
     const html = renderToStaticMarkup(createElement('div', null,
       createElement(WorldScene, { chapter: 0 }),

@@ -1,4 +1,4 @@
-import type { Booster } from './engine';
+import { LEVEL_COUNT, type Booster } from './engine';
 
 export const SAVE_KEY = 'jamshift-save';
 export const SAVE_VERSION = 2;
@@ -31,7 +31,7 @@ const MAX_BOOSTER_CHARGES = 999;
 
 function safeLevel(value: unknown, fallback: number): number {
   const parsed = typeof value === 'number' ? value : Number(value);
-  return Number.isFinite(parsed) ? Math.max(1, Math.min(100, Math.floor(parsed))) : fallback;
+  return Number.isFinite(parsed) ? Math.max(1, Math.min(LEVEL_COUNT, Math.floor(parsed))) : fallback;
 }
 
 function scoreRecord(value: unknown): Record<string, number> {
@@ -40,7 +40,7 @@ function scoreRecord(value: unknown): Record<string, number> {
   for (const [key, score] of Object.entries(value)) {
     const level = Number(key);
     const normalized = typeof score === 'number' ? score : Number(score);
-    if (Number.isInteger(level) && level >= 1 && level <= 100 && Number.isFinite(normalized) && normalized >= 0) {
+    if (Number.isInteger(level) && level >= 1 && level <= LEVEL_COUNT && Number.isFinite(normalized) && normalized >= 0) {
       record[String(level)] = Math.floor(normalized);
     }
   }
@@ -52,7 +52,7 @@ function completedRecord(value: unknown): Record<string, boolean> {
   const record: Record<string, boolean> = {};
   for (const [key, completed] of Object.entries(value)) {
     const level = Number(key);
-    if (Number.isInteger(level) && level >= 1 && level <= 100 && completed === true) record[String(level)] = true;
+    if (Number.isInteger(level) && level >= 1 && level <= LEVEL_COUNT && completed === true) record[String(level)] = true;
   }
   return record;
 }
@@ -93,7 +93,7 @@ export function parseSave(serialized: string | null | undefined): PlayerSave {
     const highestCompleted = Math.max(0, ...Object.keys(completedLevels).map(Number));
     const unlocked = Math.max(
       safeLevel(raw.unlocked, 1),
-      Math.min(100, highestCompleted + (highestCompleted > 0 ? 1 : 0)),
+      Math.min(LEVEL_COUNT, highestCompleted + (highestCompleted > 0 ? 1 : 0)),
     );
 
     return {

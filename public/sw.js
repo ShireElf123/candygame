@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jam-shift-shell-v6';
+const CACHE_NAME = 'jam-shift-shell-v7';
 const PRECACHE_ASSETS = [];
 const APP_BASE = new URL('./', self.registration.scope).href;
 const APP_SHELL = [

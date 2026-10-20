@@ -24,6 +24,8 @@ const SCENES: ScenePalette[] = [
   { skyTop: '#9bdcf2', skyBottom: '#f4fbff', farHill: '#c5e9f4', nearHill: '#93cade', deepHill: '#5c9bb9', accent: '#69aee0', accentLight: '#dcf4ff', sun: '#ffe9a6' },
   { skyTop: '#7579c8', skyBottom: '#f3c4dd', farHill: '#b48dd1', nearHill: '#866db7', deepHill: '#5c4b91', accent: '#f28fa9', accentLight: '#ffd0cf', sun: '#ffe492' },
   { skyTop: '#f0acd2', skyBottom: '#fff1cf', farHill: '#d28cba', nearHill: '#ae659e', deepHill: '#774d83', accent: '#e7a83a', accentLight: '#fff0a4', sun: '#fff0a4' },
+  { skyTop: '#c6a8df', skyBottom: '#fae9e2', farHill: '#d7a8cd', nearHill: '#ad79b6', deepHill: '#684f83', accent: '#75d5c1', accentLight: '#d4efac', sun: '#ffe08b' },
+  { skyTop: '#47628c', skyBottom: '#bdcdea', farHill: '#9392cc', nearHill: '#6c72b4', deepHill: '#3f477d', accent: '#f0a4ce', accentLight: '#d9e4ff', sun: '#fff1c0' },
 ];
 
 function WorldScene({ chapter }: Props) {
@@ -51,8 +53,22 @@ function WorldScene({ chapter }: Props) {
         </linearGradient>
       </defs>
       <rect width="720" height="170" rx="22" fill={`url(#${skyId})`} />
-      <circle className="world-sun" cx="602" cy="39" r="22" fill={scene.sun} opacity=".92" />
-      <circle className="world-sun-glow" cx="602" cy="39" r="31" fill={scene.sun} opacity=".18" />
+      {chapter === 11 ? <g className="world-moon" aria-hidden="true">
+        <circle cx="602" cy="39" r="23" fill={scene.sun} opacity=".96" />
+        <circle cx="613" cy="29" r="21" fill={scene.skyTop} opacity=".98" />
+        <ellipse cx="602" cy="39" rx="37" ry="12" fill="none" stroke={scene.accentLight} strokeWidth="1.6" opacity=".68" transform="rotate(-17 602 39)" />
+        <circle cx="632" cy="28" r="3.1" fill={scene.accentLight} />
+        <circle cx="571" cy="47" r="2.2" fill={scene.sun} opacity=".88" />
+      </g> : <>
+        <circle className="world-sun" cx="602" cy="39" r="22" fill={scene.sun} opacity=".92" />
+        <circle className="world-sun-glow" cx="602" cy="39" r="31" fill={scene.sun} opacity=".18" />
+      </>}
+      {chapter === 10 && <g className="world-prism-mark" aria-hidden="true">
+        <path d="m490 73 12-22 14 22-13 6Z" fill={scene.accentLight} opacity=".78" />
+        <path d="m502 51 1 28m-1-28-11 22m12-22 13 22" fill="none" stroke="#fff" strokeWidth="1.5" opacity=".76" />
+        <path d="m530 87 8-15 10 15-9 4Z" fill={scene.accent} opacity=".78" />
+        <path d="m538 72 1 19m-1-19-7 15m8-15 9 15" fill="none" stroke="#fff" strokeWidth="1.1" opacity=".72" />
+      </g>}
       <path d="M-15 91c67-39 112-32 170-8 43 18 89 8 141-15 71-31 119-18 170 7 59 30 108 14 150-4 45-19 80-8 125 15v87H-15Z" fill={scene.farHill} opacity=".68" />
       <path d="M-18 121c72-39 141-38 209-8 59 27 98 20 160-8 73-33 128-22 186 7 63 32 108 26 201-7v75H-18Z" fill={`url(#${hillId})`} />
       <path d="M-22 150c84-30 146-31 217-7 63 22 111 18 173-4 66-24 120-20 179 2 58 21 115 18 195-10v48H-22Z" fill={scene.deepHill} opacity=".48" />

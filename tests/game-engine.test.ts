@@ -188,6 +188,15 @@ describe('board generation and resolution', () => {
     expect(board.flat()).toEqual(boardBefore);
   });
 
+  it('keeps a level-specific spawn palette when a dead board needs replacement', () => {
+    const spawnWeights = [0, 1, 4].map(color => ({ color, weight: 1 }));
+    const deadBoard = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => makeCandy(2)));
+    const reshuffled = shuffleBoard(deadBoard, () => 0, spawnWeights);
+    expect(reshuffled.flat().every(candy => [0, 1, 4].includes(candy.color))).toBe(true);
+    expect(findMatches(reshuffled).size).toBe(0);
+    expect(hasMove(reshuffled)).toBe(true);
+  });
+
   it('prioritizes a swap that creates a special candy', () => {
     const board = emptyBoard();
     [0, 0, 1, 0, 0, 5, 0, 1].forEach((color, col) => { board[0][col] = makeCandy(color); });
@@ -333,9 +342,9 @@ describe('special candy rules', () => {
 
   it('adds a named boss finale to every chapter and tracks remaining boss power', () => {
     const bossLevels = LEVELS.filter(level => level.boss);
-    expect(bossLevels).toHaveLength(10);
-    expect(bossLevels.map(level => LEVELS.indexOf(level) + 1)).toEqual([10, 20, 30, 40, 50, 60, 70, 80, 90, 100]);
-    expect(new Set(bossLevels.map(level => level.boss?.name)).size).toBe(10);
+    expect(bossLevels).toHaveLength(12);
+    expect(bossLevels.map(level => LEVELS.indexOf(level) + 1)).toEqual(Array.from({ length: 12 }, (_, index) => (index + 1) * 10));
+    expect(new Set(bossLevels.map(level => level.boss?.name)).size).toBe(12);
 
     const finale = bossLevels[0];
     const boss = finale.boss!;
@@ -360,6 +369,17 @@ describe('special candy rules', () => {
     expect(objectivesComplete(level, level.target, level.goalCount, 0, 0, 0, 0, level.ingredientCount)).toBe(true);
     expect(objectiveProgressPercent(level, level.target, level.goalCount, 0, 0, 0, 0, 0)).toBe(0);
     expect(objectiveProgressPercent(level, level.target, level.goalCount, 0, 0, 0, 0, 0, level.ingredientCount)).toBe(100);
+  });
+
+  it('tracks the best cascade chain as a mixed-goal objective across turns', () => {
+    const level = LEVELS[11];
+    expect(level.levelId).toBe(12);
+    expect(goalsForLevel(level)).toEqual(['collect', 'cascade']);
+    expect(level.cascadeCount).toBe(2);
+    expect(objectivesComplete(level, 0, level.goalCount, 0, 0, 0, 0, 0, 1)).toBe(false);
+    expect(objectivesComplete(level, 0, level.goalCount, 0, 0, 0, 0, 0, level.cascadeCount)).toBe(true);
+    expect(objectiveProgressPercent(level, 0, level.goalCount, 0, 0, 0, 0, 0, 0, 1)).toBe(50);
+    expect(objectiveProgressPercent(level, 0, level.goalCount, 0, 0, 0, 0, 0, 0, level.cascadeCount)).toBe(100);
   });
 
   it('adds deterministic layered sugar shells as a second objective', () => {

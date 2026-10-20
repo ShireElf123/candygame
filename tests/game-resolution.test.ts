@@ -65,6 +65,7 @@ describe('pure cascade resolution plan', () => {
     }, () => values[index++] ?? 0);
 
     expect(plan.steps.map(step => step.cascade)).toEqual([1, 2]);
+    expect(plan.maxCascade).toBe(2);
     expect(plan.steps[0].clearCells).toEqual([keyOf(2, 0), keyOf(2, 1), keyOf(2, 2)]);
     expect(plan.steps[0].boardAfterDrop[0].map(candy => candy.color)).toEqual([0, 0, 0]);
     expect(plan.steps[1].clearCells).toEqual([keyOf(0, 0), keyOf(0, 1), keyOf(0, 2)]);

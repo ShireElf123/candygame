@@ -1,10 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from '../src/App';
 
 const appSource = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe('Jam Shift game shell', () => {
   it('renders a game-first title screen without relying on browser-only APIs', () => {
@@ -15,10 +17,23 @@ describe('Jam Shift game shell', () => {
     expect(html).toContain('candy-art');
     expect(html).toContain('character-art');
     expect(html).toContain('Play level 01');
+    expect(html).toContain('across 120 playful puzzles');
     expect(html).toContain('Install Jam Shift');
     expect(html).toContain('YOUR JOURNEY');
     expect(html).toContain('Explore the world map');
     expect(html).not.toContain('YOUR PUZZLE PORTAL');
+    expect(html).not.toContain('playtest-mode-banner');
+  });
+
+  it('opens the requested level in a visibly isolated development playtest session', () => {
+    vi.stubGlobal('window', { location: { search: '?playtest=79' } });
+    const html = renderToString(createElement(App)).replace(/<!-- -->/g, '');
+    expect(html).toContain('playtest-mode-banner');
+    expect(html).toContain('progress will not be saved');
+    expect(html).toContain('Playtest progress is temporary');
+    expect(html).toContain('Play level 79');
+    expect(html).toContain('aria-label="Level 79"');
+    expect(html).not.toContain('Level 79, locked');
   });
 
   it('exposes names for decorative counters and labeled UI groups with semantic roles', () => {

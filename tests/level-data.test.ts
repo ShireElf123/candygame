@@ -31,7 +31,7 @@ function oneLevel(overrides: Record<string, unknown> = {}) {
 describe('data-driven campaign levels', () => {
   it('loads the whole campaign from the validated JSON manifest', () => {
     expect(LEVELS).toHaveLength(LEVEL_COUNT);
-    expect(CHAPTERS).toHaveLength(10);
+    expect(CHAPTERS).toHaveLength(12);
     expect(LEVELS[0]).toMatchObject({ levelId: 1, rows: 8, columns: 8, moves: 32, target: 850, goalType: 'score' });
     expect(LEVELS[7]).toMatchObject({ levelId: 8, goalType: 'collect', secondaryGoalType: 'shell', shellCount: 4 });
     expect(LEVELS[9].boss?.maxHealth).toBe(6);
@@ -71,6 +71,33 @@ describe('data-driven campaign levels', () => {
     expect(hasMove(start.board)).toBe(true);
   });
 
+  it('adds gradual cascade-chain milestones across the campaign', () => {
+    const milestones = [12, 32, 52, 72, 92].map(levelId => LEVELS[levelId - 1]);
+    expect(milestones.map(level => [level.levelId, level.secondaryGoalType, level.cascadeCount])).toEqual([
+      [12, 'cascade', 2],
+      [32, 'cascade', 2],
+      [52, 'cascade', 3],
+      [72, 'cascade', 3],
+      [92, 'cascade', 3],
+    ]);
+  });
+
+  it('adds two themed worlds and a four-color Moon Mix campaign rule', () => {
+    const prismLevels = LEVELS.slice(100, 110);
+    const moonLevels = LEVELS.slice(110, 120);
+    expect(prismLevels).toHaveLength(10);
+    expect(prismLevels.every(level => level.chapter === 11 && level.chapterName === 'Prism Orchard')).toBe(true);
+    expect(prismLevels[9].boss).toMatchObject({ name: 'Lady Luma', maxHealth: 17 });
+    expect(moonLevels).toHaveLength(10);
+    expect(moonLevels.every(level => level.chapter === 12 && level.chapterName === 'Moonmallow Observatory')).toBe(true);
+    expect(moonLevels.every(level => level.spawnWeights.map(weight => weight.color).join(',') === '0,1,4,5')).toBe(true);
+    expect(moonLevels[4].objectives).toEqual([
+      { type: 'collect', color: 1, targetAmount: 16 },
+      { type: 'cascade', targetAmount: 3 },
+    ]);
+    expect(moonLevels[9].boss).toMatchObject({ name: 'Mallow Nova', maxHealth: 20 });
+  });
+
   it('accepts authored I ingredient cells only with a matching objective above the exit row', () => {
     const manifest = oneLevel({
       rows: 3,
@@ -103,6 +130,10 @@ describe('data-driven campaign levels', () => {
   it('rejects malformed objectives and board matrices before play', () => {
     expect(() => parseLevelManifest(oneLevel({ objectives: [{ type: 'teleport', targetAmount: 1 }] })))
       .toThrow(/unknown objective type/);
+    expect(() => parseLevelManifest(oneLevel({ objectives: [{ type: 'cascade', targetAmount: 31 }] })))
+      .toThrow(/30-wave limit/);
+    expect(() => parseLevelManifest(oneLevel({ chapter: 13 })))
+      .toThrow(/chapter cannot exceed 12/);
     expect(() => parseLevelManifest(oneLevel({
       rows: 3,
       columns: 4,

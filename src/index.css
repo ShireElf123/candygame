@@ -89,6 +89,22 @@ button:focus-visible, a:focus-visible {
   padding: 0 clamp(18px, 4vw, 58px) 22px;
   position: relative;
 }
+.playtest-mode-banner {
+  position: relative;
+  z-index: 2;
+  margin: 10px auto 0;
+  padding: 8px 12px;
+  color: #5b4215;
+  border: 1px dashed rgba(153, 98, 11, .55);
+  border-radius: 12px;
+  background: rgba(255, 246, 207, .92);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .06em;
+  line-height: 1.4;
+  text-align: center;
+  text-transform: uppercase;
+}
 .game-header {
   min-height: 82px;
   display: flex;
