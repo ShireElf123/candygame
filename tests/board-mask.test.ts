@@ -26,7 +26,7 @@ import {
 import { buildResolutionPlan } from '../src/game/resolution';
 import { createSeededRandom } from '../src/game/performance';
 import { BOARD_SHAPE_PROTOTYPES, getBoardShapePrototype } from '../src/game/shape-prototypes';
-import { parseShapeLabLaunch } from '../src/game/shape-lab-launch';
+import { parseShapeLabLaunch, shapeLabIsAvailable } from '../src/game/shape-lab-launch';
 
 const TEST_SEED = 20261020;
 const weights = [0, 1, 2, 3, 4, 5].map(color => ({ color, weight: 1 }));
@@ -242,7 +242,11 @@ describe('isolated board-shape prototypes', () => {
     }
   });
 
-  it('launches only in development and selects a valid prototype safely', () => {
+  it('launches in development and isolated Vercel previews, never production', () => {
+    expect(shapeLabIsAvailable(true, 'development', '')).toBe(true);
+    expect(shapeLabIsAvailable(false, 'production', 'preview')).toBe(true);
+    expect(shapeLabIsAvailable(false, 'production', 'production')).toBe(false);
+    expect(shapeLabIsAvailable(false, 'production', '')).toBe(false);
     expect(parseShapeLabLaunch('?shapelab=3', true)).toEqual({ enabled: true, prototypeId: 3 });
     expect(parseShapeLabLaunch('?shapelab=9', true)).toEqual({ enabled: true, prototypeId: 1 });
     expect(parseShapeLabLaunch('?shapelab=abc', true)).toEqual({ enabled: true, prototypeId: 1 });

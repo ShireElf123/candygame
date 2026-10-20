@@ -30,6 +30,9 @@ function serviceWorkerPrecachePlugin(): Plugin {
 }
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VERCEL_ENV': JSON.stringify(process.env.VERCEL_ENV ?? ''),
+  },
   plugins: [react(), serviceWorkerPrecachePlugin()],
   base: './',
   server: {

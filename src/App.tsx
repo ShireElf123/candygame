@@ -61,7 +61,7 @@ import { buildResolutionPlan, type ResolutionPlan } from './game/resolution';
 import { starsForCampaign, starsForScore } from './game/progress';
 import { DEFAULT_SAVE, readSave, writeSave } from './game/save';
 import { parsePlaytestLaunch } from './game/playtest';
-import { parseShapeLabLaunch } from './game/shape-lab-launch';
+import { parseShapeLabLaunch, shapeLabIsAvailable } from './game/shape-lab-launch';
 import { boardImpactClass, fallAnimationDuration, GAME_MOTION, GAME_MOTION_PROFILE, prefersReducedMotion } from './game/motion';
 import {
   createSeededRandom,
@@ -1873,7 +1873,7 @@ function TargetMark() {
 function App() {
   const shapeLabLaunch = parseShapeLabLaunch(
     typeof window === 'undefined' ? '' : window.location.search,
-    import.meta.env.DEV,
+    shapeLabIsAvailable(import.meta.env.DEV, import.meta.env.MODE, import.meta.env.VERCEL_ENV),
   );
   return shapeLabLaunch.enabled
     ? <ShapeLab initialPrototypeId={shapeLabLaunch.prototypeId} />
