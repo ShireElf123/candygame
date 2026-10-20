@@ -1,49 +1,52 @@
 [
   {
-    "name": "Start and restart remain playable",
+    "name": "First run, restart, and progress stay reliable",
     "sanity": true,
     "viewport": "mobile",
     "covers": [
       "first-run tutorial",
       "start button responds",
       "board initializes without matches",
-      "restart cancels stale operations",
-      "game input recovers",
+      "restart confirmation",
+      "stale operations cancel safely",
       "chapter-based level curve",
-      "retry rescue moves"
+      "retry rescue moves",
+      "validated local save"
     ],
-    "description": "Verifies first-time play opens a short tutorial, the level starts cleanly, and restart restores responsive input.",
+    "description": "Checks the portal-to-puzzle onboarding flow and confirms a restart returns to a playable board.",
     "steps": [
       "Open Jam Shift on a fresh save",
-      "Tap Play level 1",
+      "Tap Play level 01",
       "Read the quick guide and choose Got it — let's play!",
-      "Make an invalid swap then restart",
+      "Make an invalid swap, choose Restart level, and confirm the restart",
       "Tap two adjacent candies"
     ],
-    "expected": "First-time players receive a dismissible guide; level 1 starts with a fair board, restart clears stale activity, and controls respond again."
+    "expected": "First-time players receive a dismissible guide; level 1 starts with a fair board, restart confirms before resetting, and controls respond again."
   },
   {
-    "name": "Tap and swipe controls both swap adjacent candies",
-    "viewport": "mobile",
+    "name": "Tap, swipe, and keyboard controls resolve adjacent moves",
+    "viewport": "mobile and desktop",
     "covers": [
       "tap-to-select controls",
       "pointer swipe controls",
+      "arrow-key board navigation",
       "adjacent-only swap validation",
       "invalid swap rollback",
-      "goal-aware clear-value hints",
+      "goal-aware move hints",
       "both hinted candies visibly highlighted"
     ],
-    "description": "Verifies both hint targets are highlighted and a goal-relevant legal move can be played using tap or swipe.",
+    "description": "Verifies touch and keyboard interactions, plus the two-cell goal-focused hint.",
     "steps": [
       "Start a level and dismiss the guide if shown",
-      "Tap Hint and observe the two highlighted candies",
+      "Choose Show me a move and observe the two highlighted candies",
       "Swap the hinted pair using taps",
-      "Restart and swipe a candy toward an adjacent cell"
+      "Restart and confirm, then swipe a candy toward an adjacent cell",
+      "Use Tab and arrow keys to navigate the candy board"
     ],
-    "expected": "The hint highlights both adjacent candies for a legal move; tap and swipe resolve valid swaps, while invalid swaps return cleanly."
+    "expected": "The hint highlights both adjacent candies for a legal move; tap, swipe, and keyboard input resolve valid swaps, while invalid swaps return cleanly."
   },
   {
-    "name": "Matches cascade, score and objectives update",
+    "name": "Matches, cascades, and objectives settle cleanly",
     "viewport": "mobile",
     "covers": [
       "horizontal and vertical matching",
@@ -58,15 +61,15 @@
       "deadlock reshuffle",
       "board remains playable after shuffle"
     ],
-    "description": "Checks objective progress and cascade scoring settle correctly and board recovery leaves legal moves.",
+    "description": "Checks that a normal turn resolves, feedback settles, and the next legal move remains available.",
     "steps": [
       "Start a level",
       "Make a valid match",
       "Wait for falls and cascades to settle",
-      "Check score, moves and objective counter",
+      "Check score, moves, and objective progress",
       "Continue until the board reshuffles if no legal moves remain"
     ],
-    "expected": "Successful moves consume one move, cascades update score and objectives, and any deadlock recovery preserves a full, match-free board with at least one legal move."
+    "expected": "Successful moves consume one move, cascades update score and objectives, and deadlock recovery leaves a full, match-free board with at least one legal move."
   },
   {
     "name": "Special candy effects and combinations",
@@ -76,8 +79,7 @@
       "five-match color candy",
       "L/T wrapped candy",
       "striped and wrapped combinations",
-      "parallel striped combo clears both matching rows or columns",
-      "perpendicular striped combo clears a cross",
+      "parallel and perpendicular striped pairs clear the same centered cross",
       "color bomb conversion combos",
       "special swap consumes both candies",
       "input lock recovery"
@@ -89,18 +91,105 @@
       "Activate specials and swap special pairs",
       "Wait for chained clears to settle"
     ],
-    "expected": "Match shapes create specials; special swaps clear their intended areas and consume both swapped candies, including when a stripe is swapped perpendicular to its blast direction, without leaving the board locked."
+    "expected": "Match shapes create specials; every striped-plus-striped swap clears one full row and one full column regardless of stripe orientation, and special swaps consume both candies without leaving the board locked."
   },
   {
-    "name": "Level progression and booster economy",
+    "name": "Special-candy activation milestones",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "secondary activation targets on levels 15, 35, 55, 75, and 95",
+      "special creation does not count as activation",
+      "activation counter persists across moves and cascades",
+      "both objectives are required to win",
+      "objective progress and accessibility text update"
+    ],
+    "description": "Confirms that the five authored campaign milestones require actually firing specials and preserve that progress through normal gameplay.",
+    "steps": [
+      "Using a QA save with milestone levels unlocked, open levels 15, 35, 55, 75, and 95 and verify activation targets of 1, 2, 2, 3, and 3 alongside the original goal",
+      "On a milestone, make a four-match and confirm the new special is created without advancing the activation counter",
+      "Activate the special in a later clear and verify the counter and combined progress bar update",
+      "Leave the original goal incomplete and confirm the level does not win; finish both goals to confirm the normal win flow"
+    ],
+    "expected": "Only specials actually included in a clear count; the activation total persists between moves, updates in the HUD, and cannot substitute for the level’s original objective."
+  },
+  {
+    "name": "Sugar rush cascade-chain milestones",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "2-wave cascade targets on levels 12 and 32",
+      "3-wave cascade targets on levels 52, 72, and 92",
+      "best chain persists across moves",
+      "one-turn cascades drive chain progress",
+      "both objectives are required to win"
+    ],
+    "description": "Checks that cascade challenges reward a genuine chain from one move and preserve the best chain achieved during the level.",
+    "steps": [
+      "Using a QA save, open levels 12, 32, 52, 72, and 92 and verify chain targets of 2, 2, 3, 3, and 3 alongside their color-collect goals",
+      "On a milestone, make a match with no follow-up and confirm the best-chain counter records one wave without completing a 2-wave target",
+      "Plan a move that creates an automatic refill cascade; confirm the chain counter advances and remains after later turns",
+      "Complete the color objective while the chain target is incomplete and confirm the level does not win",
+      "Reach the required chain depth and finish the color objective to verify the normal win and score-bonus flow"
+    ],
+    "expected": "Only a single move's actual cascade waves count toward the best-chain record. The record persists for the level, and both the chain and color-collect goals are required to win."
+  },
+  {
+    "name": "Jam jar ingredient-drop milestones",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "ingredient targets on levels 25, 45, 64, and 85",
+      "jam jars are visible non-matchable board pieces",
+      "jars cannot be swapped or cleared directly",
+      "column gravity drops jars through cleared spaces",
+      "delivery progress and mixed-goal win checks",
+      "booster and special effects preserve ingredients",
+      "hint moves favor clears beneath a jar"
+    ],
+    "description": "Checks the new gravity-driven ingredient objective and its interaction with normal clears, specials, boosters, and mixed goals.",
+    "steps": [
+      "Using a QA save, open levels 25, 45, 64, and 85 and verify ingredient targets of 1, 1, 2, and 2 alongside each original goal",
+      "On level 25, try selecting, swapping, and targeting the jam jar with a booster; confirm it stays in place and no move or booster charge is spent",
+      "Clear candies below the jar in its column, first with a normal match and then with a line or color effect; watch it fall with gravity and deliver at the bottom",
+      "Verify the delivered counter updates and the jar is removed only on delivery",
+      "Complete the original objective while leaving a jar undelivered and confirm the level does not win; deliver the remaining jar to finish",
+      "Request a hint and confirm both highlighted candies form a legal move that supports the active objectives"
+    ],
+    "expected": "Jam jars are readable, fixed objective pieces. They never match or swap, effects cannot destroy them directly, clears in their column drop them toward the exit, and every ingredient plus the paired objective is required to win."
+  },
+  {
+    "name": "Seeded motion A/B, rapid input, and interruption recovery",
+    "viewport": "desktop and mobile",
+    "covers": [
+      "compact versus readable motion profiles",
+      "seeded same-board replay",
+      "performance trace completion",
+      "rapid-tap input lock",
+      "restart during a cascade",
+      "resize during an animation",
+      "reduced-motion completion"
+    ],
+    "description": "Uses the development-only profiler to compare the same move and verify cancellation paths without changing production defaults.",
+    "steps": [
+      "In development, open the same level with ?perfTrace=1&motion=compact&perfSeed=12345 and make a legal move",
+      "Repeat from the same level with ?perfTrace=1&motion=readable&perfSeed=12345 and the same board move; compare board fingerprints and move reports",
+      "Repeat with ?perfTrace=1&motion=compact&perfSeed=12345&perfEffects=off to isolate ambient and burst effects",
+      "Tap another pair rapidly during a clear or fall, then verify no extra move starts",
+      "Restart during a multi-wave cascade and verify the new board accepts input",
+      "Resize the viewport during a swap or fall and verify the move settles",
+      "Enable the operating-system reduced-motion preference and try both a legal and rejected swap"
+    ],
+    "expected": "Seeded runs use matching boards and coordinates, completed moves record input unlock with phase timings, rapid input never overlaps a resolver, restart and resize cannot leave a stale lock, and reduced motion still resolves the game state."
+  },
+  {
+    "name": "Campaign progression and booster economy",
     "viewport": "desktop",
     "covers": [
-      "level map chapter pagination",
+      "world pagination",
       "locked level nodes",
       "objective completion persistence",
       "level completion stars only after a win",
       "campaign star total excludes failed attempts",
       "chapter and level metadata",
+      "mixed score-and-secondary-objective milestones",
       "win and loss states",
       "generated sound effects",
       "leftover-move score bonus",
@@ -108,15 +197,124 @@
       "booster charges decrease on use",
       "booster costs one move"
     ],
-    "description": "Verifies chapter paging, genuine level completion, stars, sound feedback, booster accounting and saved progress.",
+    "description": "Verifies campaign navigation, genuine level completion, winning-score stars, sound, and booster accounting.",
     "steps": [
-      "Open the level map",
-      "Switch to the next chapter and back",
-      "Open the current unlocked level",
-      "Equip and use one available booster on a candy",
+      "Open the world map",
+      "Switch to the next world and back",
+      "Select the current unlocked level and inspect its objective",
+      "Start the level, equip and use an available power-up",
       "Verify the charge and move count change",
       "Complete or lose a level, then reload"
     ],
-    "expected": "The map shows ten levels per chapter, locked levels cannot be opened, stars and cleared levels are tracked separately, each booster use consumes one charge and one move, and progress remains available after reload."
+    "expected": "The map shows twelve worlds with ten levels each (120 total), locked levels cannot be opened, selected late-world milestone levels clearly show two required objectives, the star cap is 360 and stars use a winning run rather than a failed personal best, each power-up use consumes one charge and one move, and campaign progress remains on the device after reload."
+  },
+  {
+    "name": "Prism Orchard and Moonmallow Observatory expansion",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "existing saves unlock beyond level 100 without losing saved records",
+      "worlds 11 and 12 navigate as ten-level chapters",
+      "new boss finales on levels 110 and 120",
+      "four-color Moon Mix boards on levels 111–120",
+      "lightweight original prism and moon map illustrations"
+    ],
+    "description": "Checks the campaign extension and its distinct, four-color final-world rule without resetting legacy player progress.",
+    "steps": [
+      "Use a QA save with level 100 complete; reload and confirm level 101 is unlocked and earlier scores/stars remain",
+      "Open world 11, inspect levels 101–110 and the Lady Luma chapter-finale preview",
+      "Open world 12 and confirm levels 111–120, the Mallow Nova finale, and the Moon Mix four-color palette label",
+      "Start one Moon Mix level and confirm only grape, lemon, blueberry, and orange candies spawn; reload and verify progress remains saved",
+      "On a narrow mobile viewport, verify the new chapter art and ten level buttons keep the existing board/map layout usable"
+    ],
+    "expected": "The campaign shows 120 levels across twelve ten-level worlds; previous local progress is retained, new boss levels unlock normally, Moon Mix levels use exactly four available colors, and the original inline-vector chapter art requires no external image assets."
+  },
+  {
+    "name": "In-game install option and Home Screen launch",
+    "viewport": "mobile",
+    "covers": [
+      "visible Install Jam Shift control on the title screen",
+      "native beforeinstallprompt flow where supported",
+      "Android browser menu instructions when native prompting is unavailable",
+      "iOS Safari Add to Home Screen instructions",
+      "installed standalone mode hides the install control"
+    ],
+    "description": "Checks that players can find installation again after dismissing an earlier browser prompt, including the manual iOS path.",
+    "steps": [
+      "Open the HTTPS game link in Android Chrome and confirm Install Jam Shift is visible on the title screen",
+      "Tap the button; accept or dismiss the native install prompt, then confirm the fallback instructions remain available if needed",
+      "Open the same link in iPhone Safari, tap Install Jam Shift, and follow Share then Add to Home Screen",
+      "Launch the installed icon and confirm the in-browser install action is hidden while running standalone"
+    ],
+    "expected": "The button either opens the browser install prompt or shows platform-appropriate steps. After installation, the standalone app opens without showing a redundant install action."
+  },
+  {
+    "name": "Development-only campaign playtest launch",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "query-selectable authored level in Vite development mode",
+      "all campaign levels unlocked only for local playtesting",
+      "normal local save is not loaded or overwritten in playtest mode",
+      "production mode ignores the playtest query"
+    ],
+    "description": "Provides a safe way to reach the flagged levels for human testing without shipping a level-unlock shortcut or contaminating campaign saves.",
+    "steps": [
+      "Run npm run dev and open the preview URL with ?playtest=79",
+      "Confirm the map selects level 79, all levels are unlocked, and the Local playtest banner says progress will not be saved",
+      "Play or leave the level, reload, and confirm the test session did not change the ordinary saved campaign",
+      "Open a production build with the same query and confirm normal campaign access rules remain in effect"
+    ],
+    "expected": "Valid playtest URLs open directly to a requested level in development mode with in-memory progress only; malformed levels fall back safely, and production ignores the query."
+  },
+  {
+    "name": "Illustrated chapter trail and level-goal markers",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "ten clickable levels follow a winding chapter route",
+      "completed, current, locked, and boss-finale node states",
+      "mixed objectives are previewed without opening a level",
+      "route progress advances only across consecutive completed levels",
+      "keyboard focus and screen-reader labels remain meaningful",
+      "campaign map changes do not affect the gameplay board ratio"
+    ],
+    "description": "Replaces the flat ten-button grid with an original, touch-friendly route while keeping the existing campaign unlock and level-preview behavior.",
+    "steps": [
+      "Open the world map on a fresh save and inspect the current world's ten-node route",
+      "Tab through available level nodes and confirm locked nodes cannot be activated",
+      "Select a mixed-goal level and a chapter finale; compare the node markers with the objective and boss preview in the detail panel",
+      "Use a QA save with consecutive cleared levels, then confirm the route fill stops at the first incomplete level and the completed nodes show earned stars",
+      "Check at 320 CSS pixels, a typical phone width, and desktop; confirm every node stays inside the route panel and the level detail remains reachable",
+      "Start a level and confirm the existing 8×8 campaign gameplay board frame and ratio are unchanged"
+    ],
+    "expected": "Each world presents ten accessible circular stops along a soft illustrated trail. The route fill reflects consecutive clears; objective pips, boss markers, star counts, current position, and locked states agree with the selected level's detail card. The map scrolls naturally on mobile, keeps touch targets at least 42 CSS pixels, and does not change campaign rules, saves, move budgets, or board geometry."
+  },
+  {
+    "name": "Local and Vercel-preview irregular board shape lab",
+    "viewport": "mobile and desktop",
+    "covers": [
+      "six isolated 8 by 8 board silhouettes",
+      "identical level-one score goal, move budget and spawn mix across prototypes",
+      "shared seeded opening layout for fair shape comparisons",
+      "void cells cannot be swapped, matched, filled or receive objectives",
+      "gravity and special effects skip holes safely",
+      "shape-lab sessions do not read or write campaign progress",
+      "session-local human outcome and subjective feedback with JSON export",
+      "campaign-timed swap and rejected-swap animation",
+      "event-driven clear and segmented-gravity animations",
+      "reduced-motion and interrupted animation recovery",
+      "shape lab enabled in Vercel Preview only and absent from Production"
+    ],
+    "description": "Lets testers compare original board silhouettes locally or in a Vercel Preview deployment without adding levels to the campaign or changing its rules and balance.",
+    "steps": [
+      "Run npm run dev, or open the Vercel Preview deployment, with ?shapelab=1",
+      "Use the shape selector to try Bellflower, Twin Isles, Tide Bowl, Switchback, Crescent Reach and Pocket Current; confirm the frame remains 8 by 8 and score goal/moves stay constant",
+      "Confirm shared playable cells begin with the same candy colors across layouts; play a legal swap and an invalid swap and observe the normal swap and reject motions",
+      "In Pocket Current, make matches above and below the central void and confirm candies never fall into or across the empty cells; activate a stripe and confirm it only clears playable cells",
+      "In Pocket Current, make a match and follow the clear, drop and cascade animations; verify candies do not fall into or across the central holes",
+      "Restart during a clear/fall, then repeat with reduced motion enabled and after resizing; confirm the board always becomes responsive",
+      "Leave the feedback selections blank and confirm Record attempt is disabled; choose the actual outcome and both ratings, add an optional note, then record and download the JSON",
+      "Replay shapes, then exit the lab and confirm ordinary campaign progress remains unchanged",
+      "Open a production build with the same query and confirm it shows the normal campaign rather than the isolated lab"
+    ],
+    "expected": "All six prototypes are playable in local development and Vercel Preview only; shared cells use a consistent seeded opening, voids remain inert through swaps, objectives, refills, specials and shuffles, and the existing event-driven campaign swap/clear/fall animations play within their normal ordered phases. Restart, resize, detached nodes and reduced motion never leave the prototype input-locked; the Production build ignores the query, campaign data and saves remain unchanged, and feedback is recorded only after the tester supplies the outcome and both ratings."
   }
 ]

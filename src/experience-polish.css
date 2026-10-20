@@ -1,0 +1,274 @@
+/* Cohesive mobile-game pass: clearer palette hierarchy, readable HUD, lighter motion cost. */
+:root {
+  --jam-ink: #312e81;
+  --jam-paper: #fffdf5;
+  --jam-sky: #38bdf8;
+  --jam-meadow: #22c55e;
+  --jam-coral: #f97316;
+  --jam-pink: #ec4899;
+  --jam-gold: #fbbf24;
+}
+
+/* The play space gets one calm sky-to-meadow gradient; the board stays the hero. */
+.app-shell.is-playing {
+  color: var(--jam-ink);
+  background:
+    radial-gradient(circle at 89% 7%, rgba(253, 224, 71, .42), transparent 13rem),
+    radial-gradient(ellipse at 0% 82%, rgba(34, 197, 94, .24), transparent 28rem),
+    radial-gradient(ellipse at 100% 92%, rgba(236, 72, 153, .1), transparent 25rem),
+    linear-gradient(180deg, #38bdf8 0%, #c8eff9 32%, #e4f7e4 72%, #86efac 100%);
+}
+.app-shell.is-playing::before {
+  opacity: .12;
+  mix-blend-mode: soft-light;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, .9) .85px, transparent 1px);
+  background-size: 26px 26px;
+  background-position: 4px 6px;
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .55) 70%, transparent 100%);
+}
+.app-shell.is-playing::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: -7%;
+  right: -3%;
+  width: clamp(120px, 21vw, 260px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(254, 240, 138, .28) 0 12%, rgba(250, 204, 21, .12) 24%, transparent 70%);
+  pointer-events: none;
+}
+.app-shell.is-intro::before { opacity: .16; }
+
+/* A quieter two-color frame keeps glossy candies and goal colors in front. */
+.app-shell.is-playing .game-board-wrap {
+  border-color: rgba(255, 255, 255, .98);
+  background: linear-gradient(145deg, #38bdf8 0%, #67e8f9 43%, #86efac 100%);
+  box-shadow: 0 8px 0 #16a34a, 0 22px 38px rgba(21, 128, 61, .22), inset 0 2px 0 rgba(255, 255, 255, .86);
+}
+.app-shell.is-playing .candy-board {
+  border-color: #fff;
+  background-color: #bae6fd;
+  background-image: repeating-conic-gradient(#7dd3fc 0 25%, #e0f2fe 0 50%);
+  box-shadow: inset 0 3px 9px rgba(14, 116, 144, .12), 0 2px 0 rgba(255, 255, 255, .58);
+}
+.app-shell.is-playing .candy-board.resolving {
+  box-shadow: inset 0 3px 9px rgba(14, 116, 144, .1), 0 0 0 2px #fff, 0 0 15px rgba(250, 204, 21, .56);
+}
+
+/* One clear hierarchy: navy ink, warm paper panels, gold progress, coral actions. */
+.app-shell.is-playing .level-hud {
+  border-color: rgba(245, 158, 11, .38);
+  background: linear-gradient(115deg, rgba(255, 254, 247, .98), rgba(254, 243, 199, .98) 54%, rgba(252, 231, 243, .96));
+  box-shadow: 0 6px 0 #16a34a, 0 14px 23px rgba(21, 128, 61, .17), inset 0 2px 0 #fff;
+}
+.app-shell.is-playing .level-hud-kicker {
+  color: #7c3aed;
+  font-size: 9px;
+  letter-spacing: .075em;
+}
+.app-shell.is-playing .level-hud-copy > b { color: #312e81; }
+.app-shell.is-playing .level-hud-subline { color: #514c78; font-size: 9px; }
+.app-shell.is-playing .level-hud-subline > span:first-child { color: #3730a3; background: #e0f2fe; }
+.app-shell.is-playing .level-hud-moves {
+  border-color: #fff;
+  background: linear-gradient(145deg, #fef08a, #fbbf24 58%, #fb923c);
+  box-shadow: 0 5px 0 #c2410c, 0 8px 14px rgba(249, 115, 22, .2), inset 0 2px 0 rgba(255, 255, 255, .82);
+}
+.app-shell.is-playing .level-hud-moves small,
+.app-shell.is-playing .level-hud-moves b { color: #7c2d12; }
+.app-shell.is-playing .level-hud-moves small { font-size: 8px; letter-spacing: .09em; }
+.app-shell.is-playing .level-hud-moves b { font-variant-numeric: tabular-nums; }
+.app-shell.is-playing .level-objective-track,
+.app-shell.is-playing .boss-health-track {
+  border-color: rgba(255, 255, 255, .95);
+  background: #e9d5ff;
+}
+.app-shell.is-playing .level-objective-track > span {
+  background: linear-gradient(90deg, #38bdf8, #10b981 48%, #fbbf24);
+  box-shadow: 0 0 6px rgba(16, 185, 129, .22);
+}
+.app-shell.is-playing .boss-health-track > span { background: linear-gradient(90deg, #fbbf24, #f97316 56%, #ec4899); }
+.app-shell.is-playing .score-live { color: #312e81; font-size: 9px; font-variant-numeric: tabular-nums; }
+.app-shell.is-playing .status-message {
+  color: #312e81;
+  border-color: rgba(245, 158, 11, .3);
+  background: linear-gradient(100deg, #fffdf5, #fef3c7);
+  font-size: clamp(9px, 1vw, 11px);
+}
+.app-shell.is-playing .status-message-indicator { background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, .16); }
+
+/* Slightly larger labels and reliable tap targets across portrait and landscape. */
+.app-shell.is-playing .play-world-label { font-size: 9px; letter-spacing: .055em; }
+.app-shell.is-playing .power-button { min-height: 46px; }
+.app-shell.is-playing .powerup-label b { font-size: 9px; }
+.app-shell.is-playing .powerup-count { font-size: 8px; }
+.app-shell.is-playing .utility-button { min-height: 44px; font-size: 10px; }
+.app-shell.is-playing .back-link,
+.app-shell.is-playing .play-icon-button,
+.app-shell.is-playing .icon-action,
+.app-shell.is-playing .power-button,
+.app-shell.is-playing .utility-button,
+.app-shell.is-playing .primary-button {
+  transition: transform 130ms cubic-bezier(.2, .8, .25, 1), box-shadow 150ms ease, filter 150ms ease;
+  touch-action: manipulation;
+}
+.app-shell.is-playing .power-button:hover:not(:disabled),
+.app-shell.is-playing .utility-button:hover:not(:disabled),
+.app-shell.is-playing .primary-button:hover:not(:disabled) { filter: brightness(1.045) saturate(1.04); }
+.app-shell.is-playing .power-button:active:not(:disabled),
+.app-shell.is-playing .utility-button:active:not(:disabled),
+.app-shell.is-playing .primary-button:active:not(:disabled),
+.app-shell.is-playing .play-topline .back-link:active,
+.app-shell.is-playing .play-icon-button:active,
+.app-shell.is-playing .icon-action:active { transform: translateY(2px) scale(.98); }
+
+/* Don't reserve a compositor layer for every candy; promote only active pieces. */
+.app-shell.is-playing .candy { will-change: auto; }
+.app-shell.is-playing .candy.swap-motion,
+.app-shell.is-playing .candy.swap-rejected { will-change: transform; }
+.app-shell.is-playing .candy-art { will-change: auto; }
+
+/* Extra detail in original map and character art, with gentle low-amplitude motion. */
+.world-flower { transform-box: fill-box; transform-origin: center bottom; }
+.world-flower-one { animation: meadow-flower-sway 4.8s ease-in-out infinite alternate; }
+.world-flower-two { animation: meadow-flower-sway 5.6s ease-in-out -2.2s infinite alternate-reverse; }
+.world-flower-three { animation: meadow-flower-sway 4.2s ease-in-out -1.1s infinite alternate; }
+.character-glint { transform-box: fill-box; transform-origin: center; animation: character-glint 2.4s ease-in-out infinite; }
+@keyframes meadow-flower-sway { from { transform: rotate(-1.2deg); } to { transform: rotate(1.2deg); } }
+@keyframes character-glint { 0%, 70%, 100% { opacity: .62; transform: scale(.88) rotate(-8deg); } 84% { opacity: 1; transform: scale(1.12) rotate(7deg); } }
+
+@media (max-width: 760px) {
+  /* The tray is nearly opaque; skip backdrop blur while candy motion redraws beneath it. */
+  .app-shell.is-playing .powerups-card { backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .app-shell.is-playing .level-hud-kicker { font-size: 8px; letter-spacing: .045em; }
+  .app-shell.is-playing .level-hud-subline { font-size: 8px; }
+  .app-shell.is-playing .level-hud-moves small { font-size: 7px; }
+  .app-shell.is-playing .play-world-label { font-size: 8px; }
+  .app-shell.is-playing .power-button { min-height: 44px; }
+  .app-shell.is-playing .powerup-label b { font-size: 8px; }
+  .app-shell.is-playing .utility-button { min-height: 44px; font-size: 9px; }
+}
+@media (max-width: 370px) {
+  .app-shell.is-playing .level-hud-kicker { font-size: 7px; }
+  .app-shell.is-playing .level-hud-subline { font-size: 8px; }
+  .app-shell.is-playing .play-world-label { font-size: 8px; }
+  .app-shell.is-playing .powerup-label b { font-size: 8px; }
+  .app-shell.is-playing .utility-button { font-size: 9px; }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  .app-shell.is-playing .level-hud-kicker { font-size: 8px; letter-spacing: .035em; }
+  .app-shell.is-playing .level-hud-copy > b { font-size: 12px; }
+  .app-shell.is-playing .level-hud-subline { font-size: 8px; }
+  .app-shell.is-playing .level-hud-moves small { font-size: 7px; }
+  .app-shell.is-playing .power-button { min-height: 44px; }
+  .app-shell.is-playing .powerup-label b { font-size: 8px; }
+  .app-shell.is-playing .utility-button { min-height: 44px; font-size: 9px; }
+  body { background-attachment: scroll; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-flower,
+  .character-glint { animation: none !important; }
+  .app-shell.is-playing .candy-board,
+  .app-shell.is-playing button { transition: none !important; }
+}
+
+/* Keep essential gameplay labels readable in the compact mobile HUD and power tray. */
+.app-shell.is-playing .level-hud-kicker,
+.app-shell.is-playing .level-hud-subline,
+.app-shell.is-playing .level-hud-moves small,
+.app-shell.is-playing .play-world-label,
+.app-shell.is-playing .powerups-card > .card-heading,
+.app-shell.is-playing .tool-card > .card-heading,
+.app-shell.is-playing .objective-heading,
+.app-shell.is-playing .objective-copy small,
+.app-shell.is-playing .objective-secondary small,
+.app-shell.is-playing .score-target,
+.app-shell.is-playing .powerup-label b,
+.app-shell.is-playing .powerup-label small,
+.app-shell.is-playing .powerup-count,
+.app-shell.is-playing .utility-button,
+.app-shell.is-playing .status-message,
+.app-shell.is-playing .score-live,
+.app-shell.is-playing .hud-star-count {
+  font-size: max(0.72rem, 10px);
+}
+
+/* Dev-only A/B switch: keep core candy travel, suppress ambient/juice effects. */
+.app-shell.perf-effects-off .juice-effects { display: none !important; }
+.app-shell.perf-effects-off .candy-board { transition: none !important; }
+.app-shell.perf-effects-off .candy-board.juice-impact-a,
+.app-shell.perf-effects-off .candy-board.juice-impact-b { animation: none !important; }
+.app-shell.perf-effects-off .candy-art,
+.app-shell.perf-effects-off .jelly-glaze,
+.app-shell.perf-effects-off .sugar-shell::after,
+.app-shell.perf-effects-off .candy.wrapped:not(.swap-motion):not(.swap-rejected):not(.clearing):not(.falling):not(.chosen):not(.hint-target),
+.app-shell.perf-effects-off .candy.color:not(.swap-motion):not(.swap-rejected):not(.clearing):not(.falling):not(.chosen):not(.hint-target) {
+  animation: none !important;
+}
+
+/* Always offer a clear install path from the title screen, including browsers
+   that don't expose the native beforeinstallprompt event (notably iOS Safari). */
+.app-shell.is-intro .install-app-wrap { position: relative; display: inline-flex; flex: 0 0 auto; }
+.app-shell.is-intro .install-app-button {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 15px;
+  color: #58354f;
+  border: 1px solid rgba(105, 55, 88, .22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .82);
+  box-shadow: 0 3px 0 rgba(105, 55, 88, .13), inset 0 1px 0 #fff;
+  font-size: 12px;
+  font-weight: 900;
+  transition: transform .16s ease, background-color .16s ease, box-shadow .16s ease;
+}
+.app-shell.is-intro .install-app-button svg { color: #2563a6; }
+.app-shell.is-intro .install-app-button:hover { background: #fff; box-shadow: 0 4px 0 rgba(105, 55, 88, .16), 0 8px 16px rgba(105, 55, 88, .1); }
+.app-shell.is-intro .install-app-button:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(105, 55, 88, .15); }
+.app-shell.is-intro .install-app-button:focus-visible,
+.app-shell.is-intro .install-app-help button:focus-visible { outline: 3px solid #f0bd3c; outline-offset: 3px; }
+.app-shell.is-intro .install-app-help {
+  position: fixed;
+  z-index: 120;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  width: min(340px, calc(100vw - 28px));
+  padding: 14px 15px;
+  color: #51334f;
+  border: 1px solid rgba(105, 55, 88, .18);
+  border-radius: 17px;
+  background: linear-gradient(145deg, #fffef9, #f2fbff 66%, #fff2f8);
+  box-shadow: 0 12px 32px rgba(66, 50, 84, .22), inset 0 1px 0 #fff;
+}
+.install-app-help-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.install-app-help-heading b { color: #51334f; font-size: 14px; font-weight: 950; }
+.app-shell.is-intro .install-app-help-heading button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: #684c63;
+  border: 1px solid rgba(105, 55, 88, .16);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .85);
+}
+.app-shell.is-intro .install-app-help p { margin: 7px 0 0; color: #66566c; font-size: 12px; line-height: 1.5; }
+
+/* Jam jars are fixed objective pieces: they fall with column gravity, never match or swap. */
+.candy.ingredient {
+  z-index: 2;
+  color: #8e3657;
+  border: 1px solid rgba(111, 61, 69, .55);
+  border-radius: 30% 30% 36% 36%;
+  background: linear-gradient(145deg, #fff4cc 0%, #ebd293 72%, #bb8158 100%);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, .9), inset 0 -3px 0 rgba(105, 60, 68, .2), 0 2px 5px rgba(35, 42, 67, .24);
+}
+.candy.ingredient .candy-face { width: 88%; height: 88%; filter: drop-shadow(0 2px 2px rgba(52, 40, 59, .3)); }
+.candy.ingredient .ingredient-art { overflow: visible; }
+.candy.ingredient:not(.falling):not(.clearing):not(.swap-motion):not(.swap-rejected) .candy-art { animation: none !important; }
+.candy.ingredient:hover:not(:disabled) { z-index: 2; filter: none; transform: none; cursor: default; }

@@ -1,0 +1,156 @@
+import { readFileSync } from 'node:fs';
+import postcss, { type Declaration } from 'postcss';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  boardImpactClass,
+  fallAnimationDuration,
+  GAME_MOTION,
+  GAME_MOTION_PROFILE,
+  GAME_MOTION_PROFILES,
+  motionProfileFromSearch,
+  prefersReducedMotion,
+} from '../src/game/motion';
+
+const juiceStyles = postcss.parse(readFileSync(new URL('../src/juice.css', import.meta.url), 'utf8'));
+const experienceStyles = postcss.parse(readFileSync(new URL('../src/experience-polish.css', import.meta.url), 'utf8'));
+const appSource = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
+
+afterEach(() => vi.unstubAllGlobals());
+
+function animationFor(selector: string): string | undefined {
+  let animation: string | undefined;
+  juiceStyles.walkRules(rule => {
+    if (rule.selector !== selector) return;
+    const declaration = rule.nodes.find((node): node is Declaration => node.type === 'decl' && node.prop === 'animation');
+    if (declaration) animation = declaration.value;
+  });
+  return animation;
+}
+
+function mobilePlayingPowerupDeclaration(property: string): string | undefined {
+  let value: string | undefined;
+  experienceStyles.walkAtRules('media', media => {
+    if (media.params !== '(max-width: 760px)') return;
+    media.walkRules(rule => {
+      if (rule.selector !== '.app-shell.is-playing .powerups-card') return;
+      const declaration = rule.nodes.find((node): node is Declaration => node.type === 'decl' && node.prop === property);
+      if (declaration) value = declaration.value;
+    });
+  });
+  return value;
+}
+
+function keyframeProperties(name: string): Set<string> {
+  const properties = new Set<string>();
+  juiceStyles.walkAtRules('keyframes', keyframes => {
+    if (keyframes.params === name) keyframes.walkDecls(declaration => { properties.add(declaration.prop); });
+  });
+  return properties;
+}
+
+function firstKeyframeTransform(name: string): string | undefined {
+  let value: string | undefined;
+  juiceStyles.walkAtRules('keyframes', keyframes => {
+    if (keyframes.params !== name) return;
+    keyframes.walkRules('0%', rule => {
+      const declaration = rule.nodes.find((node): node is Declaration => node.type === 'decl' && node.prop === 'transform');
+      if (declaration) value = declaration.value;
+    });
+  });
+  return value;
+}
+
+describe('motion preference', () => {
+  it('reads the browser reduced-motion preference', () => {
+    const matchMedia = vi.fn().mockReturnValue({ matches: true });
+    vi.stubGlobal('window', { matchMedia });
+
+    expect(prefersReducedMotion()).toBe(true);
+    expect(matchMedia).toHaveBeenCalledWith('(prefers-reduced-motion: reduce)');
+  });
+});
+
+describe('readable and compact A/B motion profiles', () => {
+  it('preserves compact production timings and allows a readable-only development override', () => {
+    expect(GAME_MOTION_PROFILE).toBe('compact');
+    expect(motionProfileFromSearch('?motion=compact')).toBe('compact');
+    expect(motionProfileFromSearch('?motion=readable')).toBe('readable');
+    expect(motionProfileFromSearch('?motion=readable', false)).toBe('compact');
+  });
+
+  it('uses the same deterministic timing formulas for each profile', () => {
+    const readable = GAME_MOTION_PROFILES.readable;
+    const compact = GAME_MOTION_PROFILES.compact;
+    expect(readable.swapAnimationMs + readable.clearAnimationMs + fallAnimationDuration(1, readable)).toBe(386);
+    expect(compact.swapAnimationMs + compact.clearAnimationMs + fallAnimationDuration(1, compact)).toBe(216);
+    expect(fallAnimationDuration(4, readable)).toBe(188);
+    expect(fallAnimationDuration(4, compact)).toBe(80);
+  });
+});
+
+describe('responsive gameplay motion budget', () => {
+  it('does not shake the board before an actual match impact', () => {
+    expect(boardImpactClass(0)).toBeNull();
+    expect(boardImpactClass(1)).toBe('juice-impact-a');
+    expect(boardImpactClass(2)).toBe('juice-impact-b');
+  });
+
+  it('wires the guarded board impact class into the rendered board', () => {
+    expect(appSource).toContain('const boardImpact = boardImpactClass(impactPulse);');
+    expect(appSource).toContain("${boardImpact ? ` ${boardImpact}` : ''}");
+  });
+
+  it('awaits every gameplay animation by the class and CSS keyframe name', () => {
+    expect(appSource).toContain("await waitForBoardAnimation('.candy.swap-motion', 'candy-swap', controller, trace, 'swap')");
+    expect(appSource).toContain("await waitForBoardAnimation('.candy.swap-rejected', 'candy-reject', controller, trace, 'rejected-swap')");
+    expect(appSource).toContain("await waitForBoardAnimation('.candy.clearing', 'candy-pop', controller, trace, `wave-${step.cascade}-clear`)");
+    expect(appSource).toContain("await waitForBoardAnimation('.candy.falling', 'candy-fall', controller, trace, `wave-${step.cascade}-fall`)");
+  });
+
+  it('feeds both profile timings through inherited board custom properties', () => {
+    expect(animationFor('.candy.swap-motion')).toContain('var(--swap-duration, 88ms)');
+    expect(animationFor('.candy.swap-rejected')).toContain('var(--reject-duration, 100ms)');
+    expect(animationFor('.candy.clearing')).toContain('var(--clear-duration, 72ms)');
+    expect(animationFor('.candy-board.juice-impact-a')).toContain('var(--impact-duration, 72ms)');
+    expect(animationFor('.candy-board.juice-impact-b')).toContain('var(--impact-duration, 72ms)');
+    expect(appSource).toContain("'--swap-duration': `${GAME_MOTION.swapAnimationMs}ms`");
+    expect(appSource).toContain("'--reject-duration': `${GAME_MOTION.rejectAnimationMs}ms`");
+    expect(appSource).toContain("'--clear-duration': `${GAME_MOTION.clearAnimationMs}ms`");
+  });
+
+  it('uses pixel offsets for swaps and falls so grid gaps are included', () => {
+    expect(firstKeyframeTransform('candy-swap')).toContain('var(--swap-x, 0px)');
+    expect(firstKeyframeTransform('candy-swap')).toContain('var(--swap-y, 0px)');
+    expect(firstKeyframeTransform('candy-fall')).toContain('var(--fall-x, 0px)');
+    expect(firstKeyframeTransform('candy-fall')).toContain('var(--fall-y, -40px)');
+  });
+
+  it('preserves the current one-row move budget and keeps the readable profile opt-in', () => {
+    const readable = GAME_MOTION_PROFILES.readable;
+    const compactMoveMs = GAME_MOTION.swapAnimationMs + GAME_MOTION.clearAnimationMs + fallAnimationDuration(1);
+    const readableMoveMs = readable.swapAnimationMs + readable.clearAnimationMs + fallAnimationDuration(1, readable);
+    expect(compactMoveMs).toBe(216);
+    expect(readableMoveMs).toBe(386);
+    expect(GAME_MOTION.clearAnimationMs + GAME_MOTION.fallMaxMs).toBe(200);
+  });
+
+  it('keeps candy fall timing proportional for short drops and caps long drops', () => {
+    expect(animationFor('.candy.falling')).toContain(`var(--fall-duration, ${fallAnimationDuration(1)}ms)`);
+    expect(fallAnimationDuration(1)).toBe(56);
+    expect(fallAnimationDuration(4)).toBe(80);
+    expect(fallAnimationDuration(20)).toBe(GAME_MOTION.fallMaxMs);
+    expect(fallAnimationDuration(-2)).toBe(GAME_MOTION.fallBaseMs);
+  });
+
+  it('uses transform and opacity rather than an animated filter for frequent candy clears', () => {
+    const properties = keyframeProperties('candy-pop');
+    expect(properties.has('transform')).toBe(true);
+    expect(properties.has('opacity')).toBe(true);
+    expect(properties.has('filter')).toBe(false);
+  });
+
+  it('avoids a live backdrop blur over the board on the mobile power-up tray', () => {
+    expect(mobilePlayingPowerupDeclaration('backdrop-filter')).toBe('none');
+    expect(mobilePlayingPowerupDeclaration('-webkit-backdrop-filter')).toBe('none');
+  });
+});

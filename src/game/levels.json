@@ -1,0 +1,2407 @@
+{
+  "schemaVersion": 1,
+  "defaults": {
+    "columns": 8,
+    "rows": 8,
+    "spawnWeights": [
+      {
+        "color": 0,
+        "weight": 100
+      },
+      {
+        "color": 1,
+        "weight": 100
+      },
+      {
+        "color": 2,
+        "weight": 100
+      },
+      {
+        "color": 3,
+        "weight": 100
+      },
+      {
+        "color": 4,
+        "weight": 100
+      },
+      {
+        "color": 5,
+        "weight": 100
+      }
+    ]
+  },
+  "levels": [
+    {
+      "levelId": 1,
+      "chapter": 1,
+      "chapterName": "Sugar Garden",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 32,
+      "targetScore": 850,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 850
+        }
+      ]
+    },
+    {
+      "levelId": 2,
+      "chapter": 1,
+      "chapterName": "Sugar Garden",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 32,
+      "targetScore": 900,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 900
+        }
+      ]
+    },
+    {
+      "levelId": 3,
+      "chapter": 1,
+      "chapterName": "Sugar Garden",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 31,
+      "targetScore": 950,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 950
+        }
+      ]
+    },
+    {
+      "levelId": 4,
+      "chapter": 1,
+      "chapterName": "Sugar Garden",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 31,
+      "targetScore": 1000,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1000
+        }
+      ]
+    },
+    {
+      "levelId": 5,
+      "chapter": 1,
+      "chapterName": "Sugar Garden",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 30,
+      "targetScore": 1050,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 0,
+          "targetAmount": 6
+        }
+      ]
+    },
+    {
+      "levelId": 6,
+      "chapter": 1,
+      "chapterName": "Sugar Garden",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 30,
+      "targetScore": 1100,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 5
+        }
+      ]
+    },
+    {
+      "levelId": 7,
+      "chapter": 1,
+      "chapterName": "Sugar Garden",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 29,
+      "targetScore": 1200,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1200
+        }
+      ]
+    },
+    {
+      "levelId": 8,
+      "chapter": 1,
+      "chapterName": "Sugar Garden",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 29,
+      "targetScore": 1250,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 3,
+          "targetAmount": 6
+        },
+        {
+          "type": "shell",
+          "targetAmount": 4
+        }
+      ]
+    },
+    {
+      "levelId": 9,
+      "chapter": 1,
+      "chapterName": "Sugar Garden",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 28,
+      "targetScore": 1300,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 6
+        }
+      ]
+    },
+    {
+      "levelId": 10,
+      "chapter": 1,
+      "chapterName": "Sugar Garden",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 28,
+      "targetScore": 1350,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 6
+        }
+      ],
+      "boss": {
+        "name": "Captain Crumble",
+        "epithet": "Cookie corsair",
+        "color": 5,
+        "taunt": "Catch me if you can!",
+        "maxHealth": 6
+      }
+    },
+    {
+      "levelId": 11,
+      "chapter": 2,
+      "chapterName": "Berry Bay",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 30,
+      "targetScore": 1350,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1350
+        }
+      ]
+    },
+    {
+      "levelId": 12,
+      "chapter": 2,
+      "chapterName": "Berry Bay",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 30,
+      "targetScore": 1370,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 1,
+          "targetAmount": 7
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 2
+        }
+      ]
+    },
+    {
+      "levelId": 13,
+      "chapter": 2,
+      "chapterName": "Berry Bay",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 29,
+      "targetScore": 1395,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1395
+        }
+      ]
+    },
+    {
+      "levelId": 14,
+      "chapter": 2,
+      "chapterName": "Berry Bay",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 29,
+      "targetScore": 1420,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 7
+        }
+      ]
+    },
+    {
+      "levelId": 15,
+      "chapter": 2,
+      "chapterName": "Berry Bay",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 28,
+      "targetScore": 1445,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1445
+        },
+        {
+          "type": "special",
+          "targetAmount": 1
+        }
+      ]
+    },
+    {
+      "levelId": 16,
+      "chapter": 2,
+      "chapterName": "Berry Bay",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 28,
+      "targetScore": 1475,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 5,
+          "targetAmount": 8
+        }
+      ]
+    },
+    {
+      "levelId": 17,
+      "chapter": 2,
+      "chapterName": "Berry Bay",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 1505,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 8
+        }
+      ]
+    },
+    {
+      "levelId": 18,
+      "chapter": 2,
+      "chapterName": "Berry Bay",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 1535,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1535
+        },
+        {
+          "type": "shell",
+          "targetAmount": 5
+        }
+      ]
+    },
+    {
+      "levelId": 19,
+      "chapter": 2,
+      "chapterName": "Berry Bay",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 1565,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 2,
+          "targetAmount": 9
+        }
+      ]
+    },
+    {
+      "levelId": 20,
+      "chapter": 2,
+      "chapterName": "Berry Bay",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 1595,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 7
+        }
+      ],
+      "boss": {
+        "name": "Berry Bandit",
+        "epithet": "Jam jar juggler",
+        "color": 2,
+        "taunt": "This berry haul is mine!",
+        "maxHealth": 7
+      }
+    },
+    {
+      "levelId": 21,
+      "chapter": 3,
+      "chapterName": "Lemon Lagoon",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 29,
+      "targetScore": 1510,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1510
+        }
+      ]
+    },
+    {
+      "levelId": 22,
+      "chapter": 3,
+      "chapterName": "Lemon Lagoon",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 29,
+      "targetScore": 1530,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 7
+        }
+      ]
+    },
+    {
+      "levelId": 23,
+      "chapter": 3,
+      "chapterName": "Lemon Lagoon",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 28,
+      "targetScore": 1555,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 0,
+          "targetAmount": 8
+        }
+      ]
+    },
+    {
+      "levelId": 24,
+      "chapter": 3,
+      "chapterName": "Lemon Lagoon",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 28,
+      "targetScore": 1580,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1580
+        }
+      ]
+    },
+    {
+      "levelId": 25,
+      "chapter": 3,
+      "chapterName": "Lemon Lagoon",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 1605,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 2,
+          "targetAmount": 9
+        },
+        {
+          "type": "ingredient",
+          "targetAmount": 1
+        }
+      ]
+    },
+    {
+      "levelId": 26,
+      "chapter": 3,
+      "chapterName": "Lemon Lagoon",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 1635,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 8
+        }
+      ]
+    },
+    {
+      "levelId": 27,
+      "chapter": 3,
+      "chapterName": "Lemon Lagoon",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 1665,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1665
+        }
+      ]
+    },
+    {
+      "levelId": 28,
+      "chapter": 3,
+      "chapterName": "Lemon Lagoon",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 1695,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 5,
+          "targetAmount": 9
+        },
+        {
+          "type": "shell",
+          "targetAmount": 6
+        }
+      ]
+    },
+    {
+      "levelId": 29,
+      "chapter": 3,
+      "chapterName": "Lemon Lagoon",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 1725,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 9
+        },
+        {
+          "type": "score",
+          "targetAmount": 1725
+        }
+      ]
+    },
+    {
+      "levelId": 30,
+      "chapter": 3,
+      "chapterName": "Lemon Lagoon",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 1755,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 8
+        }
+      ],
+      "boss": {
+        "name": "Zest Zapper",
+        "epithet": "Lagoon lightning",
+        "color": 1,
+        "taunt": "Ready for a sour surprise?",
+        "maxHealth": 8
+      }
+    },
+    {
+      "levelId": 31,
+      "chapter": 4,
+      "chapterName": "Mint Meadow",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 28,
+      "targetScore": 1680,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1680
+        }
+      ]
+    },
+    {
+      "levelId": 32,
+      "chapter": 4,
+      "chapterName": "Mint Meadow",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 28,
+      "targetScore": 1700,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 3,
+          "targetAmount": 9
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 2
+        }
+      ]
+    },
+    {
+      "levelId": 33,
+      "chapter": 4,
+      "chapterName": "Mint Meadow",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 1725,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 8
+        }
+      ]
+    },
+    {
+      "levelId": 34,
+      "chapter": 4,
+      "chapterName": "Mint Meadow",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 1750,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1750
+        }
+      ]
+    },
+    {
+      "levelId": 35,
+      "chapter": 4,
+      "chapterName": "Mint Meadow",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 1775,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 9
+        },
+        {
+          "type": "special",
+          "targetAmount": 2
+        }
+      ]
+    },
+    {
+      "levelId": 36,
+      "chapter": 4,
+      "chapterName": "Mint Meadow",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 1805,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 1,
+          "targetAmount": 10
+        }
+      ]
+    },
+    {
+      "levelId": 37,
+      "chapter": 4,
+      "chapterName": "Mint Meadow",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 1835,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1835
+        }
+      ]
+    },
+    {
+      "levelId": 38,
+      "chapter": 4,
+      "chapterName": "Mint Meadow",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 1865,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 3,
+          "targetAmount": 10
+        },
+        {
+          "type": "shell",
+          "targetAmount": 7
+        }
+      ]
+    },
+    {
+      "levelId": 39,
+      "chapter": 4,
+      "chapterName": "Mint Meadow",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 1895,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 10
+        },
+        {
+          "type": "score",
+          "targetAmount": 1895
+        }
+      ]
+    },
+    {
+      "levelId": 40,
+      "chapter": 4,
+      "chapterName": "Mint Meadow",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 1925,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 9
+        }
+      ],
+      "boss": {
+        "name": "Mallow Muncher",
+        "epithet": "Meadow mischief-maker",
+        "color": 3,
+        "taunt": "The meadow is my snack!",
+        "maxHealth": 9
+      }
+    },
+    {
+      "levelId": 41,
+      "chapter": 5,
+      "chapterName": "Moonlit Market",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 1850,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1850
+        }
+      ]
+    },
+    {
+      "levelId": 42,
+      "chapter": 5,
+      "chapterName": "Moonlit Market",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 1870,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 9
+        }
+      ]
+    },
+    {
+      "levelId": 43,
+      "chapter": 5,
+      "chapterName": "Moonlit Market",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 1895,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 2,
+          "targetAmount": 10
+        }
+      ]
+    },
+    {
+      "levelId": 44,
+      "chapter": 5,
+      "chapterName": "Moonlit Market",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 1920,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 1920
+        }
+      ]
+    },
+    {
+      "levelId": 45,
+      "chapter": 5,
+      "chapterName": "Moonlit Market",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 1945,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 4,
+          "targetAmount": 11
+        },
+        {
+          "type": "ingredient",
+          "targetAmount": 1
+        }
+      ]
+    },
+    {
+      "levelId": 46,
+      "chapter": 5,
+      "chapterName": "Moonlit Market",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 1975,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 10
+        }
+      ]
+    },
+    {
+      "levelId": 47,
+      "chapter": 5,
+      "chapterName": "Moonlit Market",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 2005,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2005
+        }
+      ]
+    },
+    {
+      "levelId": 48,
+      "chapter": 5,
+      "chapterName": "Moonlit Market",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 2035,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 11
+        }
+      ]
+    },
+    {
+      "levelId": 49,
+      "chapter": 5,
+      "chapterName": "Moonlit Market",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 2065,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 2,
+          "targetAmount": 12
+        },
+        {
+          "type": "score",
+          "targetAmount": 2065
+        }
+      ]
+    },
+    {
+      "levelId": 50,
+      "chapter": 5,
+      "chapterName": "Moonlit Market",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 2095,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 10
+        }
+      ],
+      "boss": {
+        "name": "Midnight Moth",
+        "epithet": "Market moonlighter",
+        "color": 0,
+        "taunt": "You will never catch my sparkle.",
+        "maxHealth": 10
+      }
+    },
+    {
+      "levelId": 51,
+      "chapter": 6,
+      "chapterName": "Crystal Caverns",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 2020,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2020
+        }
+      ]
+    },
+    {
+      "levelId": 52,
+      "chapter": 6,
+      "chapterName": "Crystal Caverns",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 2040,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 5,
+          "targetAmount": 11
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 3
+        }
+      ]
+    },
+    {
+      "levelId": 53,
+      "chapter": 6,
+      "chapterName": "Crystal Caverns",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 2065,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2065
+        }
+      ]
+    },
+    {
+      "levelId": 54,
+      "chapter": 6,
+      "chapterName": "Crystal Caverns",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 2090,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 11
+        }
+      ]
+    },
+    {
+      "levelId": 55,
+      "chapter": 6,
+      "chapterName": "Crystal Caverns",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 2115,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 2,
+          "targetAmount": 12
+        },
+        {
+          "type": "special",
+          "targetAmount": 2
+        }
+      ]
+    },
+    {
+      "levelId": 56,
+      "chapter": 6,
+      "chapterName": "Crystal Caverns",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 2145,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2145
+        }
+      ]
+    },
+    {
+      "levelId": 57,
+      "chapter": 6,
+      "chapterName": "Crystal Caverns",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 2175,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 12
+        }
+      ]
+    },
+    {
+      "levelId": 58,
+      "chapter": 6,
+      "chapterName": "Crystal Caverns",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 2205,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 5,
+          "targetAmount": 12
+        },
+        {
+          "type": "shell",
+          "targetAmount": 9
+        }
+      ]
+    },
+    {
+      "levelId": 59,
+      "chapter": 6,
+      "chapterName": "Crystal Caverns",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 2235,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2235
+        },
+        {
+          "type": "jelly",
+          "targetAmount": 12
+        }
+      ]
+    },
+    {
+      "levelId": 60,
+      "chapter": 6,
+      "chapterName": "Crystal Caverns",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 22,
+      "targetScore": 2265,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 11
+        }
+      ],
+      "boss": {
+        "name": "Crystal Crumbler",
+        "epithet": "Cavern keeper",
+        "color": 4,
+        "taunt": "One crack and the crystals are mine.",
+        "maxHealth": 11
+      }
+    },
+    {
+      "levelId": 61,
+      "chapter": 7,
+      "chapterName": "Neon Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 2190,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2190
+        }
+      ]
+    },
+    {
+      "levelId": 62,
+      "chapter": 7,
+      "chapterName": "Neon Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 2210,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 11
+        }
+      ]
+    },
+    {
+      "levelId": 63,
+      "chapter": 7,
+      "chapterName": "Neon Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 2235,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 4,
+          "targetAmount": 12
+        }
+      ]
+    },
+    {
+      "levelId": 64,
+      "chapter": 7,
+      "chapterName": "Neon Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 2260,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2260
+        },
+        {
+          "type": "ingredient",
+          "targetAmount": 2
+        }
+      ]
+    },
+    {
+      "levelId": 65,
+      "chapter": 7,
+      "chapterName": "Neon Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 2285,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 12
+        }
+      ]
+    },
+    {
+      "levelId": 66,
+      "chapter": 7,
+      "chapterName": "Neon Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 2315,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 1,
+          "targetAmount": 13
+        }
+      ]
+    },
+    {
+      "levelId": 67,
+      "chapter": 7,
+      "chapterName": "Neon Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 2345,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2345
+        }
+      ]
+    },
+    {
+      "levelId": 68,
+      "chapter": 7,
+      "chapterName": "Neon Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 2375,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 13
+        }
+      ]
+    },
+    {
+      "levelId": 69,
+      "chapter": 7,
+      "chapterName": "Neon Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 22,
+      "targetScore": 2405,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 4,
+          "targetAmount": 14
+        },
+        {
+          "type": "score",
+          "targetAmount": 2405
+        }
+      ]
+    },
+    {
+      "levelId": 70,
+      "chapter": 7,
+      "chapterName": "Neon Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 22,
+      "targetScore": 2435,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 12
+        }
+      ],
+      "boss": {
+        "name": "Neon Nibbler",
+        "epithet": "Orchard night owl",
+        "color": 0,
+        "taunt": "Let us light up this board!",
+        "maxHealth": 12
+      }
+    },
+    {
+      "levelId": 71,
+      "chapter": 8,
+      "chapterName": "Frosted Peaks",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 2360,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2360
+        }
+      ]
+    },
+    {
+      "levelId": 72,
+      "chapter": 8,
+      "chapterName": "Frosted Peaks",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 2380,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 1,
+          "targetAmount": 13
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 3
+        }
+      ]
+    },
+    {
+      "levelId": 73,
+      "chapter": 8,
+      "chapterName": "Frosted Peaks",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 2405,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 12
+        }
+      ]
+    },
+    {
+      "levelId": 74,
+      "chapter": 8,
+      "chapterName": "Frosted Peaks",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 2430,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2430
+        }
+      ]
+    },
+    {
+      "levelId": 75,
+      "chapter": 8,
+      "chapterName": "Frosted Peaks",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 2455,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 4,
+          "targetAmount": 14
+        },
+        {
+          "type": "special",
+          "targetAmount": 3
+        }
+      ]
+    },
+    {
+      "levelId": 76,
+      "chapter": 8,
+      "chapterName": "Frosted Peaks",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 2485,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 13
+        }
+      ]
+    },
+    {
+      "levelId": 77,
+      "chapter": 8,
+      "chapterName": "Frosted Peaks",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 2515,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2515
+        }
+      ]
+    },
+    {
+      "levelId": 78,
+      "chapter": 8,
+      "chapterName": "Frosted Peaks",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 22,
+      "targetScore": 2545,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 1,
+          "targetAmount": 14
+        },
+        {
+          "type": "shell",
+          "targetAmount": 9
+        }
+      ]
+    },
+    {
+      "levelId": 79,
+      "chapter": 8,
+      "chapterName": "Frosted Peaks",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 22,
+      "targetScore": 2575,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 14
+        },
+        {
+          "type": "score",
+          "targetAmount": 2575
+        }
+      ]
+    },
+    {
+      "levelId": 80,
+      "chapter": 8,
+      "chapterName": "Frosted Peaks",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 21,
+      "targetScore": 2605,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 13
+        }
+      ],
+      "boss": {
+        "name": "Frost Flurry",
+        "epithet": "Peak snow-sprite",
+        "color": 4,
+        "taunt": "A chilly challenge awaits!",
+        "maxHealth": 13
+      }
+    },
+    {
+      "levelId": 81,
+      "chapter": 9,
+      "chapterName": "Starfall Summit",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 2530,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2530
+        }
+      ]
+    },
+    {
+      "levelId": 82,
+      "chapter": 9,
+      "chapterName": "Starfall Summit",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 2550,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 13
+        }
+      ]
+    },
+    {
+      "levelId": 83,
+      "chapter": 9,
+      "chapterName": "Starfall Summit",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 2575,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 0,
+          "targetAmount": 14
+        }
+      ]
+    },
+    {
+      "levelId": 84,
+      "chapter": 9,
+      "chapterName": "Starfall Summit",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 2600,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 14
+        }
+      ]
+    },
+    {
+      "levelId": 85,
+      "chapter": 9,
+      "chapterName": "Starfall Summit",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 2625,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2625
+        },
+        {
+          "type": "ingredient",
+          "targetAmount": 2
+        }
+      ]
+    },
+    {
+      "levelId": 86,
+      "chapter": 9,
+      "chapterName": "Starfall Summit",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 2655,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 3,
+          "targetAmount": 15
+        }
+      ]
+    },
+    {
+      "levelId": 87,
+      "chapter": 9,
+      "chapterName": "Starfall Summit",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 22,
+      "targetScore": 2685,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 15
+        }
+      ]
+    },
+    {
+      "levelId": 88,
+      "chapter": 9,
+      "chapterName": "Starfall Summit",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 22,
+      "targetScore": 2715,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2715
+        },
+        {
+          "type": "shell",
+          "targetAmount": 9
+        }
+      ]
+    },
+    {
+      "levelId": 89,
+      "chapter": 9,
+      "chapterName": "Starfall Summit",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 21,
+      "targetScore": 2745,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 0,
+          "targetAmount": 15
+        },
+        {
+          "type": "score",
+          "targetAmount": 2745
+        }
+      ]
+    },
+    {
+      "levelId": 90,
+      "chapter": 9,
+      "chapterName": "Starfall Summit",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 21,
+      "targetScore": 2775,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 14
+        }
+      ],
+      "boss": {
+        "name": "Comet Cookie",
+        "epithet": "Starfall showstopper",
+        "color": 5,
+        "taunt": "Make a wish, then make a match!",
+        "maxHealth": 14
+      }
+    },
+    {
+      "levelId": 91,
+      "chapter": 10,
+      "chapterName": "Royal Candy Castle",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 2700,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2700
+        }
+      ]
+    },
+    {
+      "levelId": 92,
+      "chapter": 10,
+      "chapterName": "Royal Candy Castle",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 2720,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 3,
+          "targetAmount": 15
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 3
+        }
+      ]
+    },
+    {
+      "levelId": 93,
+      "chapter": 10,
+      "chapterName": "Royal Candy Castle",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 2745,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 14
+        }
+      ]
+    },
+    {
+      "levelId": 94,
+      "chapter": 10,
+      "chapterName": "Royal Candy Castle",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 2770,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 5,
+          "targetAmount": 15
+        }
+      ]
+    },
+    {
+      "levelId": 95,
+      "chapter": 10,
+      "chapterName": "Royal Candy Castle",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 22,
+      "targetScore": 2795,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2795
+        },
+        {
+          "type": "special",
+          "targetAmount": 3
+        }
+      ]
+    },
+    {
+      "levelId": 96,
+      "chapter": 10,
+      "chapterName": "Royal Candy Castle",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 22,
+      "targetScore": 2825,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 15
+        }
+      ]
+    },
+    {
+      "levelId": 97,
+      "chapter": 10,
+      "chapterName": "Royal Candy Castle",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 21,
+      "targetScore": 2855,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 2,
+          "targetAmount": 15
+        }
+      ]
+    },
+    {
+      "levelId": 98,
+      "chapter": 10,
+      "chapterName": "Royal Candy Castle",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 21,
+      "targetScore": 2885,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 2885
+        },
+        {
+          "type": "shell",
+          "targetAmount": 9
+        }
+      ]
+    },
+    {
+      "levelId": 99,
+      "chapter": 10,
+      "chapterName": "Royal Candy Castle",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 21,
+      "targetScore": 2915,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 16
+        },
+        {
+          "type": "score",
+          "targetAmount": 2915
+        }
+      ]
+    },
+    {
+      "levelId": 100,
+      "chapter": 10,
+      "chapterName": "Royal Candy Castle",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 20,
+      "targetScore": 2945,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 15
+        }
+      ],
+      "boss": {
+        "name": "Crowned Caramel",
+        "epithet": "Castle confectioner",
+        "color": 1,
+        "taunt": "The crown stays with me!",
+        "maxHealth": 15
+      }
+    },
+    {
+      "levelId": 101,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 28,
+      "targetScore": 3000,
+      "goalColor": 0,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 3000
+        }
+      ]
+    },
+    {
+      "levelId": 102,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 28,
+      "targetScore": 3030,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 1,
+          "targetAmount": 14
+        }
+      ]
+    },
+    {
+      "levelId": 103,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 3060,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 16
+        }
+      ]
+    },
+    {
+      "levelId": 104,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 3090,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 4,
+          "targetAmount": 14
+        },
+        {
+          "type": "shell",
+          "targetAmount": 6
+        }
+      ]
+    },
+    {
+      "levelId": 105,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 3120,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "ingredient",
+          "targetAmount": 2
+        }
+      ]
+    },
+    {
+      "levelId": 106,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 3150,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "special",
+          "targetAmount": 3
+        }
+      ]
+    },
+    {
+      "levelId": 107,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 3180,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 3,
+          "targetAmount": 15
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 3
+        }
+      ]
+    },
+    {
+      "levelId": 108,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 3210,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 3210
+        },
+        {
+          "type": "shell",
+          "targetAmount": 8
+        }
+      ]
+    },
+    {
+      "levelId": 109,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 3240,
+      "goalColor": 2,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 2,
+          "targetAmount": 16
+        },
+        {
+          "type": "special",
+          "targetAmount": 2
+        }
+      ]
+    },
+    {
+      "levelId": 110,
+      "chapter": 11,
+      "chapterName": "Prism Orchard",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 3270,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 17
+        }
+      ],
+      "boss": {
+        "name": "Lady Luma",
+        "epithet": "Keeper of the Prism Orchard",
+        "color": 4,
+        "taunt": "Let’s see your brightest move!",
+        "maxHealth": 17
+      }
+    },
+    {
+      "levelId": 111,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 27,
+      "targetScore": 3300,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 3300
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 112,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 3330,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 19
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 113,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 26,
+      "targetScore": 3360,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 5,
+          "targetAmount": 16
+        },
+        {
+          "type": "shell",
+          "targetAmount": 8
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 114,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 25,
+      "targetScore": 3390,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "ingredient",
+          "targetAmount": 2
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 115,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 3420,
+      "goalColor": 1,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 1,
+          "targetAmount": 16
+        },
+        {
+          "type": "cascade",
+          "targetAmount": 3
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 116,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 24,
+      "targetScore": 3450,
+      "goalColor": 3,
+      "objectives": [
+        {
+          "type": "special",
+          "targetAmount": 4
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 117,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 3480,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "jelly",
+          "targetAmount": 21
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 118,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 23,
+      "targetScore": 3510,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "score",
+          "targetAmount": 3510
+        },
+        {
+          "type": "shell",
+          "targetAmount": 10
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 119,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 22,
+      "targetScore": 3540,
+      "goalColor": 4,
+      "objectives": [
+        {
+          "type": "collect",
+          "color": 4,
+          "targetAmount": 17
+        },
+        {
+          "type": "ingredient",
+          "targetAmount": 2
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ]
+    },
+    {
+      "levelId": 120,
+      "chapter": 12,
+      "chapterName": "Moonmallow Observatory",
+      "columns": 8,
+      "rows": 8,
+      "maxMoves": 21,
+      "targetScore": 3570,
+      "goalColor": 5,
+      "objectives": [
+        {
+          "type": "boss",
+          "targetAmount": 20
+        }
+      ],
+      "spawnWeights": [
+        {
+          "color": 0,
+          "weight": 100
+        },
+        {
+          "color": 1,
+          "weight": 100
+        },
+        {
+          "color": 4,
+          "weight": 100
+        },
+        {
+          "color": 5,
+          "weight": 100
+        }
+      ],
+      "boss": {
+        "name": "Mallow Nova",
+        "epithet": "Celestial confectioner",
+        "color": 5,
+        "taunt": "The moon is mine to sugar!",
+        "maxHealth": 20
+      }
+    }
+  ]
+}

@@ -1,17 +1,29 @@
 {
-  "id": "/",
-  "name": "Jam Shift — Sweet Little Puzzles",
+  "id": "./",
+  "name": "Jam Shift — Puzzle Club",
   "short_name": "Jam Shift",
-  "description": "A colourful match-3 puzzle with cascades, special candies, power-ups and a 100-level campaign.",
-  "start_url": "/",
-  "scope": "/",
+  "description": "An original match-three puzzle club with satisfying cascades, helpful boosters and a 120-level campaign across twelve candy worlds.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#100f2c",
-  "theme_color": "#100f2c",
+  "background_color": "#fffbeb",
+  "theme_color": "#38bdf8",
+  "categories": ["games", "entertainment"],
   "icons": [
     {
-      "src": "/jam-shift-icon.svg",
+      "src": "./jam-shift-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./jam-shift-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./jam-shift-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

@@ -1,0 +1,51 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
+import CandyArt from '../src/components/CandyArt';
+import IngredientArt from '../src/components/IngredientArt';
+
+function markup(color: number, special?: 'striped-h' | 'striped-v' | 'wrapped' | 'color') {
+  return renderToStaticMarkup(createElement(CandyArt, { color, special }));
+}
+
+describe('Jam Shift candy artwork', () => {
+  it('renders six distinct, accessible vector candy silhouettes', () => {
+    const shapeClasses = ['grapes', 'lemon', 'berry', 'mint', 'blueberry', 'orange'];
+    shapeClasses.forEach((shape, color) => {
+      const html = markup(color);
+      expect(html).toContain(`candy-shape-${shape}`);
+      expect(html).toContain('viewBox="0 0 48 48"');
+      expect(html).toContain('focusable="false"');
+    });
+  });
+
+  it('adds a per-candy glossy gradient so repeated SVGs do not share fragment ids', () => {
+    const gallery = renderToStaticMarkup(createElement('div', null,
+      createElement(CandyArt, { color: 2 }),
+      createElement(CandyArt, { color: 2 }),
+    ));
+    const gradientIds = [...gallery.matchAll(/<linearGradient id="([^"]+)"/g)].map(match => match[1]);
+    expect(gallery).toContain('stop-color="#ffb5d1"');
+    expect(gradientIds).toHaveLength(2);
+    expect(new Set(gradientIds).size).toBe(2);
+  });
+
+  it('renders a crisp, uniquely shaded jam-jar objective piece', () => {
+    const gallery = renderToStaticMarkup(createElement('div', null,
+      createElement(IngredientArt),
+      createElement(IngredientArt),
+    ));
+    expect(gallery).toContain('ingredient-art');
+    expect(gallery).toContain('viewBox="0 0 48 48"');
+    const gradientIds = [...gallery.matchAll(/<linearGradient id="([^"]+)"/g)].map(match => match[1]);
+    expect(gradientIds).toHaveLength(4);
+    expect(new Set(gradientIds).size).toBe(4);
+  });
+
+  it('renders orientation-specific stripes and a separate wrapped/cosmic treatment', () => {
+    expect(markup(0, 'striped-h')).toContain('candy-art-stripes-horizontal');
+    expect(markup(1, 'striped-v')).toContain('candy-art-stripes-vertical');
+    expect(markup(2, 'wrapped')).toContain('candy-art-wrap');
+    expect(markup(3, 'color')).toContain('candy-color-bomb');
+  });
+});

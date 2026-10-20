@@ -1,0 +1,178 @@
+/* In-game arcade polish: compact HUD, glossy board bezel, color-coded booster slots. */
+.app-shell.is-playing .play-topline .back-link,
+.app-shell.is-playing .play-icon-button,
+.app-shell.is-playing .play-world-label {
+  border-color: rgba(253, 224, 71, .42);
+  box-shadow: 0 4px 0 #3b0764, inset 0 1px 0 rgba(255, 255, 255, .24);
+}
+.app-shell.is-playing .play-icon-button {
+  color: #fff;
+  background: linear-gradient(145deg, #db2777, #7c3aed);
+}
+.app-shell.is-playing .level-hud {
+  border-color: rgba(253, 224, 71, .5);
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(56, 189, 248, .24), transparent 42%),
+    radial-gradient(ellipse at 100% 100%, rgba(236, 72, 153, .2), transparent 38%),
+    linear-gradient(115deg, #4c1d95 0%, #6b21a8 54%, #9d174d 100%);
+  box-shadow: 0 6px 0 #3b0764, 0 16px 30px rgba(30, 17, 71, .38), inset 0 2px 0 rgba(255, 255, 255, .22);
+  animation: game-hud-pop .32s cubic-bezier(.2, .8, .25, 1) both;
+}
+.app-shell.is-playing .level-hud-kicker {
+  justify-self: start;
+  max-width: 100%;
+  padding: 3px 8px;
+  color: #fff4bd;
+  border: 1px solid rgba(253, 224, 71, .48);
+  border-radius: 999px;
+  background: linear-gradient(100deg, rgba(180, 83, 9, .46), rgba(190, 24, 93, .38));
+  text-shadow: 0 1px 2px rgba(59, 7, 100, .5);
+}
+.app-shell.is-playing .level-hud-copy > b { text-shadow: 0 2px 0 rgba(59, 7, 100, .35); }
+.app-shell.is-playing .level-objective-track,
+.app-shell.is-playing .boss-health-track {
+  height: 10px;
+  border: 2px solid rgba(255, 255, 255, .36);
+  background: rgba(49, 18, 87, .76);
+  box-shadow: inset 0 2px 4px rgba(30, 17, 71, .35), 0 1px 0 rgba(255, 255, 255, .14);
+}
+.app-shell.is-playing .level-objective-track > span { background: linear-gradient(90deg, #38bdf8, #a78bfa 36%, #f472b6 70%, #fde047); }
+.app-shell.is-playing .level-hud-subline { align-items: center; }
+.app-shell.is-playing .level-hud-subline > span:first-child {
+  padding: 3px 7px;
+  border: 1px solid rgba(216, 180, 254, .28);
+  border-radius: 999px;
+  background: rgba(49, 18, 87, .42);
+}
+.app-shell.is-playing .score-live {
+  padding: 3px 8px;
+  color: #fff;
+  border: 1px solid rgba(165, 243, 252, .35);
+  border-radius: 999px;
+  background: rgba(14, 116, 144, .34);
+  font-weight: 900;
+}
+.app-shell.is-playing .hud-star-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 7px;
+  color: #451a03;
+  border: 1px solid #fff0a3;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #fef08a, #fbbf24);
+  box-shadow: 0 2px 0 #c2410c;
+}
+.app-shell.is-playing .hud-star-count b { color: #451a03; }
+.app-shell.is-playing .level-hud-moves {
+  border: 2px solid #fff3ad;
+  border-radius: 21px;
+  background: linear-gradient(145deg, #fef08a 0%, #fbbf24 58%, #fb923c 100%);
+  box-shadow: 0 5px 0 #c2410c, 0 8px 15px rgba(249, 115, 22, .25), inset 0 2px 0 rgba(255, 255, 255, .82);
+}
+.app-shell.is-playing .level-hud-moves small { letter-spacing: .14em; }
+.app-shell.is-playing .level-hud-moves b { font-size: 34px; text-shadow: 0 2px 0 rgba(255, 255, 255, .28); }
+
+.app-shell.is-playing .game-board-wrap {
+  border-color: #fff;
+  background:
+    linear-gradient(145deg, #38bdf8 0%, #6366f1 32%, #c026d3 67%, #ec4899 100%);
+  outline: 2px solid rgba(253, 224, 71, .75);
+  outline-offset: 1px;
+  box-shadow: 0 9px 0 #4c1d95, 0 24px 45px rgba(30, 17, 71, .45), inset 0 2px 0 rgba(255, 255, 255, .62);
+  animation: game-board-pop .38s cubic-bezier(.2, .8, .25, 1) both;
+}
+.app-shell.is-playing .candy-board {
+  border: 2px solid rgba(216, 180, 254, .62);
+  background-color: #21113e;
+  box-shadow: inset 0 6px 16px rgba(30, 17, 71, .52), 0 2px 0 rgba(255, 255, 255, .2);
+}
+.app-shell.is-playing .board-title-row .eyebrow { text-shadow: 0 1px 3px rgba(30, 17, 71, .55); }
+.app-shell.is-playing .icon-action {
+  color: #fff;
+  border-color: #f9a8d4;
+  background: linear-gradient(145deg, #ec4899, #8b5cf6);
+  box-shadow: 0 4px 0 #581c87, inset 0 1px 0 rgba(255, 255, 255, .36);
+}
+.app-shell.is-playing .icon-action:hover { color: #451a03; border-color: #fff0a3; background: linear-gradient(145deg, #fde047, #fb923c); }
+.app-shell.is-playing .status-message {
+  border-color: rgba(253, 224, 71, .4);
+  box-shadow: 0 4px 0 #3b0764, 0 9px 18px rgba(30, 17, 71, .28), inset 0 1px 0 rgba(255, 255, 255, .16);
+}
+
+.app-shell.is-playing .powerups-card {
+  border-color: rgba(253, 224, 71, .5);
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(56, 189, 248, .2), transparent 50%),
+    linear-gradient(145deg, #4c1d95, #311257 68%, #701a75);
+  box-shadow: 0 6px 0 #2e1065, 0 14px 26px rgba(30, 17, 71, .35), inset 0 2px 0 rgba(255, 255, 255, .2);
+}
+.app-shell.is-playing .powerups-card > .card-heading { color: #fff4bd; text-shadow: 0 1px 2px rgba(59, 7, 100, .45); }
+.app-shell.is-playing .powerups-card > .card-heading svg { color: #fde047; filter: drop-shadow(0 1px 3px rgba(253, 224, 71, .45)); }
+.app-shell.is-playing .power-button {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .48);
+  box-shadow: 0 4px 0 #9d174d, inset 0 1px 0 rgba(255, 255, 255, .42);
+  transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
+}
+.app-shell.is-playing .powerup-list .power-button:nth-child(1) {
+  border-color: #fbcfe8;
+  background: linear-gradient(145deg, #f472b6, #db2777 72%, #be185d);
+  box-shadow: 0 4px 0 #9d174d, inset 0 1px 0 rgba(255, 255, 255, .42);
+}
+.app-shell.is-playing .powerup-list .power-button:nth-child(2) {
+  border-color: #bae6fd;
+  background: linear-gradient(145deg, #38bdf8, #4f46e5 72%, #3730a3);
+  box-shadow: 0 4px 0 #312e81, inset 0 1px 0 rgba(255, 255, 255, .42);
+}
+.app-shell.is-playing .powerup-list .power-button:nth-child(3) {
+  border-color: #fde68a;
+  background: linear-gradient(145deg, #fbbf24, #f97316 72%, #c2410c);
+  box-shadow: 0 4px 0 #9a3412, inset 0 1px 0 rgba(255, 255, 255, .42);
+}
+.app-shell.is-playing .powerup-emoji {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .48);
+  background: rgba(255, 255, 255, .18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28);
+}
+.app-shell.is-playing .powerup-list .power-button:nth-child(2) .powerup-emoji,
+.app-shell.is-playing .powerup-list .power-button:nth-child(3) .powerup-emoji { background: rgba(255, 255, 255, .18); }
+.app-shell.is-playing .powerup-label b { color: #fff; text-shadow: 0 1px 2px rgba(30, 17, 71, .32); }
+.app-shell.is-playing .powerup-count {
+  color: #4c1d95;
+  border-color: rgba(255, 255, 255, .82);
+  background: #fff8d6;
+  box-shadow: 0 2px 0 rgba(76, 29, 149, .28);
+}
+.app-shell.is-playing .power-button:hover:not(:disabled) { filter: brightness(1.1) saturate(1.1); }
+.app-shell.is-playing .power-button:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #581c87; }
+.app-shell.is-playing .powerup-list .power-button.is-armed {
+  border-color: #fff;
+  background: linear-gradient(145deg, #fde047, #fb923c 55%, #ec4899);
+  box-shadow: 0 0 0 3px rgba(253, 224, 71, .42), 0 4px 0 #9a3412, inset 0 1px 0 rgba(255, 255, 255, .52);
+}
+.app-shell.is-playing .utility-button {
+  border: 1px solid #bae6fd;
+  box-shadow: 0 5px 0 #1e3a8a, 0 9px 16px rgba(14, 116, 144, .22), inset 0 1px 0 rgba(255, 255, 255, .72);
+  font-weight: 950;
+}
+.app-shell.is-playing .utility-button:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #1e3a8a; }
+.app-shell.is-playing .utility-secondary {
+  border-color: #e9d5ff;
+  box-shadow: 0 5px 0 #3b0764, 0 8px 15px rgba(76, 29, 149, .2), inset 0 1px 0 rgba(255, 255, 255, .26);
+}
+.app-shell.is-playing .utility-secondary:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #3b0764; }
+
+@keyframes game-hud-pop {
+  from { opacity: 0; transform: translateY(-7px) scale(.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes game-board-pop {
+  from { opacity: 0; transform: translateY(8px) scale(.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell.is-playing .level-hud,
+  .app-shell.is-playing .game-board-wrap { animation: none; }
+}

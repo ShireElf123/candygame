@@ -1,20 +1,36 @@
-import { StrictMode } from 'react';
+import { Profiler, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { PERFORMANCE_TRACE_ENABLED, recordReactProfile } from './game/performance';
+import '@fontsource-variable/fredoka';
+import '@fontsource-variable/nunito';
 import './index.css';
 import './pro.css';
 import './juice.css';
+import './theme.css';
+import './immersive.css';
+import './arcade-skin.css';
+import './game-ui.css';
+import './mobile-game-skin.css';
+import './juice-polish.css';
+import './experience-polish.css';
+import './level-trail.css';
 
-if ('serviceWorker' in navigator) {
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    void navigator.serviceWorker.register('/sw.js').catch(() => {
+    const workerUrl = new URL('./sw.js', document.baseURI);
+    void navigator.serviceWorker.register(workerUrl, { scope: import.meta.env.BASE_URL, updateViaCache: 'none' }).catch(() => {
       // Offline enhancements are optional; gameplay remains fully usable without them.
     });
   });
 }
 
+const app = PERFORMANCE_TRACE_ENABLED
+  ? <Profiler id="app" onRender={recordReactProfile}><App /></Profiler>
+  : <App />;
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
-  </StrictMode>
+    {app}
+  </StrictMode>,
 );
